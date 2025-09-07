@@ -1,8 +1,8 @@
 export default function RecentWinners() {
   const winners = [
-    { id: "cosm...gsye20", date: "January 18", prize: "G0008 Atom" },
-    { id: "cosm...23u9fw", date: "January 18", prize: "G0009 Atom" },
-    { id: "cosm...93nd34", date: "January 18", prize: "G0008 Atom" },
+    { id: "cosm...gsye20", date: "January 18", prize: "G0008 Eth" },
+    { id: "cosm...23u9fw", date: "January 18", prize: "G0009 Eth" },
+    { id: "cosm...93nd34", date: "January 18", prize: "G0008 Eth" },
   ]
 
   return (

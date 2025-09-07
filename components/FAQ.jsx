@@ -30,7 +30,7 @@ export default function FAQ() {
 		{
 			question: "What networks does VaultQuest support?",
 			answer:
-				"VaultQuest currently supports Atom, with plans to expand to Cosmos, Polygon, and other major networks in the near future. Our multi-chain strategy aims to provide users with options that best suit their needs.",
+				"VaultQuest currently supports Eth, with plans to expand to Cosmos, Polygon, and other major networks in the near future. Our multi-chain strategy aims to provide users with options that best suit their needs.",
 		},
 		{
 			question: "How can I participate in governance?",

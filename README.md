@@ -76,7 +76,7 @@ VaultQuest leverages tokenized vaults built on the ERC4626 standard—a modern E
 │   │   ├── CreateVaultModal.jsx
 │   │   └── DepositModal.jsx
 │   ├── icons
-│   │   └── AtomIcon.jsx
+│   │   └── EthIcon.jsx
 │   └── ... (additional components)
 ├── hooks
 ├── lib
@@ -91,7 +91,7 @@ VaultQuest leverages tokenized vaults built on the ERC4626 standard—a modern E
 - **app/**: Contains Next.js pages, including the vault interface that handles displaying vaults, deposit actions, filtering, and search.
 - **components/**: Reusable UI components such as navigation, modals, and icons used throughout the VaultQuest interface.
 - **hooks/** and **lib/**: Application logic and utility functions.
-- **public/**: Static assets including images for Atom, USDC, and Cosmo.
+- **public/**: Static assets including images for Eth, USDC, and Cosmo.
 - **styles/**: Global styles and component-specific styling.
 
 ---
@@ -173,7 +173,7 @@ npm run start
 - **ERC4626:** Standard for tokenized, yield-bearing vaults.
 - **DeFi Protocols:** Integration with decentralized finance strategies such as lending, liquidity provision, and yield farming.
 - **Cosmo:** A decentralized blockchain platform designed for innovative decentralized applications and cross-chain integration.
-- **Atom:** The native token of the Cosmos ecosystem, integrated into VaultQuest to facilitate secure and efficient operations within the decentralized network.
+- **Eth:** The native token of the Ethereum ecosystem, integrated into VaultQuest to facilitate secure and efficient operations within the decentralized network.
 
 ---
 
@@ -199,4 +199,4 @@ For any questions or inquiries, please open an issue in the repository or contac
 
 ---
 
-VaultQuest leverages advanced DeFi concepts and robust multi-chain integration—including support for Atom and Cosmo—to offer users an exciting, risk-free opportunity to earn potential rewards through participation. Enjoy exploring and contributing to VaultQuest!
+VaultQuest leverages advanced DeFi concepts and robust multi-chain integration—including support for Eth and Cosmo—to offer users an exciting, risk-free opportunity to earn potential rewards through participation. Enjoy exploring and contributing to VaultQuest!

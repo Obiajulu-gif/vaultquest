@@ -24,7 +24,7 @@ export default function PrizesPage() {
       name: "Grand Prize",
       network: "Cosmos",
       amount: 23087.0,
-      token: "atom",
+      token: "eth",
       tokenAmount: 0.23,
     },
     {
@@ -32,7 +32,7 @@ export default function PrizesPage() {
       name: "Weekly Prize",
       network: "Cosmos",
       amount: 12500.0,
-      token: "atom",
+      token: "eth",
       tokenAmount: 0.15,
     },
     {
@@ -40,7 +40,7 @@ export default function PrizesPage() {
       name: "Daily Prize",
       network: "Cosmos",
       amount: 5000.0,
-      token: "atom",
+      token: "eth",
       tokenAmount: 0.08,
     },
     {
@@ -48,7 +48,7 @@ export default function PrizesPage() {
       name: "Hourly Prize",
       network: "Cosmos",
       amount: 1000.0,
-      token: "atom",
+      token: "eth",
       tokenAmount: 0.02,
     },
     {
@@ -56,7 +56,7 @@ export default function PrizesPage() {
       name: "Community Prize",
       network: "Cosmos",
       amount: 7500.0,
-      token: "atom",
+      token: "eth",
       tokenAmount: 0.12,
     },
     {
@@ -105,10 +105,10 @@ export default function PrizesPage() {
                     Cosmos
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Atom" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
-                    onClick={() => setActiveFilter("Atom")}
+                    className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Eth" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
+                    onClick={() => setActiveFilter("Eth")}
                   >
-                    Atom
+                    Eth
                   </button>
                 </div>
               </div>

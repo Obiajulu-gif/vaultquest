@@ -9,7 +9,7 @@ export default function SupportedChains() {
   // Blockchain data with logos and names
  const blockchains = [
 		{
-			name: "Atom",
+			name: "Eth",
 			logo: "/images/avax.png",
 			color: "bg-gradient-to-r from-cyan-500 to-blue-500",
 			description: "Interoperable blockchain for the Cosmos ecosystem",

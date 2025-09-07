@@ -284,7 +284,7 @@ export default function DocPage() {
 									<div className="space-y-4">
 										<div className="bg-[#2A0A0A]/80 backdrop-blur-sm rounded-lg p-5 border border-red-900/20">
 											<div className="flex justify-between items-start mb-2">
-												<h3 className="font-bold">Prize Vault (Atom)</h3>
+												<h3 className="font-bold">Prize Vault (Eth)</h3>
 												<div className="flex items-center gap-2">
 													<button
 														className="text-gray-400 hover:text-white"
@@ -308,7 +308,7 @@ export default function DocPage() {
 
 										<div className="bg-[#2A0A0A]/80 backdrop-blur-sm rounded-lg p-5 border border-red-900/20">
 											<div className="flex justify-between items-start mb-2">
-												<h3 className="font-bold">Prize Pool (Atom)</h3>
+												<h3 className="font-bold">Prize Pool (Eth)</h3>
 												<div className="flex items-center gap-2">
 													<button
 														className="text-gray-400 hover:text-white"

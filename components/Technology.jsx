@@ -3,7 +3,7 @@ import Image from "next/image"
 export default function Technology() {
   const technologies = [
 		{
-			name: "ATOM",
+			name: "ETH",
 			description:
 				" a revolutionary ecosystem within the Cosmos network, comprising a collection of partially sovereign blockchains.",
 			icon: "/images/avax.png",
@@ -20,9 +20,9 @@ export default function Technology() {
       icon: "/images/nextjs.png",
     },
     {
-      name: "The Atom Economic Zone (AEZ)",
+      name: "The Eth Economic Zone (EEZ)",
       description:
-        "Leveraging the power of ATOM to create innovative economic models that drive blockchain adoption.",
+        "Leveraging the power of ETH to create innovative economic models that drive blockchain adoption.",
       icon: "/images/aeze.png",
     },
 	];
