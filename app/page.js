@@ -21,13 +21,13 @@ export default function Home() {
       <main className="pt-16">
         <Hero />
         <Stats />
-        {/* <SupportedChains /> */}
+        <SupportedChains />
         <SavingAndWinning />
         <WhyPrizeSavings />
-        {/* <Technology /> */}
-        {/* <Roadmap /> */}
-        {/* <GetInvolved /> */}
-        {/* <FAQ /> */}
+        <Technology />
+        <Roadmap />
+        <GetInvolved />
+        <FAQ />
       </main>
 
       <Footer />
