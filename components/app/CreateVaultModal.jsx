@@ -46,9 +46,8 @@ export default function CreateVaultModal({
 
 	// Duration options in hours (will be converted to seconds in parent)
 	const durationOptions = [
-		{ value: 1, label: "1 Hour (testing only)" },
-		{ value: 6, label: "6 Hours (testing only)" },
-		{ value: 24, label: "1 Day" },
+		{ value: 0.25, label: "15 minutes (testing only)" },
+		{ value: 0.5, label: "30 minutes (testing only)" },
 		{ value: 168, label: "1 Week" },
 		{ value: 336, label: "2 Weeks" },
 		{ value: 720, label: "1 Month" },
