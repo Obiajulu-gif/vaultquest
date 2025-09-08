@@ -37,7 +37,7 @@ export default function CreateVaultModal({
 
 	// Token options with their contract addresses
 	const tokenOptions = [
-		{ value: "0x0000000000000000000000000000000000000000", label: "ETH (Native)", symbol: "ETH" },
+		{ value: "0x0000000000000000000000000000000000000000", label: "AVAX", symbol: "AVAX" },
 		{ value: "0xA0b86a33E6441893F6f7AD06c28f5BAA7D4b0D16", label: "USDC", symbol: "USDC" },
 		{ value: "0xdAC17F958D2ee523a2206206994597C13D831ec7", label: "USDT", symbol: "USDT" },
 		{ value: "0x6B175474E89094C44Da98b954EedeAC495271d0F", label: "DAI", symbol: "DAI" },
@@ -117,7 +117,7 @@ export default function CreateVaultModal({
 							Vault Name
 						</label>
 						<Input
-							placeholder="e.g. ETH Savings Vault"
+							placeholder="e.g. Savings Vault"
 							className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20"
 							value={vaultName}
 							onChange={(e) => {
@@ -142,7 +142,7 @@ export default function CreateVaultModal({
 							<SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20">
 								<SelectValue placeholder="Select Token" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20">
+							<SelectContent className="bg-[#1A0808] border border-red-900/20 text-gray-400">
 								{tokenOptions.map((token) => (
 									<SelectItem key={token.value} value={token.value}>
 										{token.label}
@@ -171,7 +171,7 @@ export default function CreateVaultModal({
 							<SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20">
 								<SelectValue placeholder="Select Duration" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20">
+							<SelectContent className="bg-[#1A0808] border border-red-900/20 text-gray-400">
 								{durationOptions.map((duration) => (
 									<SelectItem key={duration.value} value={duration.value.toString()}>
 										{duration.label}

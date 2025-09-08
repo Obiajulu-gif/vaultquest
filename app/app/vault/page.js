@@ -316,7 +316,7 @@ export default function VaultPage() {
 		writeContract({
 			...vaultData,
 			functionName: "createVault",
-			args: [vaultName, vaultToken, vaultDurationInSeconds, vaultInterestRate],
+			args: [vaultName, vaultToken, vaultDurationInSeconds, (vaultInterestRate * 100)], //multiply the interest rate by 100 (demanded by the smart contract)
 		});
 
 		setSubmitted(true);
