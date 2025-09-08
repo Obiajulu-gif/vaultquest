@@ -359,13 +359,17 @@ export default function VaultPage() {
 
 		const maxWithdraw = selectedVault.balance || 0;
 
-		if (!withdrawalAmount || Number(withdrawalAmount) <= 0) {
-			setError("Please enter a valid withdrawal amount");
-			return;
-		}
+		// if (!withdrawalAmount || Number(withdrawalAmount) <= 0) {
+		// 	setError("Please enter a valid withdrawal amount");
+		// 	return;
+		// }
 
-		if (Number(withdrawalAmount) > maxWithdraw) {
-			setError(`You can only withdraw up to ${maxWithdraw.toFixed(4)} ${selectedVault.balanceToken}`);
+		// if (Number(withdrawalAmount) > maxWithdraw) {
+		// 	setError(`You can only withdraw up to ${maxWithdraw.toFixed(4)} ${selectedVault.balanceToken}`);
+		// 	return;
+		// }
+		if ( maxWithdraw <= 0) {
+			setError(`You have nothing to withdraw`);
 			return;
 		}
 
@@ -374,7 +378,7 @@ export default function VaultPage() {
 		writeContract({
 			...vaultData,
 			functionName: "withdraw",
-			args: [vaultId, parseEther(withdrawalAmount)],
+			args: [vaultId],
 		});
 
 		setSubmitted(true);
@@ -557,7 +561,8 @@ export default function VaultPage() {
 													setVaultId(vault.id);
 													setIsWithdrawalModalOpen(true);
 												}}
-												disabled={!vault.active || vault.timeLeft <= 0}
+												disabled={!vault.active}
+												// disabled={!vault.active || vault.timeLeft <= 0}
 											>
 												Withdraw
 											</Button>

@@ -36,16 +36,18 @@ export default function WithdrawalModal({
               <label className="block text-sm text-gray-300 mb-1">
                 Amount
               </label>
-              <Input
+              {/* <Input
                 type="number"
                   value={withdrawalAmount}
                   onChange={(e) => setWithdrawalAmount(e.target.value)}
                 placeholder="Enter amount"
                 className="bg-[#2A0A0A]/70 border-red-900/20 text-white"
-              />
+              /> */}
+
+              <div>All your funds will be withdrawn from the vault. Are you sure you want to continue?</div>
             </div>
             {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-            
+
             {success && (
               <p className="text-green-500 text-sm mb-2">
                 Withdrawal successful! 🎉
