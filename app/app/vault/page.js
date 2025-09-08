@@ -477,7 +477,7 @@ export default function VaultPage() {
 								: "Loading..."}
 						</div>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 							{isLoadingVaults ? (
 								Array.from({ length: 4 }, (_, i) => <VaultSkeleton key={i} />)
 							) : filteredVaults.length > 0 ? (
