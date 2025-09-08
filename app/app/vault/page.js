@@ -194,12 +194,12 @@ export default function VaultPage() {
 			return {
 				id: vaultId,
 				name: `Vault ${vaultId}`,
-				network: "Ethereum",
+				network: "AVAX",
 				apy: 0,
 				tvl: 0,
-				tvlToken: "ETH",
+				tvlToken: "AVAX",
 				balance: 0,
-				balanceToken: "ETH",
+				balanceToken: "AVAX",
 				users: 0,
 				token: "0x0000000000000000000000000000000000000000",
 				timeLeft: 0,
@@ -220,14 +220,14 @@ export default function VaultPage() {
 		] = vaultData.result || [];
 
 		const isETH = token === "0x0000000000000000000000000000000000000000";
-		const tokenSymbol = isETH ? "ETH" : "TOKEN";
+		const tokenSymbol = isETH ? "AVAX" : "TOKEN";
 		const formattedTVL = totalDeposits ? Number(formatEther(totalDeposits)) : 0;
 		const annualRate = interestRate ? Number(interestRate) / 100 : 0;
 
 		return {
 			id: vaultId,
 			name: name || `Vault ${vaultId}`,
-			network: "Ethereum",
+			network: "AVAX",
 			apy: annualRate,
 			tvl: formattedTVL,
 			tvlToken: tokenSymbol,
@@ -345,7 +345,7 @@ export default function VaultPage() {
 				...vaultData,
 				functionName: "deposit",
 				args: [vaultId, parseEther(depositAmount)], // deposit args
-				value: parseEther(depositAmount), // only valid for ETH vaults
+				value: parseEther(depositAmount), // only valid for AVAX vaults
 			});
 
 		} catch (err) {
@@ -449,13 +449,13 @@ export default function VaultPage() {
 										All
 									</button>
 									<button
-										className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Ethereum"
+										className={`px-3 py-1 rounded-full text-sm ${activeFilter === "AVAX"
 											? "bg-red-600"
 											: "hover:bg-[#3A0A0A]"
 											}`}
-										onClick={() => setActiveFilter("Ethereum")}
+										onClick={() => setActiveFilter("AVAX")}
 									>
-										Ethereum
+										AVAX
 									</button>
 								</div>
 							</div>
@@ -600,7 +600,7 @@ export default function VaultPage() {
 												{filteredVaults
 													.reduce((sum, vault) => sum + vault.tvl, 0)
 													.toFixed(4)}{" "}
-												ETH
+												AVAX
 											</div>
 											<div className="mt-2 text-sm text-gray-400">
 												Across {filteredVaults.length} active vaults

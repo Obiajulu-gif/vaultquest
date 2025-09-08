@@ -26,7 +26,7 @@ export default function RecentDeposits({ deposits = [] }) {
                     </div>
                   </td>
                   <td className="py-4 font-mono">{deposit.address}</td>
-                  <td className="py-4">{deposit.amount.toFixed(4)} {deposit.amount !== 0 ? "ETH" : ""}</td>
+                  <td className="py-4">{deposit.amount.toFixed(4)} {deposit.amount !== 0 ? "AVAX" : ""}</td>
                 </tr>
               ))
             ) : (
