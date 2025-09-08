@@ -1,4 +1,4 @@
-import { AtomIcon } from "@/components/icons/AtomIcon";
+import { EthIcon } from "@/components/icons/EthIcon";
 
 export default function UserDepositsList({ deposits = [], vaults = [] }) {
 	// Map vault IDs to vault objects for easy lookup
@@ -25,7 +25,7 @@ export default function UserDepositsList({ deposits = [], vaults = [] }) {
 								<td className="py-4">
 									<div className="flex items-center gap-2">
 										<div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-											<AtomIcon className="w-5 h-5" />
+											<EthIcon className="w-5 h-5" />
 										</div>
 										<span>
 											{vaultMap[deposit.vaultId]?.name || "Unknown Vault"}

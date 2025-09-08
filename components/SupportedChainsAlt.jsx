@@ -4,7 +4,7 @@ export default function SupportedChainsAlt() {
 	// Blockchain data with logos and names
 	const blockchains = [
 		{
-			name: "Atom",
+			name: "Eth",
 			logo: "/placeholder.svg?height=40&width=40",
 			color: "bg-gradient-to-r from-purple-500 to-green-500",
 		},

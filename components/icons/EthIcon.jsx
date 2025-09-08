@@ -1,4 +1,4 @@
-export function AtomIcon({ className = "w-6 h-6" }) {
+export function EthIcon({ className = "w-6 h-6" }) {
 	return (
 		<svg
 			className={className}

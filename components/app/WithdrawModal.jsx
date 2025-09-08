@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, X, AlertCircle } from "lucide-react";
-import { AtomIcon } from "@/components/icons/AtomIcon";
+import { EthIcon } from "@/components/icons/EthIcon";
 
 export default function WithdrawModal({ isOpen, onClose }) {
 	const [amount, setAmount] = useState("");
@@ -73,7 +73,7 @@ export default function WithdrawModal({ isOpen, onClose }) {
 					<div className="space-y-4">
 						<div className="relative">
 							<button className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-sm">
-								<AtomIcon className="w-5 h-5" />
+								<EthIcon className="w-5 h-5" />
 								{selectedToken}
 								<ChevronDown className="h-4 w-4" />
 							</button>

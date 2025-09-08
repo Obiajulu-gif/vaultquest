@@ -7,37 +7,37 @@ export default function PrizeGrid() {
       id: 1,
       name: "Grand Prize",
       amount: 23087.0,
-      atom: 0.23,
+      eth: 0.23,
     },
     {
       id: 2,
       name: "Weekly Prize",
       amount: 12500.0,
-      atom: 0.15,
+      eth: 0.15,
     },
     {
       id: 3,
       name: "Daily Prize",
       amount: 5000.0,
-      atom: 0.08,
+      eth: 0.08,
     },
     {
       id: 4,
       name: "Hourly Prize",
       amount: 1000.0,
-      atom: 0.02,
+      eth: 0.02,
     },
     {
       id: 5,
       name: "Community Prize",
       amount: 7500.0,
-      atom: 0.12,
+      eth: 0.12,
     },
     {
       id: 6,
       name: "Special Prize",
       amount: 15000.0,
-      atom: 0.18,
+      eth: 0.18,
     },
   ];
 
@@ -54,7 +54,7 @@ export default function PrizeGrid() {
             <Image
               height={100}
               width={100}
-              alt="atom"
+              alt="eth"
               src="/images/avax.png"
               className="w-5 h-5 md:w-6 md:h-6"
             />
@@ -63,7 +63,7 @@ export default function PrizeGrid() {
             $
             {prize.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </div>
-          <div className="text-gray-400 text-xs md:text-sm mb-3 md:mb-4">+ {prize.atom} AVAX</div>
+          <div className="text-gray-400 text-xs md:text-sm mb-3 md:mb-4">+ {prize.eth} AVAX</div>
           <div className="text-red-500 text-xs md:text-sm hover:text-red-400 transition-colors">
             Click to view
           </div>
