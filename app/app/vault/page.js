@@ -245,12 +245,6 @@ export default function VaultPage() {
 					totalInterest: formatEther(totalInterest),
 				};
 
-				// Debug logging
-				console.log(`Vault ${vaultId} Winner Info:`, {
-					vaultId,
-					winner: winnerAddress,
-					totalInterest: (totalInterest) + " $AVAX",
-				});
 			}
 		});
 
@@ -411,13 +405,10 @@ export default function VaultPage() {
 			setSubmitted(false);
 			setSuccess(false);
 
-			console.log("Depositing....", parseEther(depositAmount));
-
-			// Step 1: Send the transaction
 			await writeContract({
 				...vaultData,
 				functionName: "deposit",
-				args: [vaultId, parseEther(depositAmount)], // deposit args
+				args: [vaultId, parseEther(depositAmount)], 
 				value: parseEther(depositAmount), // only valid for AVAX vaults
 			});
 
@@ -631,14 +622,11 @@ export default function VaultPage() {
 											</Button>
 											{/* Add winner display below withdraw button */}
 											{vaultWinners[vault.id] && (
-												<div className="mt-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30">
+												<div className="mt-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30 flex gap-4 flex-row items-center">
 													<div className="text-xs text-green-400 mb-1">🏆 Winner</div>
 													<div className="text-sm text-green-300 font-mono truncate">
-														{vaultWinners[vault.id].address.slice(0, 6)}...
-														{vaultWinners[vault.id].address.slice(-4)}
-													</div>
-													<div className="text-xs text-gray-400 mt-1">
-														Prize: {(parseFloat(vaultWinners[vault.id].totalInterest)* 1000).toFixed(10)} AVAX
+														{vaultWinners[vault.id].address.slice(0, 7)}...
+														{vaultWinners[vault.id].address.slice(-5)}
 													</div>
 												</div>
 											)}
