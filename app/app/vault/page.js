@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AppNav from "@/components/app/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ export default function VaultPage() {
 	const [submitted, setSubmitted] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState(false);
+	const [vaultWinners, setVaultWinners] = useState({});
 
 	// Form state
 	const [vaultName, setVaultName] = useState("");
@@ -140,6 +141,45 @@ export default function VaultPage() {
 	} = useReadContracts({
 		contracts: depositorBalanceContracts.length ? depositorBalanceContracts : [],
 	});
+
+	// Check which vaults have winners
+	const {
+		data: hasWinnerData,
+		isLoading: isLoadingHasWinner,
+		refetch: refetchHasWinner,
+	} = useReadContracts({
+		contracts: totalVaults
+			? Array.from({ length: Number(totalVaults) }, (_, i) => ({
+				...vaultData,
+				functionName: "hasWinner",
+				args: [i],
+			}))
+			: [],
+	});
+
+	// Memoize vaultsWithWinners to prevent recreation on every render
+	const vaultsWithWinners = useMemo(() => {
+		if (!hasWinnerData) return [];
+		return hasWinnerData
+			.map((result, index) => (result?.result === true ? index : null))
+			.filter((id) => id !== null);
+	}, [hasWinnerData]);
+
+	// Get winner info for vaults that have winners
+	const {
+		data: winnerInfoData,
+		isLoading: isLoadingWinnerInfo,
+		refetch: refetchWinnerInfo,
+	} = useReadContracts({
+		contracts: vaultsWithWinners.length > 0
+			? vaultsWithWinners.map((vaultId) => ({
+				...vaultData,
+				functionName: "getWinnerInfo",
+				args: [vaultId],
+			}))
+			: [],
+	});
+
 	// ---------- END NEW wagmi reads ------------
 
 	// Contract writes
@@ -161,11 +201,12 @@ export default function VaultPage() {
 			setTimeout(() => {
 				refetchVaults();
 				refetchTotalVaults();
-				// refresh depositor balances for connected address
 				refetchDepositorBalances();
-				// NEW: refresh depositors and all depositor balances
+
 				refetchVaultDepositors();
 				refetchAllDepositorBalances();
+				refetchHasWinner();
+				refetchWinnerInfo();
 				setSubmitted(false);
 				setSuccess(false);
 				setIsCreateModalOpen(false);
@@ -179,6 +220,8 @@ export default function VaultPage() {
 		refetchDepositorBalances,
 		refetchVaultDepositors,
 		refetchAllDepositorBalances,
+		refetchHasWinner,
+		refetchWinnerInfo,
 	]);
 
 	// Refetch depositor balances whenever address or totalVaults changes
@@ -187,6 +230,36 @@ export default function VaultPage() {
 			refetchDepositorBalances();
 		}
 	}, [address, totalVaults, refetchDepositorBalances]);
+
+	// Process winner data
+	useEffect(() => {
+		if (!winnerInfoData || vaultsWithWinners.length === 0) return;
+
+		const winners = {};
+		vaultsWithWinners.forEach((vaultId, index) => {
+			const winnerData = winnerInfoData[index]?.result;
+			if (winnerData) {
+				const [winnerAddress, totalInterest] = winnerData;
+				winners[vaultId] = {
+					address: winnerAddress,
+					totalInterest: formatEther(totalInterest),
+				};
+
+				// Debug logging
+				console.log(`Vault ${vaultId} Winner Info:`, {
+					vaultId,
+					winner: winnerAddress,
+					totalInterest: (totalInterest) + " $AVAX",
+				});
+			}
+		});
+
+		// Only update state if winners object has changed
+		setVaultWinners(prevWinners => {
+			const hasChanged = JSON.stringify(prevWinners) !== JSON.stringify(winners);
+			return hasChanged ? winners : prevWinners;
+		});
+	}, [winnerInfoData]);
 
 	// Helper function to format vault data
 	const formatVaultForDisplay = (vaultData, vaultId) => {
@@ -359,16 +432,7 @@ export default function VaultPage() {
 
 		const maxWithdraw = selectedVault.balance || 0;
 
-		// if (!withdrawalAmount || Number(withdrawalAmount) <= 0) {
-		// 	setError("Please enter a valid withdrawal amount");
-		// 	return;
-		// }
-
-		// if (Number(withdrawalAmount) > maxWithdraw) {
-		// 	setError(`You can only withdraw up to ${maxWithdraw.toFixed(4)} ${selectedVault.balanceToken}`);
-		// 	return;
-		// }
-		if ( maxWithdraw <= 0) {
+		if (maxWithdraw <= 0) {
 			setError(`You have nothing to withdraw`);
 			return;
 		}
@@ -562,10 +626,22 @@ export default function VaultPage() {
 													setIsWithdrawalModalOpen(true);
 												}}
 												disabled={!vault.active}
-												// disabled={!vault.active || vault.timeLeft <= 0}
 											>
 												Withdraw
 											</Button>
+											{/* Add winner display below withdraw button */}
+											{vaultWinners[vault.id] && (
+												<div className="mt-2 p-2 bg-green-900/20 rounded-lg border border-green-500/30">
+													<div className="text-xs text-green-400 mb-1">🏆 Winner</div>
+													<div className="text-sm text-green-300 font-mono truncate">
+														{vaultWinners[vault.id].address.slice(0, 6)}...
+														{vaultWinners[vault.id].address.slice(-4)}
+													</div>
+													<div className="text-xs text-gray-400 mt-1">
+														Prize: {(parseFloat(vaultWinners[vault.id].totalInterest)* 1000).toFixed(10)} AVAX
+													</div>
+												</div>
+											)}
 
 										</div>
 									</div>
