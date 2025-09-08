@@ -102,7 +102,7 @@ export default function PrizesPage() {
                     className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Cosmos" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
                     onClick={() => setActiveFilter("Cosmos")}
                   >
-                    Cosmos
+                    Avax
                   </button>
                   <button
                     className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Eth" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
