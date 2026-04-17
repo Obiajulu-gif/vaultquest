@@ -1,0 +1,20 @@
+reviews:
+  profile: "assertive"
+  request_changes_workflow: true
+
+languages:
+  javascript:
+    enabled: true
+  typescript:
+    enabled: true
+  python:
+    enabled: true
+
+rules:
+  - "Focus on logic bugs, security issues, and performance."
+  - "Avoid nitpicking formatting if Prettier/ESLint is used."
+  - "Be strict on smart contract safety and edge cases."
+  - "Highlight risky blockchain interactions."
+
+pull_requests:
+  auto_review: true
