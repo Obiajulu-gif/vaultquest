@@ -21,7 +21,7 @@ export default function Hero() {
           <div className="absolute bottom-40 left-60 top-20 animate-float">
             <Image
               src="/aval.png"
-              alt="Avalanche"
+              alt="Stellar"
               width={120}
               height={120}
             />
@@ -29,7 +29,7 @@ export default function Hero() {
           <div className="absolute bottom-40 right-60 top-20 animate-float">
             <Image
               src="/avall.png"
-              alt="Avalanche"
+              alt="Stellar"
               width={50}
               height={50}
             />
@@ -47,11 +47,11 @@ export default function Hero() {
 
         {/* Mobile Background Elements */}
          <div className="md:hidden">
-           {/* Top Left Avalanche */}
+           {/* Top Left Stellar */}
            <div className="absolute top-20 left-4 opacity-80">
              <Image
                src="/aval.png"
-               alt="Avalanche"
+               alt="Stellar"
                width={80}
                height={80}
              />
@@ -69,11 +69,11 @@ export default function Hero() {
                height={60}
              />
            </div>
-           {/* Right Edge Small Avalanche */}
+           {/* Right Edge Small Stellar */}
            <div className="absolute top-2/3 -right-4">
              <Image
                src="/avall.png"
-               alt="Avalanche"
+               alt="Stellar"
                width={40}
                height={40}
              />

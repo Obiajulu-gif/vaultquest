@@ -3,9 +3,9 @@ import Image from "next/image"
 export default function Technology() {
   const technologies = [
 		{
-			name: "ETH",
+			name: "Stellar",
 			description:
-				" a revolutionary ecosystem within the Cosmos network, comprising a collection of partially sovereign blockchains.",
+				"Payment-focused blockchain infrastructure for fast, low-friction asset movement and settlement.",
 			icon: "/images/avax.png",
 		},
 		{
@@ -20,9 +20,9 @@ export default function Technology() {
       icon: "/images/nextjs.png",
     },
     {
-      name: "The Eth Economic Zone (EEZ)",
+      name: "Soroban",
       description:
-        "Leveraging the power of ETH to create innovative economic models that drive blockchain adoption.",
+        "Smart contract platform for building Stellar-native applications with explicit on-chain logic.",
       icon: "/images/aeze.png",
     },
 	];
