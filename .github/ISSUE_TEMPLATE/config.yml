@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Drip Wave Contribution Guide
+    url: https://github.com/Obiajulu-gif/vaultquest/blob/main/CONTRIBUTING.md
+    about: Review contribution expectations, validation steps, and UI evidence requirements.
