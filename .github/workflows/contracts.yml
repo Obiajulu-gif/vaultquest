@@ -1,0 +1,125 @@
+name: Smart Contract CI
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "soroban/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".cargo/**"
+      - ".github/workflows/contracts.yml"
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - "contracts/**"
+      - "soroban/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".cargo/**"
+      - ".github/workflows/contracts.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contracts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect Soroban workspace
+    runs-on: ubuntu-latest
+    outputs:
+      workspace_dir: ${{ steps.detect.outputs.workspace_dir }}
+      has_workspace: ${{ steps.detect.outputs.has_workspace }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Detect Rust workspace for Soroban contracts
+        id: detect
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          workspace_dir=""
+
+          if [ -f Cargo.toml ] && { [ -d contracts ] || [ -d soroban ]; }; then
+            workspace_dir="."
+          elif [ -f contracts/Cargo.toml ]; then
+            workspace_dir="contracts"
+          elif [ -f soroban/Cargo.toml ]; then
+            workspace_dir="soroban"
+          else
+            candidate="$(find contracts soroban -maxdepth 3 -name Cargo.toml -print -quit 2>/dev/null || true)"
+            if [ -n "$candidate" ]; then
+              workspace_dir="$(dirname "$candidate")"
+            fi
+          fi
+
+          if [ -z "$workspace_dir" ]; then
+            echo "has_workspace=false" >> "$GITHUB_OUTPUT"
+            echo "workspace_dir=" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_workspace=true" >> "$GITHUB_OUTPUT"
+            echo "workspace_dir=$workspace_dir" >> "$GITHUB_OUTPUT"
+          fi
+
+  contracts:
+    name: Fmt, Clippy, Test, Build
+    runs-on: ubuntu-latest
+    needs: detect
+    if: ${{ needs.detect.outputs.has_workspace == 'true' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ needs.detect.outputs.workspace_dir }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32v1-none
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ needs.detect.outputs.workspace_dir }}/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: cargo test --workspace --all-targets --all-features
+
+      - name: Build release Wasm artifacts
+        run: cargo build --workspace --target wasm32v1-none --release
+
+  no-contracts:
+    name: No Soroban workspace present
+    runs-on: ubuntu-latest
+    needs: detect
+    if: ${{ needs.detect.outputs.has_workspace != 'true' }}
+
+    steps:
+      - name: Skip cleanly
+        run: echo "No Rust/Soroban contract workspace is committed yet under contracts/ or soroban/."
