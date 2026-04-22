@@ -77,4 +77,8 @@ jobs:
         run: npm test --if-present
 
       - name: Build
+        env:
+          # Non-placeholder string so lib/env.ts validation passes in CI.
+          # Real project IDs are set in hosting/deployment secrets, not here.
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ci-build-placeholder' }}
         run: npm run build --if-present

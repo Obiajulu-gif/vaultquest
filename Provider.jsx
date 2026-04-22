@@ -14,12 +14,13 @@ import {
   QueryClientProvider,
   QueryClient,
 } from "@tanstack/react-query";
+import { env } from "@/lib/env";
 
 const config = getDefaultConfig({
-  appName: 'My Avalanche Dapp',
-  projectId: 'YOUR_PROJECT_ID',
+  appName: 'VaultQuest',
+  projectId: env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
   chains: [avalancheFuji, avalanche],
-  ssr: true, // If your dApp uses server side rendering (SSR)
+  ssr: true,
 });
 
 const queryClient = new QueryClient();

@@ -1,0 +1,46 @@
+name: Config Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: config-guard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  placeholder-check:
+    name: Check for placeholder secrets in source
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Fail on literal YOUR_PROJECT_ID in source files
+        run: |
+          set -euo pipefail
+          # env.ts references the string in validation logic; exclude it.
+          if grep -r \
+               --include="*.js" --include="*.jsx" \
+               --include="*.ts" --include="*.tsx" \
+               --exclude-dir=node_modules \
+               --exclude-dir=.next \
+               --exclude-dir=dist \
+               --exclude-dir=build \
+               --exclude='env.ts' \
+               "YOUR_PROJECT_ID" .; then
+            echo ""
+            echo "ERROR: Literal placeholder 'YOUR_PROJECT_ID' found in source files."
+            echo "Set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID in your .env.local (locally)"
+            echo "or in the repository's CI/hosting secrets (for deployed environments)."
+            echo "See docs/env-inventory.md."
+            exit 1
+          fi
+          echo "No placeholder secrets detected."
