@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import correlation from "./middleware/correlation.js";
 import { LedgerService } from "./services/ledger.js";
 import { actionsRoutes } from "./routes/actions.js";
+import { internalRoutes } from "./routes/internal.js";
 import { AppError } from "./errors.js";
 
 export type AppDeps = {
@@ -19,6 +20,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
 
   app.get("/health", async () => ({ ok: true }));
   app.register(actionsRoutes(svc));
+  app.register(internalRoutes(svc, deps.internalSecret));
 
   app.setErrorHandler((err, _req, reply) => {
     if (err instanceof AppError) {
