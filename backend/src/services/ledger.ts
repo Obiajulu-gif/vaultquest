@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client";
 import { ERROR_CODES } from "../constants.js";
 import { AppError } from "../errors.js";
@@ -188,5 +189,16 @@ export class LedgerService {
       });
       return { matched: true };
     });
+  }
+
+  async scrubWallet(walletAddress: string): Promise<{ scrubbed: number }> {
+    const result = await this.prisma.actionLedger.updateMany({
+      where: { walletAddress, redactedAt: null },
+      data: {
+        actionPayload: Prisma.DbNull as unknown as never,
+        redactedAt: new Date()
+      }
+    });
+    return { scrubbed: result.count };
   }
 }

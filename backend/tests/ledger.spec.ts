@@ -259,3 +259,29 @@ describe("LedgerService.reconcileEvent", () => {
     expect(row?.status).toBe("confirmed");
   });
 });
+
+describe("LedgerService.scrubWallet", () => {
+  let db: TestDb;
+  let svc: LedgerService;
+
+  beforeAll(async () => { db = await startTestDb(); svc = new LedgerService(db.prisma); });
+  afterAll(async () => { await db.stop(); });
+  beforeEach(async () => { await resetDb(db.prisma); });
+
+  it("nulls action_payload and sets redacted_at for a wallet", async () => {
+    const w = "GREDACT";
+    const a = await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: "r1" }));
+    const other = await svc.createAction(makeIntentInput({ walletAddress: "GOTHER", idempotencyKey: "r2" }));
+
+    const result = await svc.scrubWallet(w);
+    expect(result.scrubbed).toBe(1);
+
+    const scrubbed = await db.prisma.actionLedger.findUnique({ where: { id: a.id } });
+    expect(scrubbed?.actionPayload).toBeNull();
+    expect(scrubbed?.redactedAt).not.toBeNull();
+
+    const untouched = await db.prisma.actionLedger.findUnique({ where: { id: other.id } });
+    expect(untouched?.actionPayload).not.toBeNull();
+    expect(untouched?.redactedAt).toBeNull();
+  });
+});

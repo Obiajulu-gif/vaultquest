@@ -29,7 +29,7 @@ model ActionLedger {
   idempotencyKey    String       @unique @map("idempotency_key")
   walletAddress     String       @map("wallet_address")
   actionType        ActionType   @map("action_type")
-  actionPayload     Json         @map("action_payload")
+  actionPayload     Json?        @map("action_payload")
   status            ActionStatus @default(pending)
   txHash            String?      @map("tx_hash")
   sorobanEventId    String?      @map("soroban_event_id")
