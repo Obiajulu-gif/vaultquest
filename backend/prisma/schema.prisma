@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ActionType {
+  deposit
+  withdraw
+  create_vault
+  claim
+  select_winner
+}
+
+enum ActionStatus {
+  pending
+  submitted
+  confirmed
+  failed
+  reverted
+  orphaned
+}
+
+model ActionLedger {
+  id                String       @id @default(uuid()) @db.Uuid
+  idempotencyKey    String       @unique @map("idempotency_key")
+  walletAddress     String       @map("wallet_address")
+  actionType        ActionType   @map("action_type")
+  actionPayload     Json         @map("action_payload")
+  status            ActionStatus @default(pending)
+  txHash            String?      @map("tx_hash")
+  sorobanEventId    String?      @map("soroban_event_id")
+  correlationId     String       @default(uuid()) @map("correlation_id") @db.Uuid
+  errorCode         String?      @map("error_code")
+  errorDetail       String?      @map("error_detail")
+  retryCount        Int          @default(0) @map("retry_count")
+  redactedAt        DateTime?    @map("redacted_at")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  submittedAt       DateTime?    @map("submitted_at")
+  confirmedAt       DateTime?    @map("confirmed_at")
+
+  @@index([walletAddress, createdAt(sort: Desc)])
+  @@index([txHash])
+  @@index([status, updatedAt])
+  @@map("action_ledger")
+}
+
+model PendingEvent {
+  txHash          String    @id @map("tx_hash")
+  sorobanEventId  String    @map("soroban_event_id")
+  eventPayload    Json      @map("event_payload")
+  statusHint      String    @map("status_hint")
+  receivedAt      DateTime  @default(now()) @map("received_at")
+  consumedAt      DateTime? @map("consumed_at")
+
+  @@map("pending_events")
+}
