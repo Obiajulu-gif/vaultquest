@@ -191,6 +191,11 @@ export class LedgerService {
     });
   }
 
+  async findByIdempotencyKey(key: string): Promise<ActionRecord | null> {
+    const row = await this.prisma.actionLedger.findUnique({ where: { idempotencyKey: key } });
+    return (row as unknown as ActionRecord) ?? null;
+  }
+
   async scrubWallet(walletAddress: string): Promise<{ scrubbed: number }> {
     const result = await this.prisma.actionLedger.updateMany({
       where: { walletAddress, redactedAt: null },

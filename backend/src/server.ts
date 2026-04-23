@@ -1,13 +1,13 @@
 import { buildApp } from "./app.js";
+import { env } from "./env.js";
+import { getPrisma } from "./db.js";
 
-const app = buildApp();
-const port = Number(process.env.PORT ?? 3001);
+const app = buildApp({ prisma: getPrisma(env.DATABASE_URL), internalSecret: env.INTERNAL_SERVICE_SECRET });
 
 app
-  .listen({ port, host: "0.0.0.0" })
+  .listen({ port: env.PORT, host: "0.0.0.0" })
   .then((addr) => {
-    // eslint-disable-next-line no-console
-    console.log(`listening on ${addr}`);
+    app.log.info({ addr }, "listening");
   })
   .catch((err) => {
     // eslint-disable-next-line no-console
