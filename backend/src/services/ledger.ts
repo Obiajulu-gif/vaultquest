@@ -51,4 +51,49 @@ export class LedgerService {
     });
     return created as unknown as ActionRecord;
   }
+
+  async attachTxHash(id: string, txHash: string): Promise<ActionRecord> {
+    return this.prisma.$transaction(async (tx) => {
+      const row = await tx.actionLedger.findUnique({ where: { id } });
+      if (!row) throw AppError.notFound(`action ${id} not found`);
+
+      if (row.status !== "pending") {
+        throw AppError.conflict(
+          ERROR_CODES.ILLEGAL_TRANSITION,
+          `cannot attach tx_hash to action in status ${row.status}`
+        );
+      }
+
+      const pending = await tx.pendingEvent.findUnique({ where: { txHash } });
+
+      if (pending) {
+        await tx.pendingEvent.update({
+          where: { txHash },
+          data: { consumedAt: new Date() }
+        });
+        const confirmed = await tx.actionLedger.update({
+          where: { id },
+          data: {
+            status: pending.statusHint === "reverted" ? "reverted" : "confirmed",
+            txHash,
+            submittedAt: new Date(),
+            confirmedAt: new Date(),
+            sorobanEventId: pending.sorobanEventId,
+            errorCode: pending.statusHint === "reverted" ? ERROR_CODES.REVERTED_ON_CHAIN : null
+          }
+        });
+        return confirmed as unknown as ActionRecord;
+      }
+
+      const updated = await tx.actionLedger.update({
+        where: { id },
+        data: {
+          status: "submitted",
+          txHash,
+          submittedAt: new Date()
+        }
+      });
+      return updated as unknown as ActionRecord;
+    });
+  }
 }
