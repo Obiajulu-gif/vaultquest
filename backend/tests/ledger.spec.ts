@@ -176,7 +176,7 @@ describe("LedgerService.getAction + listActions", () => {
     await svc.cancelAction(a.id, "WALLET_REJECTED");
     const list = await svc.listActions({ walletAddress: w, status: "failed", limit: 10 });
     expect(list.items).toHaveLength(1);
-    expect(list.items[0].status).toBe("failed");
+    expect(list.items[0]?.status).toBe("failed");
   });
 
   it("paginates with cursor", async () => {

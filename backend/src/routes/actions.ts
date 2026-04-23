@@ -88,4 +88,12 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         next_cursor: result.nextCursor
       };
     });
+
+    app.delete("/actions", async (req) => {
+      const wallet = (req.query as Record<string, string | undefined>).wallet;
+      if (!wallet || wallet.length === 0) {
+        return { scrubbed: 0 };
+      }
+      return svc.scrubWallet(wallet);
+    });
   };

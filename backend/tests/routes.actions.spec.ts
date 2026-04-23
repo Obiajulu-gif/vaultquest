@@ -137,4 +137,21 @@ describe("public /actions routes", () => {
     expect(list.statusCode).toBe(200);
     expect(list.json().items).toHaveLength(2);
   });
+
+  it("DELETE /actions?wallet=G... scrubs payload", async () => {
+    const key = randomUUID();
+    const create = await app.inject({
+      method: "POST", url: "/actions",
+      headers: { "idempotency-key": key, "content-type": "application/json" },
+      payload: { wallet_address: "GSCRUB", action_type: "deposit", action_payload: { secret: "hidden" } }
+    });
+    const id = create.json().id;
+    const del = await app.inject({ method: "DELETE", url: "/actions?wallet=GSCRUB" });
+    expect(del.statusCode).toBe(200);
+    expect(del.json().scrubbed).toBe(1);
+
+    const get = await app.inject({ method: "GET", url: `/actions/${id}` });
+    expect(get.json().action_payload).toBeNull();
+    expect(get.json().redacted_at).not.toBeNull();
+  });
 });

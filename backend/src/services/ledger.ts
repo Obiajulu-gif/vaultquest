@@ -60,7 +60,7 @@ export class LedgerService {
         idempotencyKey: input.idempotencyKey,
         walletAddress: input.walletAddress,
         actionType: input.actionType,
-        actionPayload: input.actionPayload
+        actionPayload: input.actionPayload as object
       }
     });
     return created as unknown as ActionRecord;
