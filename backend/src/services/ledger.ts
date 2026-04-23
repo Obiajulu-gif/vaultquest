@@ -2,6 +2,19 @@ import type { PrismaClient } from "@prisma/client";
 import { ERROR_CODES } from "../constants.js";
 import { AppError } from "../errors.js";
 import type { IntentInput, ActionRecord } from "../types.js";
+import type { ActionStatus } from "../constants.js";
+
+export type ListActionsParams = {
+  walletAddress: string;
+  status?: ActionStatus;
+  limit: number;
+  cursor?: string | null;
+};
+
+export type ListActionsResult = {
+  items: ActionRecord[];
+  nextCursor: string | null;
+};
 
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
@@ -95,5 +108,45 @@ export class LedgerService {
       });
       return updated as unknown as ActionRecord;
     });
+  }
+
+  async cancelAction(id: string, errorCode: string, errorDetail?: string): Promise<ActionRecord> {
+    const row = await this.prisma.actionLedger.findUnique({ where: { id } });
+    if (!row) throw AppError.notFound(`action ${id} not found`);
+
+    if (row.status !== "pending") {
+      throw AppError.conflict(
+        ERROR_CODES.ILLEGAL_TRANSITION,
+        `cannot cancel action in status ${row.status}`
+      );
+    }
+
+    const updated = await this.prisma.actionLedger.update({
+      where: { id },
+      data: { status: "failed", errorCode, errorDetail: errorDetail ?? null }
+    });
+    return updated as unknown as ActionRecord;
+  }
+
+  async getAction(id: string): Promise<ActionRecord | null> {
+    const row = await this.prisma.actionLedger.findUnique({ where: { id } });
+    return row ? (row as unknown as ActionRecord) : null;
+  }
+
+  async listActions(params: ListActionsParams): Promise<ListActionsResult> {
+    const { walletAddress, status, limit, cursor } = params;
+
+    const rows = await this.prisma.actionLedger.findMany({
+      where: { walletAddress, ...(status !== undefined && { status }) },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      ...(cursor != null && { cursor: { id: cursor }, skip: 1 })
+    });
+
+    const hasMore = rows.length > limit;
+    const items = hasMore ? rows.slice(0, limit) : rows;
+    const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
+
+    return { items: items as unknown as ActionRecord[], nextCursor };
   }
 }

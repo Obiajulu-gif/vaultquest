@@ -115,3 +115,81 @@ describe("LedgerService.attachTxHash", () => {
     expect(consumed?.consumedAt).not.toBeNull();
   });
 });
+
+describe("LedgerService.cancelAction", () => {
+  let db: TestDb;
+  let svc: LedgerService;
+
+  beforeAll(async () => { db = await startTestDb(); svc = new LedgerService(db.prisma); });
+  afterAll(async () => { await db.stop(); });
+  beforeEach(async () => { await resetDb(db.prisma); });
+
+  it("transitions pending -> failed", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    const cancelled = await svc.cancelAction(created.id, "WALLET_REJECTED", "user closed modal");
+    expect(cancelled.status).toBe("failed");
+    expect(cancelled.errorCode).toBe("WALLET_REJECTED");
+    expect(cancelled.errorDetail).toBe("user closed modal");
+  });
+
+  it("rejects cancel on submitted", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    await svc.attachTxHash(created.id, "tx_1");
+    await expect(svc.cancelAction(created.id, "WALLET_REJECTED"))
+      .rejects.toMatchObject({ code: "ILLEGAL_TRANSITION" });
+  });
+});
+
+describe("LedgerService.getAction + listActions", () => {
+  let db: TestDb;
+  let svc: LedgerService;
+
+  beforeAll(async () => { db = await startTestDb(); svc = new LedgerService(db.prisma); });
+  afterAll(async () => { await db.stop(); });
+  beforeEach(async () => { await resetDb(db.prisma); });
+
+  it("gets action by id", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    const found = await svc.getAction(created.id);
+    expect(found?.id).toBe(created.id);
+  });
+
+  it("returns null on missing id", async () => {
+    const found = await svc.getAction("11111111-1111-1111-1111-111111111111");
+    expect(found).toBeNull();
+  });
+
+  it("lists actions by wallet in desc order", async () => {
+    const w = "GWALLET1";
+    const a = await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: "k1" }));
+    await new Promise((r) => setTimeout(r, 5));
+    const b = await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: "k2" }));
+    const list = await svc.listActions({ walletAddress: w, limit: 10 });
+    expect(list.items.map((i) => i.id)).toEqual([b.id, a.id]);
+    expect(list.nextCursor).toBeNull();
+  });
+
+  it("filters list by status", async () => {
+    const w = "GWALLET2";
+    const a = await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: "k3" }));
+    await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: "k4" }));
+    await svc.cancelAction(a.id, "WALLET_REJECTED");
+    const list = await svc.listActions({ walletAddress: w, status: "failed", limit: 10 });
+    expect(list.items).toHaveLength(1);
+    expect(list.items[0].status).toBe("failed");
+  });
+
+  it("paginates with cursor", async () => {
+    const w = "GWALLET3";
+    for (let i = 0; i < 3; i++) {
+      await svc.createAction(makeIntentInput({ walletAddress: w, idempotencyKey: `p${i}` }));
+      await new Promise((r) => setTimeout(r, 5));
+    }
+    const first = await svc.listActions({ walletAddress: w, limit: 2 });
+    expect(first.items).toHaveLength(2);
+    expect(first.nextCursor).not.toBeNull();
+    const second = await svc.listActions({ walletAddress: w, limit: 2, cursor: first.nextCursor! });
+    expect(second.items).toHaveLength(1);
+    expect(second.nextCursor).toBeNull();
+  });
+});
