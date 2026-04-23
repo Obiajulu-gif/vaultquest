@@ -38,3 +38,15 @@ error message if the variable is missing or is still the literal placeholder
 literal string `YOUR_PROJECT_ID` in a JS/TS source file. This prevents the old
 placeholder from silently sneaking back into the codebase.
 
+## Backend (issue #34 — action ledger)
+
+These are consumed by `backend/src/env.ts`.
+
+| Variable | Purpose | Required? |
+|---|---|---|
+| `DATABASE_URL` | Postgres connection string | Yes |
+| `INTERNAL_SERVICE_SECRET` | Shared secret between event indexer (#13) and `/internal/reconcile` | Yes |
+| `ORPHAN_TTL_MINUTES` | Minutes after which `submitted` rows with no event are orphaned | Default 10 |
+| `LOG_LEVEL` | Pino log level | Default `info` |
+| `PORT` | HTTP port | Default 3001 |
+
