@@ -149,4 +149,44 @@ export class LedgerService {
 
     return { items: items as unknown as ActionRecord[], nextCursor };
   }
+
+  async reconcileEvent(input: {
+    txHash: string;
+    sorobanEventId: string;
+    eventPayload: unknown;
+    statusHint: "confirmed" | "reverted";
+  }): Promise<{ matched: boolean }> {
+    return this.prisma.$transaction(async (tx) => {
+      const row = await tx.actionLedger.findFirst({ where: { txHash: input.txHash } });
+
+      if (!row) {
+        await tx.pendingEvent.upsert({
+          where: { txHash: input.txHash },
+          create: {
+            txHash: input.txHash,
+            sorobanEventId: input.sorobanEventId,
+            eventPayload: input.eventPayload as object,
+            statusHint: input.statusHint
+          },
+          update: {}
+        });
+        return { matched: false };
+      }
+
+      if (row.status === "confirmed" || row.status === "reverted") {
+        return { matched: true };
+      }
+
+      await tx.actionLedger.update({
+        where: { id: row.id },
+        data: {
+          status: input.statusHint === "reverted" ? "reverted" : "confirmed",
+          sorobanEventId: input.sorobanEventId,
+          confirmedAt: new Date(),
+          errorCode: input.statusHint === "reverted" ? ERROR_CODES.REVERTED_ON_CHAIN : null
+        }
+      });
+      return { matched: true };
+    });
+  }
 }

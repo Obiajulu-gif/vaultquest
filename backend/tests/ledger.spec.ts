@@ -193,3 +193,69 @@ describe("LedgerService.getAction + listActions", () => {
     expect(second.nextCursor).toBeNull();
   });
 });
+
+describe("LedgerService.reconcileEvent", () => {
+  let db: TestDb;
+  let svc: LedgerService;
+
+  beforeAll(async () => { db = await startTestDb(); svc = new LedgerService(db.prisma); });
+  afterAll(async () => { await db.stop(); });
+  beforeEach(async () => { await resetDb(db.prisma); });
+
+  it("confirms a submitted action", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    await svc.attachTxHash(created.id, "tx_confirm_1");
+    const result = await svc.reconcileEvent({
+      txHash: "tx_confirm_1",
+      sorobanEventId: "evt_1",
+      eventPayload: { amount: "100" },
+      statusHint: "confirmed"
+    });
+    expect(result.matched).toBe(true);
+    const row = await svc.getAction(created.id);
+    expect(row?.status).toBe("confirmed");
+    expect(row?.sorobanEventId).toBe("evt_1");
+    expect(row?.confirmedAt).not.toBeNull();
+  });
+
+  it("marks reverted on revert hint", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    await svc.attachTxHash(created.id, "tx_rev_1");
+    await svc.reconcileEvent({
+      txHash: "tx_rev_1",
+      sorobanEventId: "evt_r",
+      eventPayload: { reason: "oops" },
+      statusHint: "reverted"
+    });
+    const row = await svc.getAction(created.id);
+    expect(row?.status).toBe("reverted");
+    expect(row?.errorCode).toBe("REVERTED_ON_CHAIN");
+  });
+
+  it("parks event when no matching ledger row exists", async () => {
+    const result = await svc.reconcileEvent({
+      txHash: "tx_orphan_event",
+      sorobanEventId: "evt_parked",
+      eventPayload: { ok: true },
+      statusHint: "confirmed"
+    });
+    expect(result.matched).toBe(false);
+    const parked = await db.prisma.pendingEvent.findUnique({ where: { txHash: "tx_orphan_event" } });
+    expect(parked).not.toBeNull();
+  });
+
+  it("is idempotent on duplicate event delivery", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    await svc.attachTxHash(created.id, "tx_dup");
+    const first = await svc.reconcileEvent({
+      txHash: "tx_dup", sorobanEventId: "evt_dup", eventPayload: {}, statusHint: "confirmed"
+    });
+    const second = await svc.reconcileEvent({
+      txHash: "tx_dup", sorobanEventId: "evt_dup", eventPayload: {}, statusHint: "confirmed"
+    });
+    expect(first.matched).toBe(true);
+    expect(second.matched).toBe(true);
+    const row = await svc.getAction(created.id);
+    expect(row?.status).toBe("confirmed");
+  });
+});
