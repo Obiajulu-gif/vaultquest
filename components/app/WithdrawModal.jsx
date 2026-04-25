@@ -6,135 +6,139 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, X, AlertCircle } from "lucide-react";
-import { EthIcon } from "@/components/icons/EthIcon";
+import { X, AlertCircle, Check, Info } from "lucide-react";
 
-export default function WithdrawModal({ isOpen, onClose }) {
-	const [amount, setAmount] = useState("");
-	const [selectedToken, setSelectedToken] = useState("Prize DAI");
-	const availableBalance = "4,330.00 USDC";
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [error, setError] = useState("");
-	const [success, setSuccess] = useState(false);
-
+export default function WithdrawModal({
+	isOpen,
+	onClose,
+	selectedVault,
+	onWithdraw,
+	withdrawalAmount,
+	setWithdrawalAmount,
+	error,
+	success,
+	isPending,
+}) {
 	const handleMax = () => {
-		const maxAmount = availableBalance.split(" ")[0].replace(",", "");
-		setAmount(maxAmount);
+		if (selectedVault && selectedVault.balance) {
+			setWithdrawalAmount(selectedVault.balance.toString());
+		}
 	};
 
-	const handleWithdraw = () => {
-		// Validate amount
-		if (
-			!amount ||
-			isNaN(Number.parseFloat(amount)) ||
-			Number.parseFloat(amount) <= 0
-		) {
-			setError("Please enter a valid amount");
-			return;
-		}
-
-		const maxAmount = Number.parseFloat(
-			availableBalance.split(" ")[0].replace(",", "")
-		);
-		if (Number.parseFloat(amount) > maxAmount) {
-			setError("Amount exceeds available balance");
-			return;
-		}
-
-		setError("");
-		setIsProcessing(true);
-
-		// Simulate processing
-		setTimeout(() => {
-			setIsProcessing(false);
-			setSuccess(true);
-
-			// Close modal after success
-			setTimeout(() => {
-				onClose();
-			}, 1500);
-		}, 1000);
-	};
+	if (!isOpen || !selectedVault) return null;
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
-			<DialogContent className="bg-[#1A0808]/90 backdrop-blur-sm border border-red-900/20 text-white sm:max-w-[425px] shadow-lg rounded-xl">
-				<DialogHeader className="flex flex-row items-center justify-between">
-					<DialogTitle>Withdraw</DialogTitle>
-					<button onClick={onClose} className="text-gray-400 hover:text-white">
-						<X className="h-4 w-4" />
-					</button>
+			<DialogContent className="bg-[#1A0808] border border-red-900/30 max-w-md">
+				<DialogHeader className="border-b border-red-900/10 pb-4">
+					<div className="flex items-start justify-between">
+						<div>
+							<DialogTitle className="text-2xl font-bold">
+								Withdraw from {selectedVault?.name || "Vault"}
+							</DialogTitle>
+							<p className="text-sm text-gray-400 mt-1">
+								Claim your principal + interest
+							</p>
+						</div>
+						<DialogClose asChild>
+							<button className="rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
+								<X className="h-4 w-4" />
+								<span className="sr-only">Close</span>
+							</button>
+						</DialogClose>
+					</div>
 				</DialogHeader>
 
-				<div className="py-4">
-					<div className="space-y-4">
+				<div className="space-y-6 py-4">
+					{/* Balance Information */}
+					<div className="space-y-3">
+						<div className="bg-[#2A0A0A]/50 rounded-lg p-4 border border-red-900/10">
+							<p className="text-xs text-gray-400 mb-2 font-medium">Your Balance</p>
+							<p className="text-2xl font-bold">
+								{selectedVault?.balance?.toFixed(4) || "0"}{" "}
+								<span className="text-sm text-gray-400 font-normal">{selectedVault?.balanceToken}</span>
+							</p>
+							<p className="text-xs text-gray-500 mt-2">
+								Ready to withdraw
+							</p>
+						</div>
+					</div>
+
+					{/* Amount Input Section */}
+					<div className="space-y-2">
+						<label className="block text-sm font-medium text-gray-300">
+							Withdrawal Amount
+						</label>
 						<div className="relative">
-							<button className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-sm">
-								<EthIcon className="w-5 h-5" />
-								{selectedToken}
-								<ChevronDown className="h-4 w-4" />
-							</button>
 							<Input
-								type="text"
-								value={amount}
-								onChange={(e) => setAmount(e.target.value)}
-								className="pl-32 pr-16 h-12 bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20 text-right rounded-lg focus:border-red-500/50 focus:ring-1 focus:ring-red-500/30"
-								placeholder="0.00"
+								type="number"
+								value={withdrawalAmount}
+								onChange={(e) => setWithdrawalAmount(e.target.value)}
+								placeholder="Enter amount"
+								className="bg-[#2A0A0A]/70 border-red-900/20 text-white pr-20"
+								disabled={isPending}
 							/>
 							<button
 								onClick={handleMax}
-								className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-red-500 hover:text-red-400"
+								className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
+								disabled={isPending}
 							>
-								Max
+								MAX
 							</button>
 						</div>
+						<p className="text-xs text-gray-500">
+							Available: {selectedVault?.balance?.toFixed(4) || "0"} {selectedVault?.balanceToken}
+						</p>
+					</div>
 
-						<div className="text-sm text-gray-400">
-							Available: {availableBalance}
+					{/* Info Alert */}
+					<div className="bg-green-900/20 border border-green-500/20 rounded-lg p-3 flex gap-3">
+						<Info className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
+						<div className="text-xs text-green-300/80">
+							Withdrawing will unstake your funds. Any pending interest will be credited.
 						</div>
 					</div>
-				</div>
 
-				{error && (
-					<div className="flex items-center gap-2 text-red-500 text-sm bg-red-900/10 p-3 rounded-lg border border-red-900/30">
-						<AlertCircle size={16} />
-						{error}
-					</div>
-				)}
+					{/* Error message */}
+					{error && (
+						<div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 flex gap-3">
+							<AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
+							<p className="text-red-300 text-sm">{error}</p>
+						</div>
+					)}
 
-				{success && (
-					<div className="bg-green-900/20 text-green-500 p-4 rounded-lg text-sm border border-green-900/30 flex items-center gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							className="lucide lucide-check-circle"
+					{/* Success message */}
+					{success && (
+						<div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3 flex gap-3">
+							<Check className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />
+							<p className="text-green-300 text-sm">Withdrawal successful! 🎉</p>
+						</div>
+					)}
+
+					{/* Action Buttons */}
+					<div className="space-y-2 pt-2">
+						<Button
+							onClick={onWithdraw}
+							disabled={isPending || !withdrawalAmount || Number(withdrawalAmount) <= 0}
+							className="w-full bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg"
 						>
-							<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-							<polyline points="22 4 12 14.01 9 11.01" />
-						</svg>
-						Withdrawal successful! Your funds have been sent to your wallet.
-					</div>
-				)}
+							{isPending ? "Processing..." : "Confirm Withdrawal"}
+						</Button>
 
-				<Button
-					className={`w-full bg-red-600 hover:bg-red-700 transition-all duration-300 py-3 rounded-lg font-medium ${
-						isProcessing ? "animate-pulse" : ""
-					}`}
-					onClick={handleWithdraw}
-					disabled={isProcessing || success}
-				>
-					{isProcessing ? "Processing..." : "Withdraw"}
-				</Button>
+						<Button
+							onClick={onClose}
+							variant="outline"
+							disabled={isPending}
+							className="w-full border-red-900/30 text-gray-300 hover:bg-red-900/20 hover:text-red-300 transition-all"
+						>
+							Cancel
+						</Button>
+					</div>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
