@@ -5,6 +5,7 @@ import {
   attachTxBody,
   cancelBody,
   listQuery,
+  dashboardQuery,
   idempotencyKeySchema
 } from "../schemas/actions.js";
 import { AppError } from "../errors.js";
@@ -95,5 +96,29 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         return { scrubbed: 0 };
       }
       return svc.scrubWallet(wallet);
+    });
+
+    /**
+     * GET /dashboard/summary?wallet=...&stale_after_ms=...
+     *
+     * Frontend dashboard rollup (#14): per-status counts, in-flight tx hashes
+     * the wallet should keep polling, freshness flag, and the latest
+     * activity / confirmation timestamps. Lets the dashboard render without
+     * issuing several /actions queries and ad-hoc client-side joins.
+     */
+    app.get("/dashboard/summary", async (req) => {
+      const q = dashboardQuery.parse(req.query);
+      const summary = await svc.getDashboardSummary(q.wallet, {
+        staleAfterMs: q.stale_after_ms
+      });
+      return {
+        wallet_address: summary.walletAddress,
+        total_actions: summary.totalActions,
+        by_status: summary.byStatus,
+        pending_tx_hashes: summary.pendingTxHashes,
+        is_stale: summary.isStale,
+        latest_activity_at: summary.latestActivityAt,
+        latest_confirmed_at: summary.latestConfirmedAt
+      };
     });
   };
