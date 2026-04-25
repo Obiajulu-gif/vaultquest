@@ -4,10 +4,10 @@ import { useState, useEffect, useMemo } from "react";
 import AppNav from "@/components/app/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Users, TrendingUp, Wallet } from "lucide-react";
+import { Search, Plus, Users, TrendingUp, Wallet, Coins, Clock, ChevronRight } from "lucide-react";
 import CreateVaultModal from "@/components/app/CreateVaultModal";
 import DepositModal from "@/components/app/DepositModal";
-import WithdrawalModal from "@/components/app/WithdrawalModal";
+import WithdrawModal from "@/components/app/WithdrawModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RecentDeposits from "@/components/RecentDeposits";
 
@@ -22,7 +22,6 @@ import {
 } from "wagmi";
 import { vaultData } from "@/app/contract/Vault";
 import { parseEther, formatEther } from "viem";
-import Image from "next/image";
 
 export default function VaultPage() {
 	const { address } = useAccount();
@@ -261,12 +260,12 @@ export default function VaultPage() {
 			return {
 				id: vaultId,
 				name: `Vault ${vaultId}`,
-				network: "AVAX",
+				network: "Native",
 				apy: 0,
 				tvl: 0,
-				tvlToken: "AVAX",
+				tvlToken: "Native",
 				balance: 0,
-				balanceToken: "AVAX",
+				balanceToken: "Native",
 				users: 0,
 				token: "0x0000000000000000000000000000000000000000",
 				timeLeft: 0,
@@ -287,7 +286,7 @@ export default function VaultPage() {
 		] = vaultData.result || [];
 
 		const isETH = token === "0x0000000000000000000000000000000000000000";
-		const tokenSymbol = isETH ? "AVAX" : "TOKEN";
+		const tokenSymbol = isETH ? "Native" : "TOKEN";
 		const formattedTVL = totalDeposits ? Number(formatEther(totalDeposits)) : 0;
 		const annualRate = interestRate ? Number(interestRate) / 100 : 0;
 
@@ -448,97 +447,124 @@ export default function VaultPage() {
 
 	// Skeleton loader
 	const VaultSkeleton = () => (
-		<div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 border border-red-900/20 shadow-lg animate-pulse">
-			<div className="flex items-center justify-between mb-4">
-				<div className="flex items-center gap-2">
-					<div className="w-10 h-10 rounded-full bg-gray-700"></div>
+		<div className="bg-zinc-900/60 backdrop-blur-sm rounded-2xl p-6 border border-white/5 shadow-xl animate-pulse">
+			<div className="flex items-center justify-between mb-6">
+				<div className="flex items-center gap-3">
+					<div className="w-12 h-12 rounded-full bg-zinc-800"></div>
 					<div>
-						<div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
-						<div className="h-3 bg-gray-700 rounded w-16"></div>
+						<div className="h-5 bg-zinc-800 rounded w-32 mb-2"></div>
+						<div className="h-3 bg-zinc-800 rounded w-20"></div>
 					</div>
 				</div>
-				<div className="h-6 bg-gray-700 rounded w-16"></div>
+				<div className="h-7 bg-zinc-800 rounded w-20"></div>
 			</div>
-			<div className="space-y-3 mb-4">
-				<div className="flex justify-between">
-					<div className="h-3 bg-gray-700 rounded w-12"></div>
-					<div className="h-3 bg-gray-700 rounded w-20"></div>
-				</div>
-				<div className="flex justify-between">
-					<div className="h-3 bg-gray-700 rounded w-12"></div>
-					<div className="h-3 bg-gray-700 rounded w-16"></div>
-				</div>
-				<div className="flex justify-between">
-					<div className="h-3 bg-gray-700 rounded w-16"></div>
-					<div className="h-3 bg-gray-700 rounded w-12"></div>
-				</div>
+			<div className="grid grid-cols-2 gap-4 mb-6">
+				<div className="h-16 bg-zinc-800/50 rounded-xl"></div>
+				<div className="h-16 bg-zinc-800/50 rounded-xl"></div>
+				<div className="h-16 bg-zinc-800/50 rounded-xl"></div>
+				<div className="h-16 bg-zinc-800/50 rounded-xl"></div>
 			</div>
-			<div className="h-10 bg-gray-700 rounded"></div>
+			<div className="flex gap-3">
+				<div className="h-12 flex-1 bg-zinc-800 rounded-xl"></div>
+				<div className="h-12 flex-1 bg-zinc-800/50 rounded-xl"></div>
+			</div>
 		</div>
 	);
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-[#1A0505] to-[#2D0A0A] text-white">
+		<div className="min-h-screen bg-zinc-950 text-white selection:bg-indigo-500/30">
 			<AppNav />
-			<main className="container mx-auto px-4 py-8 lg:px-6">
-				<div className="max-w-7xl mx-auto">
+			<main className="container mx-auto px-4 py-8 lg:px-8 xl:max-w-7xl">
+				<div className="flex flex-col gap-8">
 					{/* Header Section */}
-					<div className="mb-8">
-						<div className="flex flex-col gap-2 mb-6">
-							<h1 className="text-4xl md:text-5xl font-bold tracking-tight">Prize Vaults</h1>
-							<p className="text-gray-400 text-lg">Deposit, earn, and win with our curated vault collection</p>
+					<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+						<div className="flex flex-col gap-2">
+							<h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">Prize Vaults</h1>
+							<p className="text-zinc-400 text-lg">Deposit, earn yield, and win weekly prizes.</p>
+						</div>
+					</div>
+
+					{/* Key Stats - Hero Section */}
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<div className="bg-zinc-900/50 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl">
+							<div className="text-sm text-zinc-400 font-medium mb-3 flex items-center gap-2">
+								<Wallet size={16} /> Total Value Locked
+							</div>
+							<div className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+								{filteredVaults
+									.reduce((sum, vault) => sum + vault.tvl, 0)
+									.toFixed(2)}{" "}
+								<span className="text-lg text-zinc-500 font-normal">Tokens</span>
+							</div>
 						</div>
 
-						{/* Key Stats - Hero Section */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-							<div className="bg-gradient-to-br from-red-900/20 to-red-900/10 backdrop-blur-sm rounded-lg p-5 border border-red-900/30 shadow-lg hover:shadow-xl transition-shadow">
-								<div className="text-sm text-gray-400 font-medium mb-2">Total Value Locked</div>
-								<div className="text-2xl md:text-3xl font-bold">
-									{filteredVaults
-										.reduce((sum, vault) => sum + vault.tvl, 0)
-										.toFixed(2)}{" "}
-									<span className="text-sm text-gray-400 font-normal">AVAX</span>
-								</div>
-								<div className="text-xs text-gray-500 mt-2">Across {filteredVaults.length} active vaults</div>
+						<div className="bg-zinc-900/50 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl">
+							<div className="text-sm text-zinc-400 font-medium mb-3 flex items-center gap-2">
+								<Users size={16} /> Active Users
 							</div>
-
-							<div className="bg-gradient-to-br from-red-900/20 to-red-900/10 backdrop-blur-sm rounded-lg p-5 border border-red-900/30 shadow-lg hover:shadow-xl transition-shadow">
-								<div className="text-sm text-gray-400 font-medium mb-2">Active Users</div>
-								<div className="text-2xl md:text-3xl font-bold">
-									{filteredVaults.reduce((sum, vault) => sum + vault.users, 0)}
-									<span className="text-sm text-gray-400 font-normal ml-1">users</span>
-								</div>
-								<div className="text-xs text-gray-500 mt-2">Total depositors</div>
+							<div className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+								{filteredVaults.reduce((sum, vault) => sum + vault.users, 0)}
 							</div>
+						</div>
 
-							<div className="bg-gradient-to-br from-red-900/20 to-red-900/10 backdrop-blur-sm rounded-lg p-5 border border-red-900/30 shadow-lg hover:shadow-xl transition-shadow">
-								<div className="text-sm text-gray-400 font-medium mb-2">Average Yield</div>
-								<div className="text-2xl md:text-3xl font-bold">
-									{filteredVaults.length > 0
-										? (
-											filteredVaults.reduce(
-												(sum, vault) => sum + vault.apy,
-												0
-											) / filteredVaults.length
-										).toFixed(1)
-										: 0}
-									<span className="text-sm text-gray-400 font-normal ml-1">%</span>
-								</div>
-								<div className="text-xs text-gray-500 mt-2">APY across vaults</div>
+						<div className="bg-zinc-900/50 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl">
+							<div className="text-sm text-zinc-400 font-medium mb-3 flex items-center gap-2">
+								<TrendingUp size={16} /> Average Yield
+							</div>
+							<div className="text-3xl md:text-4xl font-bold tracking-tight text-emerald-400">
+								{filteredVaults.length > 0
+									? (
+										filteredVaults.reduce(
+											(sum, vault) => sum + vault.apy,
+											0
+										) / filteredVaults.length
+									).toFixed(1)
+									: 0}
+								<span className="text-lg text-emerald-500/70 font-normal ml-1">%</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Controls Section */}
-					<div className="bg-[#1A0808]/40 backdrop-blur-sm rounded-xl border border-red-900/20 p-4 md:p-6 shadow-lg mb-8">
-						<div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-							<div>
-								<h2 className="text-lg font-semibold mb-3 md:mb-0">Explore Vaults</h2>
-								<p className="text-sm text-gray-400 hidden md:block">Filter and search to find the perfect vault for you</p>
+					<div className="bg-zinc-900/30 backdrop-blur-sm rounded-2xl border border-white/5 p-4 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+						{/* Search and Filter Controls */}
+						<div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
+							<div className="relative w-full sm:w-64">
+								<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
+								<Input
+									placeholder="Search vaults..."
+									className="pl-10 bg-zinc-900/80 border-white/10 text-white rounded-xl focus:ring-1 focus:ring-white/20 transition-all h-11"
+									value={searchQuery}
+									onChange={(e) => setSearchQuery(e.target.value)}
+								/>
 							</div>
+							<div className="bg-zinc-900/80 rounded-xl p-1 border border-white/5 inline-flex h-11">
+								<button
+									className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeFilter === "all" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-400 hover:text-white hover:bg-white/5"
+										}`}
+									onClick={() => setActiveFilter("all")}
+								>
+									All Vaults
+								</button>
+								<button
+									className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${activeFilter === "Native"
+										? "bg-white text-zinc-900 shadow-sm"
+										: "text-zinc-400 hover:text-white hover:bg-white/5"
+										}`}
+									onClick={() => setActiveFilter("Native")}
+								>
+									Native Only
+								</button>
+							</div>
+						</div>
+						
+						<div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+							<span className="text-xs text-zinc-500 hidden lg:block">
+								Showing {filteredVaults.length} vaults
+							</span>
 							{address === adminWallet && (
 								<Button
-									className="bg-red-600 hover:bg-red-700 w-full md:w-auto flex items-center justify-center gap-2 shadow-lg"
+									className="bg-white hover:bg-zinc-200 text-zinc-900 w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl h-11 px-5 font-semibold"
 									onClick={() => setIsCreateModalOpen(true)}
 								>
 									<Plus size={18} />
@@ -546,116 +572,68 @@ export default function VaultPage() {
 								</Button>
 							)}
 						</div>
-
-						{/* Search and Filter Controls */}
-						<div className="flex flex-col md:flex-row gap-3">
-							<div className="flex-1 relative">
-								<Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-								<Input
-									placeholder="Search by vault name or token..."
-									className="pl-10 bg-[#2A0A0A]/70 backdrop-blur-sm border-red-900/20 w-full text-sm md:text-base"
-									value={searchQuery}
-									onChange={(e) => setSearchQuery(e.target.value)}
-								/>
-							</div>
-							<div className="bg-[#2A0A0A]/80 backdrop-blur-sm rounded-lg p-1 border border-red-900/10 inline-flex md:w-auto gap-1">
-								<button
-									className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeFilter === "all" ? "bg-red-600 text-white shadow-md" : "text-gray-400 hover:text-white hover:bg-red-900/20"
-										}`}
-									onClick={() => setActiveFilter("all")}
-								>
-									All
-								</button>
-								<button
-									className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${activeFilter === "AVAX"
-										? "bg-red-600 text-white shadow-md"
-										: "text-gray-400 hover:text-white hover:bg-red-900/20"
-										}`}
-									onClick={() => setActiveFilter("AVAX")}
-								>
-									AVAX Only
-								</button>
-							</div>
-						</div>
-
-						<div className="mt-4 text-xs text-gray-500 flex flex-col md:flex-row justify-between gap-2">
-							<span>Showing {filteredVaults.length} of {totalVaults ? Number(totalVaults) : 0} vaults</span>
-							<span>Vault Manager: {adminWallet ? `${adminWallet.slice(0, 6)}...${adminWallet.slice(-4)}` : "Loading..."}</span>
-						</div>
 					</div>
 
 					{/* Vault Cards Grid */}
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 						{isLoadingVaults ? (
 							Array.from({ length: 6 }, (_, i) => <VaultSkeleton key={i} />)
 						) : filteredVaults.length > 0 ? (
 							filteredVaults.map((vault) => (
 								<div
 									key={vault.id}
-									className="bg-[#1A0808]/60 backdrop-blur-sm rounded-xl border border-red-900/20 shadow-lg hover:shadow-2xl hover:border-red-500/40 transition-all duration-300 overflow-hidden group"
+									className="bg-zinc-900/60 backdrop-blur-sm rounded-2xl border border-white/5 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden flex flex-col"
 								>
 									{/* Card Header */}
-									<div className="p-5 md:p-6 border-b border-red-900/10">
+									<div className="p-6 pb-4 border-b border-white/5 relative">
 										<div className="flex items-start justify-between mb-4">
 											<div className="flex items-center gap-3">
-												<Image
-													src="/images/avax.png"
-													height={40}
-													width={40}
-													alt="avax icon"
-													className="w-10 h-10 rounded-full bg-red-900/20 p-1.5"
-												/>
+												<div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center border border-white/10 shadow-inner">
+													<Coins className="w-6 h-6 text-zinc-300" />
+												</div>
 												<div className="min-w-0 flex-1">
-													<h3 className="font-semibold text-base md:text-lg truncate">{vault.name}</h3>
-													<p className="text-xs text-gray-500">Vault ID: {vault.id}</p>
+													<h3 className="font-bold text-lg text-white truncate tracking-tight">{vault.name}</h3>
+													<p className="text-xs text-zinc-500 font-mono mt-0.5">VAULT #{vault.id}</p>
 												</div>
 											</div>
-											<div className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${vault.active ? "bg-green-900/20 text-green-400 border border-green-500/30" : "bg-gray-900/20 text-gray-400 border border-gray-500/30"
+											<div className={`px-3 py-1 rounded-full text-[11px] font-semibold tracking-wide uppercase ${vault.active ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-zinc-800 text-zinc-500 border border-zinc-700"
 												}`}>
-												{vault.active ? "✓ Active" : "Inactive"}
+												{vault.active ? "Active" : "Inactive"}
 											</div>
 										</div>
 
 										{/* APY Highlight */}
-										<div className="inline-block bg-gradient-to-r from-red-600/40 to-red-700/40 px-3 py-2 rounded-lg border border-red-500/30">
-											<div className="text-xs text-gray-300 font-medium">APY</div>
-											<div className="text-lg font-bold text-red-400">{vault.apy}%</div>
+										<div className="flex items-end gap-2 mt-2">
+											<div className="text-3xl font-bold text-white leading-none">{vault.apy}%</div>
+											<div className="text-sm text-emerald-400 font-medium mb-0.5">APY</div>
 										</div>
 									</div>
 
 									{/* Card Body */}
-									<div className="p-5 md:p-6 space-y-4">
-										{/* Metrics Row 1 */}
+									<div className="p-6 space-y-4 flex-1">
 										<div className="grid grid-cols-2 gap-3">
-											<div className="bg-[#2A0A0A]/50 rounded-lg p-3 border border-red-900/10">
-												<div className="text-xs text-gray-400 font-medium flex items-center gap-1 mb-1">
-													<Wallet size={12} /> Total Value
-												</div>
-												<div className="text-sm md:text-base font-semibold">
+											<div className="bg-zinc-800/50 rounded-xl p-3 border border-white/5">
+												<div className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">Total Value</div>
+												<div className="text-base font-medium text-white">
 													{vault.tvl.toFixed(3)}
-													<span className="text-xs text-gray-400 ml-1">{vault.tvlToken}</span>
+													<span className="text-xs text-zinc-500 ml-1">{vault.tvlToken}</span>
 												</div>
 											</div>
-											<div className="bg-[#2A0A0A]/50 rounded-lg p-3 border border-red-900/10">
-												<div className="text-xs text-gray-400 font-medium flex items-center gap-1 mb-1">
-													<Users size={12} /> Participants
-												</div>
-												<div className="text-sm md:text-base font-semibold">{vault.users}</div>
+											<div className="bg-zinc-800/50 rounded-xl p-3 border border-white/5">
+												<div className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">Participants</div>
+												<div className="text-base font-medium text-white">{vault.users}</div>
 											</div>
-										</div>
-
-										{/* Metrics Row 2 */}
-										<div className="grid grid-cols-2 gap-3">
-											<div className="bg-[#2A0A0A]/50 rounded-lg p-3 border border-red-900/10">
-												<div className="text-xs text-gray-400 font-medium mb-1">Your Balance</div>
-												<div className="text-sm md:text-base font-semibold">
+											<div className="bg-zinc-800/50 rounded-xl p-3 border border-white/5">
+												<div className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">Your Balance</div>
+												<div className="text-base font-medium text-white">
 													{vault.balance.toFixed(3)}
-													<span className="text-xs text-gray-400 ml-1">{vault.balanceToken}</span>
+													<span className="text-xs text-zinc-500 ml-1">{vault.balanceToken}</span>
 												</div>
 											</div>
-											<div className="bg-[#2A0A0A]/50 rounded-lg p-3 border border-red-900/10">
-												<div className="text-xs text-gray-400 font-medium mb-1">Time Remaining</div>
-												<div className="text-sm md:text-base font-semibold">
+											<div className="bg-zinc-800/50 rounded-xl p-3 border border-white/5">
+												<div className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">Time Left</div>
+												<div className="text-base font-medium text-white flex items-center gap-1">
+													<Clock className="w-3.5 h-3.5 text-zinc-500" />
 													{vault.timeLeft > 0 ? `${Math.floor(vault.timeLeft / 86400)}d` : "Expired"}
 												</div>
 											</div>
@@ -663,11 +641,11 @@ export default function VaultPage() {
 
 										{/* Winner Badge */}
 										{vaultWinners[vault.id] && (
-											<div className="bg-gradient-to-r from-green-900/30 to-green-900/20 rounded-lg p-3 border border-green-500/30">
-												<div className="text-xs text-green-400 font-semibold flex items-center gap-2 mb-2">
-													🏆 Recent Winner
+											<div className="bg-amber-500/10 rounded-xl p-3 border border-amber-500/20 mt-4">
+												<div className="text-[11px] text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1.5 mb-1">
+													<span>🏆</span> Recent Winner
 												</div>
-												<div className="text-xs text-green-300 font-mono truncate">
+												<div className="text-xs text-amber-200/80 font-mono truncate">
 													{vaultWinners[vault.id].address.slice(0, 8)}...
 													{vaultWinners[vault.id].address.slice(-6)}
 												</div>
@@ -676,18 +654,17 @@ export default function VaultPage() {
 									</div>
 
 									{/* Card Actions */}
-									<div className="p-4 md:p-5 border-t border-red-900/10 bg-[#0F0505]/30 space-y-2">
+									<div className="p-4 bg-zinc-950/50 border-t border-white/5 flex gap-3">
 										<Button
-											className="w-full bg-red-600 hover:bg-red-700 shadow-md hover:shadow-lg transition-all text-sm md:text-base"
+											className="flex-1 bg-white hover:bg-zinc-200 text-zinc-900 font-semibold rounded-xl h-11 transition-all"
 											onClick={() => handleOpenDeposit(vault)}
 											disabled={!vault.active || vault.timeLeft <= 0}
 										>
-											{vault.timeLeft <= 0 ? "Vault Expired" : "Deposit Now"}
+											{vault.timeLeft <= 0 ? "Expired" : "Deposit"}
 										</Button>
 
 										<Button
-											variant="outline"
-											className="w-full border-red-900/30 text-gray-300 hover:bg-red-900/20 hover:text-red-300 transition-all text-sm md:text-base"
+											className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl h-11 transition-all"
 											onClick={() => {
 												setSelectedVault(vault);
 												setVaultId(vault.id);
@@ -695,85 +672,82 @@ export default function VaultPage() {
 											}}
 											disabled={!vault.active || vault.balance <= 0}
 										>
-											Withdraw {vault.balance > 0 ? `(${vault.balance.toFixed(3)})` : ""}
+											Withdraw {vault.balance > 0 ? `(${vault.balance.toFixed(2)})` : ""}
 										</Button>
 									</div>
 								</div>
 							))
 						) : (
-							<div className="col-span-full text-center py-16">
-								<div className="text-gray-400 mb-2">
-									<TrendingUp size={48} className="mx-auto opacity-20 mb-4" />
+							<div className="col-span-full text-center py-20 bg-zinc-900/30 rounded-2xl border border-white/5 border-dashed">
+								<div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+									<Search size={24} className="text-zinc-500" />
 								</div>
-								<p className="text-lg font-medium text-gray-300">
+								<p className="text-xl font-medium text-white mb-2">
 									{totalVaults && Number(totalVaults) > 0
-										? "No vaults match your search"
-										: "No vaults created yet"}
+										? "No vaults match your criteria"
+										: "No vaults available yet"}
 								</p>
-								<p className="text-sm text-gray-500 mt-2">
+								<p className="text-zinc-500 max-w-sm mx-auto">
 									{totalVaults && Number(totalVaults) > 0
-										? "Try adjusting your filters"
-										: "Check back soon for new vaults"}
+										? "Try adjusting your filters or search terms to find what you're looking for."
+										: "Check back later when new vaults are launched."}
 								</p>
 							</div>
 						)}
 					</div>
 
 					{filteredVaults.length > 0 && (
-						<div className="bg-[#1A0808]/40 backdrop-blur-sm rounded-xl border border-red-900/20 p-6 md:p-8 shadow-lg">
-							<h2 className="text-2xl font-bold mb-6">Activity & Insights</h2>
+						<div className="bg-zinc-900/30 backdrop-blur-sm rounded-2xl border border-white/5 p-6 md:p-8 shadow-lg">
+							<h2 className="text-2xl font-bold mb-6 text-white tracking-tight">Activity & Insights</h2>
 							
-							{/* Updated Tabs: added Recent Deposits tab (global) */}
 							<Tabs defaultValue="deposits" className="w-full">
-								<TabsList className="bg-[#2A0A0A]/80 border border-red-900/10 mb-6 w-full justify-start">
-									<TabsTrigger value="deposits" className="text-sm md:text-base">Recent Deposits</TabsTrigger>
-									<TabsTrigger value="stats" className="text-sm md:text-base">Detailed Stats</TabsTrigger>
+								<TabsList className="bg-zinc-900/80 border border-white/5 mb-6 inline-flex p-1 rounded-xl">
+									<TabsTrigger value="deposits" className="text-sm md:text-base rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Recent Deposits</TabsTrigger>
+									<TabsTrigger value="stats" className="text-sm md:text-base rounded-lg data-[state=active]:bg-zinc-800 data-[state=active]:text-white">Detailed Stats</TabsTrigger>
 								</TabsList>
 
-								{/* Recent Deposits (global feed) */}
 								<TabsContent value="deposits">
 									{globalDeposits && globalDeposits.length > 0 ? (
 										<RecentDeposits deposits={globalDeposits} />
 									) : (
-										<div className="text-center py-12 text-gray-400">
+										<div className="text-center py-16 text-zinc-500 bg-zinc-900/30 rounded-xl border border-white/5 border-dashed">
 											<p>No deposits recorded yet</p>
 										</div>
 									)}
 								</TabsContent>
 
-								{/* Vault Statistics */}
 								<TabsContent value="stats">
 									<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-										<div className="bg-gradient-to-br from-red-900/20 to-red-900/10 backdrop-blur-sm rounded-lg p-6 border border-red-900/30 hover:shadow-lg transition-shadow">
-											<h3 className="text-sm font-medium text-gray-400 mb-2">
+										<div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+											<h3 className="text-sm font-medium text-zinc-400 mb-2">
 												Total Value Locked
 											</h3>
-											<div className="text-3xl md:text-4xl font-bold mb-2">
+											<div className="text-3xl md:text-4xl font-bold text-white mb-2">
 												{filteredVaults
 													.reduce((sum, vault) => sum + vault.tvl, 0)
 													.toFixed(2)}
 											</div>
-											<p className="text-xs text-gray-500">
-												AVAX across {filteredVaults.length} active vaults
+											<p className="text-xs text-zinc-500">
+												Tokens across {filteredVaults.length} active vaults
 											</p>
 										</div>
 
-										<div className="bg-gradient-to-br from-blue-900/20 to-blue-900/10 backdrop-blur-sm rounded-lg p-6 border border-blue-900/30 hover:shadow-lg transition-shadow">
-											<h3 className="text-sm font-medium text-gray-400 mb-2">Total Users</h3>
-											<div className="text-3xl md:text-4xl font-bold mb-2">
+										<div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+											<h3 className="text-sm font-medium text-zinc-400 mb-2">Total Users</h3>
+											<div className="text-3xl md:text-4xl font-bold text-white mb-2">
 												{filteredVaults.reduce(
 													(sum, vault) => sum + vault.users,
 													0
 												)}
 											</div>
-											<p className="text-xs text-gray-500">
+											<p className="text-xs text-zinc-500">
 												Active depositors in ecosystem
 											</p>
 										</div>
 
-										<div className="bg-gradient-to-br from-purple-900/20 to-purple-900/10 backdrop-blur-sm rounded-lg p-6 border border-purple-900/30 hover:shadow-lg transition-shadow">
-											<h3 className="text-sm font-medium text-gray-400 mb-2">Average Yield</h3>
-											<div className="text-3xl md:text-4xl font-bold mb-2">
+										<div className="bg-zinc-900/50 backdrop-blur-sm rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors">
+											<h3 className="text-sm font-medium text-zinc-400 mb-2">Average Yield</h3>
+											<div className="text-3xl md:text-4xl font-bold text-emerald-400 mb-2">
 												{filteredVaults.length > 0
 													? (
 														filteredVaults.reduce(
@@ -782,9 +756,9 @@ export default function VaultPage() {
 														) / filteredVaults.length
 													).toFixed(2)
 													: 0}
-												<span className="text-sm text-gray-400 font-normal ml-1">%</span>
+												<span className="text-lg text-emerald-500/70 font-normal ml-1">%</span>
 											</div>
-											<p className="text-xs text-gray-500">
+											<p className="text-xs text-zinc-500">
 												Weighted average APY
 											</p>
 										</div>
@@ -822,7 +796,7 @@ export default function VaultPage() {
 				success={success}
 				isPending={isPending || isConfirming}
 			/>
-			<WithdrawalModal
+			<WithdrawModal
 				isOpen={isWithdrawalModalOpen}
 				onClose={() => setIsWithdrawalModalOpen(false)}
 				selectedVault={selectedVault}

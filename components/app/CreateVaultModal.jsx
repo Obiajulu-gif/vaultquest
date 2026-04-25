@@ -104,17 +104,17 @@ export default function CreateVaultModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="bg-[#1A0808] border border-red-900/30 max-w-md max-h-screen overflow-y-auto">
-				<DialogHeader className="border-b border-red-900/10 pb-4">
+			<DialogContent className="bg-zinc-950 border border-white/10 max-w-md max-h-screen overflow-y-auto rounded-2xl shadow-2xl">
+				<DialogHeader className="border-b border-white/5 pb-4">
 					<div className="flex items-start justify-between">
 						<div>
-							<DialogTitle className="text-2xl font-bold">Create New Vault</DialogTitle>
-							<p className="text-sm text-gray-400 mt-1">
+							<DialogTitle className="text-2xl font-bold text-white tracking-tight">Create New Vault</DialogTitle>
+							<p className="text-sm text-zinc-400 mt-1">
 								Configure a new prize-linked savings vault
 							</p>
 						</div>
-						<button onClick={handleClose} className="rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100">
-							<X className="h-4 w-4" />
+						<button onClick={handleClose} className="rounded-full p-1.5 opacity-70 transition-all hover:bg-white/10 hover:opacity-100">
+							<X className="h-4 w-4 text-white" />
 							<span className="sr-only">Close</span>
 						</button>
 					</div>
@@ -123,12 +123,12 @@ export default function CreateVaultModal({
 				<div className="py-6 space-y-5">
 					{/* Vault Name Input */}
 					<div>
-						<label className="text-sm font-medium text-gray-300 mb-2 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Vault Name
 						</label>
 						<Input
 							placeholder="e.g. Summer Savings"
-							className="bg-[#2A0A0A]/70 border-red-900/20 text-white focus:border-red-500/50"
+							className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12"
 							value={vaultName}
 							onChange={(e) => {
 								setVaultName(e.target.value);
@@ -136,14 +136,14 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						/>
-						<p className="text-xs text-gray-500 mt-1.5">
+						<p className="text-xs text-zinc-500 mt-1.5">
 							A memorable name for your vault
 						</p>
 					</div>
 
 					{/* Token Selection */}
 					<div>
-						<label className="text-sm font-medium text-gray-300 mb-2 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Asset Token
 						</label>
 						<Select
@@ -154,25 +154,25 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						>
-							<SelectTrigger className="bg-[#2A0A0A]/70 border-red-900/20 text-white focus:border-red-500/50">
+							<SelectTrigger className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12">
 								<SelectValue placeholder="Select Token" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20">
+							<SelectContent className="bg-zinc-950 border border-white/10 rounded-xl">
 								{tokenOptions.map((token) => (
-									<SelectItem key={token.value} value={token.value}>
+									<SelectItem key={token.value} value={token.value} className="focus:bg-zinc-800">
 										<span className="text-white">{token.label}</span>
 									</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
-						<p className="text-xs text-gray-500 mt-1.5">
+						<p className="text-xs text-zinc-500 mt-1.5">
 							Selected: {tokenOptions.find(t => t.value === vaultToken)?.label || "Select a token"}
 						</p>
 					</div>
 
 					{/* Duration Selection */}
 					<div>
-						<label className="text-sm font-medium text-gray-300 mb-2 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Lock Duration
 						</label>
 						<Select
@@ -183,25 +183,25 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						>
-							<SelectTrigger className="bg-[#2A0A0A]/70 border-red-900/20 text-white focus:border-red-500/50">
+							<SelectTrigger className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12">
 								<SelectValue placeholder="Select Duration" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20">
+							<SelectContent className="bg-zinc-950 border border-white/10 rounded-xl">
 								{durationOptions.map((duration) => (
-									<SelectItem key={duration.value} value={duration.value.toString()}>
+									<SelectItem key={duration.value} value={duration.value.toString()} className="focus:bg-zinc-800">
 										<span className="text-white">{duration.label}</span>
 									</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
-						<p className="text-xs text-gray-500 mt-1.5">
+						<p className="text-xs text-zinc-500 mt-1.5">
 							How long deposits are locked
 						</p>
 					</div>
 
 					{/* Interest Rate Input */}
 					<div>
-						<label className="text-sm font-medium text-gray-300 mb-2 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Annual Yield Rate (%)
 						</label>
 						<Input
@@ -210,7 +210,7 @@ export default function CreateVaultModal({
 							min="0.01"
 							max="100"
 							step="0.01"
-							className="bg-[#2A0A0A]/70 border-red-900/20 text-white focus:border-red-500/50"
+							className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12"
 							value={vaultInterestRate}
 							onChange={(e) => {
 								setVaultInterestRate(Number(e.target.value));
@@ -218,29 +218,29 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						/>
-						<p className="text-xs text-gray-500 mt-1.5">
+						<p className="text-xs text-zinc-500 mt-1.5">
 							APY paid after lock period completes
 						</p>
 					</div>
 
 					{/* Configuration Summary */}
-					<div className="bg-[#2A0A0A]/50 rounded-lg p-4 border border-red-900/10 space-y-2">
-						<p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Vault Configuration</p>
+					<div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5 space-y-2">
+						<p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Vault Configuration</p>
 						<div className="space-y-2 text-sm">
 							<div className="flex justify-between">
-								<span className="text-gray-500">Vault Name:</span>
+								<span className="text-zinc-500">Vault Name:</span>
 								<span className="text-white font-medium">{vaultName || "—"}</span>
 							</div>
 							<div className="flex justify-between">
-								<span className="text-gray-500">Token:</span>
+								<span className="text-zinc-500">Token:</span>
 								<span className="text-white font-medium">{tokenOptions.find(t => t.value === vaultToken)?.label || "—"}</span>
 							</div>
 							<div className="flex justify-between">
-								<span className="text-gray-500">Duration:</span>
+								<span className="text-zinc-500">Duration:</span>
 								<span className="text-white font-medium">{durationOptions.find(d => d.value.toString() === vaultDuration.toString())?.label || "—"}</span>
 							</div>
 							<div className="flex justify-between">
-								<span className="text-gray-500">APY:</span>
+								<span className="text-zinc-500">APY:</span>
 								<span className="text-white font-medium">{vaultInterestRate}%</span>
 							</div>
 						</div>
@@ -248,33 +248,33 @@ export default function CreateVaultModal({
 
 					{/* Error Display */}
 					{error && (
-						<div className="flex items-center gap-3 bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+						<div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
 							<AlertCircle size={18} className="text-red-400 flex-shrink-0" />
-							<p className="text-red-300 text-sm">{error}</p>
+							<p className="text-red-200 text-sm">{error}</p>
 						</div>
 					)}
 
 					{/* Success Display */}
 					{success && (
-						<div className="flex items-center gap-3 bg-green-900/20 border border-green-500/30 rounded-lg p-3">
-							<Check size={18} className="text-green-400 flex-shrink-0" />
-							<p className="text-green-300 text-sm">Vault created successfully!</p>
+						<div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+							<Check size={18} className="text-emerald-400 flex-shrink-0" />
+							<p className="text-emerald-200 text-sm">Vault created successfully!</p>
 						</div>
 					)}
 
 					{/* Transaction Status */}
 					{isPending && (
-						<div className="flex items-center gap-3 bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+						<div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
 							<div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-							<p className="text-blue-300 text-sm">Transaction pending...</p>
+							<p className="text-blue-200 text-sm">Transaction pending...</p>
 						</div>
 					)}
 				</div>
 
 				{/* Action Buttons */}
-				<div className="space-y-2 pt-4 border-t border-red-900/10">
+				<div className="space-y-3 pt-4 border-t border-white/5">
 					<Button
-						className="w-full bg-red-600 hover:bg-red-700 font-medium shadow-lg mt-4"
+						className="w-full bg-white hover:bg-zinc-200 text-zinc-900 font-bold h-12 rounded-xl transition-all disabled:bg-zinc-800 disabled:text-zinc-500 mt-4"
 						onClick={handleCreate}
 						disabled={isPending || success}
 					>
@@ -282,8 +282,8 @@ export default function CreateVaultModal({
 					</Button>
 
 					<Button
-						variant="outline"
-						className="w-full border-red-900/30 text-gray-300 hover:bg-red-900/20 hover:text-red-300"
+						variant="ghost"
+						className="w-full text-zinc-400 hover:text-white hover:bg-zinc-900 h-12 rounded-xl transition-all"
 						onClick={handleClose}
 						disabled={isPending}
 					>
