@@ -1,11 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { Menu, X } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { AvaxConnectButton } from "../../AvaxConnectButton";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import WalletConnectionButton from "./WalletConnectionButton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Droplets,
+  Home,
+  TrendingUp,
+  User,
+  Wallet,
+  LogOut,
+  ChevronDown,
+  Settings,
+  HelpCircle,
+} from "lucide-react";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
+import { WALLET_COPY, STELLAR_COPY } from "@/lib/wallets";
 
 export default function AppNav() {
   const pathname = usePathname();
@@ -90,7 +109,11 @@ export default function AppNav() {
 
           {/* Desktop Connect Button */}
           <div className="hidden md:block">
-            <AvaxConnectButton />
+            <WalletConnectionButton 
+              showAddress={true}
+              showNetwork={true}
+              size="sm"
+            />
           </div>
 
           {/* Mobile Menu Button */}
@@ -142,7 +165,11 @@ export default function AppNav() {
                 Account
               </Link>
               <div className="pt-3 border-t border-blue-900/20">
-                <AvaxConnectButton />
+                <WalletConnectionButton 
+                  showAddress={false}
+                  showNetwork={false}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>

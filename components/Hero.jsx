@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import LandingWalletConnect from "@/components/app/LandingWalletConnect"
 
 export default function Hero() {
   return (
@@ -19,20 +20,14 @@ export default function Hero() {
             />
           </div>
           <div className="absolute bottom-40 left-60 top-20 animate-float">
-            <Image
-              src="/aval.png"
-              alt="Stellar"
-              width={120}
-              height={120}
-            />
+            <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <span className="text-4xl">⭐</span>
+            </div>
           </div>
           <div className="absolute bottom-40 right-60 top-20 animate-float">
-            <Image
-              src="/avall.png"
-              alt="Stellar"
-              width={50}
-              height={50}
-            />
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+              <span className="text-2xl">🌟</span>
+            </div>
           </div>
           <div className="absolute top-80 left-96 animate-float-medium">
             <Image
@@ -49,12 +44,9 @@ export default function Hero() {
          <div className="md:hidden">
            {/* Top Left Stellar */}
            <div className="absolute top-20 left-4 opacity-80">
-             <Image
-               src="/aval.png"
-               alt="Stellar"
-               width={80}
-               height={80}
-             />
+             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+               <span className="text-3xl">⭐</span>
+             </div>
            </div>
            {/* Top Right Geometric Shape */}
            <div className="absolute top-16 right-4 opacity-40">
@@ -71,12 +63,9 @@ export default function Hero() {
            </div>
            {/* Right Edge Small Stellar */}
            <div className="absolute top-2/3 -right-4">
-             <Image
-               src="/avall.png"
-               alt="Stellar"
-               width={40}
-               height={40}
-             />
+             <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+               <span className="text-xl">🌟</span>
+             </div>
            </div>
            {/* Bottom Left Large Diamond */}
            <div className="absolute bottom-32 left-0 opacity-60">
@@ -114,24 +103,36 @@ export default function Hero() {
       </div>
 
       {/* Main Content */}
-      <div className="text-center max-w-4xl mx-auto relative z-10">
+      <div className="max-w-4xl mx-auto relative z-10">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-7xl font-bold leading-tight mb-6">
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Drip Wave
+            </span>
+            <br className="hidden md:block" />
+            <span className="text-2xl md:text-5xl text-white">
+              Stellar Savings Protocol
+            </span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Save, earn, and win on the Stellar network. Join thousands of users earning competitive yields with prize-linked savings.
+          </p>
+        </div>
         
-
-        <h1 className="text-3xl md:text-7xl font-bold leading-tight mb-6">
-          The #1 Protocol <br className="hidden md:block" />
-          <span className="md:hidden">for Real Adoption</span>
-          <span className="hidden md:inline">for Real Adoption</span>
-        </h1>
+        {/* Wallet Connection Component */}
+        <div className="max-w-2xl mx-auto">
+          <LandingWalletConnect />
+        </div>
         
-        <p className="text-sm md:text-lg text-gray-300 mb-8 max-w-md md:max-w-none mx-auto">
-          The permissionless protocol 86,000 people are using to win by saving
-        </p>
-        
-        <Link href="/app">
-          <Button className="bg-red-600 hover:bg-red-700 text-sm md:text-lg py-3 px-6 md:py-6 md:px-8 rounded-full w-full md:w-auto max-w-xs md:max-w-none">
-            Launch DApp
-          </Button>
-        </Link>
+        {/* Additional CTA for connected users */}
+        <div className="text-center mt-8">
+          <Link href="/app/pools">
+            <Button variant="ghost" className="text-gray-400 hover:text-white">
+              Explore Pools →
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   )
