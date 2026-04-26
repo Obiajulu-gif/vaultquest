@@ -44,45 +44,43 @@ export default function AppNav() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-14 md:h-16">
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <Image
-              src="/images/logo.png"
-              alt="VaultQuest Logo"
-              width={32}
-              height={32}
-              className="rounded-full md:w-10 md:h-10"
-            />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-full flex items-center justify-center">
+              <svg className="w-5 h-5 md:w-7 md:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
             <span className="text-lg md:text-xl font-bold">
-              Vault<span className="text-red-600">Quest</span>
+              Drip <span className="text-blue-400">Wave</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             <Link
+              href="/app/pools"
+              className={`transition-colors ${
+                pathname === "/app/pools"
+                  ? "text-blue-400"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              Pools
+            </Link>
+            <Link
               href="/app/prizes"
               className={`transition-colors ${
                 pathname === "/app/prizes"
-                  ? "text-red-500"
+                  ? "text-blue-400"
                   : "text-gray-300 hover:text-white"
               }`}
             >
               Prizes
             </Link>
             <Link
-              href="/app/vault"
-              className={`transition-colors ${
-                pathname === "/app/vault"
-                  ? "text-red-500"
-                  : "text-gray-300 hover:text-white"
-              }`}
-            >
-              Vault
-            </Link>
-            <Link
               href="/app/account"
               className={`transition-colors ${
                 pathname === "/app/account"
-                  ? "text-red-500"
+                  ? "text-blue-400"
                   : "text-gray-300 hover:text-white"
               }`}
             >
@@ -108,42 +106,42 @@ export default function AppNav() {
 
         {/* Mobile Navigation Menu */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-4 right-4 mt-2 backdrop-blur-sm bg-[#1A0505]/95 rounded-xl border border-red-900/20 shadow-xl z-50">
+          <div className="md:hidden absolute top-full left-4 right-4 mt-2 backdrop-blur-sm bg-[#1A0505]/95 rounded-xl border border-blue-900/20 shadow-xl z-50">
             <div className="flex flex-col p-4 space-y-3">
+              <Link
+                href="/app/pools"
+                className={`py-3 px-4 rounded-lg transition-colors text-base ${
+                  pathname === "/app/pools"
+                    ? "text-blue-400 bg-blue-600/10"
+                    : "text-gray-300 hover:text-white hover:bg-blue-600/10"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Pools
+              </Link>
               <Link
                 href="/app/prizes"
                 className={`py-3 px-4 rounded-lg transition-colors text-base ${
                   pathname === "/app/prizes"
-                    ? "text-red-500 bg-red-600/10"
-                    : "text-gray-300 hover:text-white hover:bg-red-600/10"
+                    ? "text-blue-400 bg-blue-600/10"
+                    : "text-gray-300 hover:text-white hover:bg-blue-600/10"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Prizes
               </Link>
               <Link
-                href="/app/vault"
-                className={`py-3 px-4 rounded-lg transition-colors text-base ${
-                  pathname === "/app/vault"
-                    ? "text-red-500 bg-red-600/10"
-                    : "text-gray-300 hover:text-white hover:bg-red-600/10"
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Vault
-              </Link>
-              <Link
                 href="/app/account"
                 className={`py-3 px-4 rounded-lg transition-colors text-base ${
                   pathname === "/app/account"
-                    ? "text-red-500 bg-red-600/10"
-                    : "text-gray-300 hover:text-white hover:bg-red-600/10"
+                    ? "text-blue-400 bg-blue-600/10"
+                    : "text-gray-300 hover:text-white hover:bg-blue-600/10"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Account
               </Link>
-              <div className="pt-3 border-t border-red-900/20">
+              <div className="pt-3 border-t border-blue-900/20">
                 <AvaxConnectButton />
               </div>
             </div>
