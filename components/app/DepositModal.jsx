@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { X, AlertCircle, Check, Droplets, Wallet } from "lucide-react";
+import { X, AlertCircle, Check, Droplets, Wallet, TrendingUp, RefreshCw, Clock } from "lucide-react";
 import { createTransaction } from "@/lib/api";
+import { useDripWave } from "@/hooks/useDripWave";
+import { ErrorStateDisplay, InlineError, LoadingState, InsufficientBalance } from "@/components/ui/error-state";
+import { errorManager } from "@/lib/error-handling";
 
 export default function DepositModal({
   isOpen,
@@ -19,17 +22,80 @@ export default function DepositModal({
   selectedPool,
 }) {
   const { address, isConnected } = useAccount();
+  const { 
+    validateAction, 
+    checkPrerequisites, 
+    errorState, 
+    dismissError,
+    clearErrors 
+  } = useDripWave();
   
   // Form state
   const [depositAmount, setDepositAmount] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [userBalance] = useState("1000.0"); // Mock balance for validation
+
+  // Check prerequisites when modal opens
+  useEffect(() => {
+    if (isOpen && selectedPool) {
+      const prerequisites = checkPrerequisites('deposit', selectedPool, userBalance);
+      if (!prerequisites.prerequisitesMet) {
+        if (!prerequisites.walletConnected) {
+          errorManager.addError('WALLET_NOT_CONNECTED');
+        }
+        if (!prerequisites.networkSupported) {
+          errorManager.addError('UNSUPPORTED_NETWORK');
+        }
+        if (!prerequisites.sufficientBalance) {
+          errorManager.addError('INSUFFICIENT_BALANCE', { 
+            available: userBalance,
+            required: '0.001'
+          });
+        }
+        if (!prerequisites.poolActive) {
+          errorManager.addError('POOL_NOT_ACTIVE');
+        }
+      }
+    }
+  }, [isOpen, selectedPool, checkPrerequisites, userBalance]);
+
+  // Clear errors when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      clearErrors();
+      setValidationErrors([]);
+      setRetryCount(0);
+    }
+  }, [isOpen, clearErrors]);
 
   const handleDeposit = async () => {
-    if (!isConnected) {
-      setError("Please connect your wallet first");
-      return;
+    // Clear previous errors
+    setError("");
+    setValidationErrors([]);
+    
+    // Validate prerequisites
+    const prerequisites = checkPrerequisites('deposit', selectedPool, userBalance);
+    if (!prerequisites.prerequisitesMet) {
+      if (!prerequisites.walletConnected) {
+        errorManager.addError('WALLET_NOT_CONNECTED');
+        return;
+      }
+      if (!prerequisites.networkSupported) {
+        errorManager.addError('UNSUPPORTED_NETWORK');
+        return;
+      }
+      if (!prerequisites.sufficientBalance) {
+        errorManager.addError('INSUFFICIENT_BALANCE', { 
+          available: userBalance,
+          required: depositAmount || '0.001'
+        });
+        return;
+      }
     }
 
     if (!selectedPool) {
@@ -37,16 +103,24 @@ export default function DepositModal({
       return;
     }
 
-    if (!depositAmount || Number(depositAmount) <= 0) {
-      setError("Please enter a valid amount");
+    // Prepare form data for validation
+    const formData = {
+      poolId: selectedPool.id,
+      amount: depositAmount,
+    };
+
+    // Validate form data
+    const validation = validateAction('deposit', formData, selectedPool, userBalance);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
       return;
     }
 
-    setError("");
     setIsPending(true);
+    setIsRetrying(false);
 
     try {
-      // Create transaction record
+      // Create transaction record with error handling
       const response = await createTransaction(address, "deposit", {
         pool_id: selectedPool.id,
         amount: depositAmount,
@@ -54,17 +128,58 @@ export default function DepositModal({
 
       if (response.success) {
         setSuccess(true);
-        // In a real implementation, you would now initiate the blockchain transaction
+        // Clear any existing errors
+        clearErrors();
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        setError(response.error || "Failed to process deposit");
+        const errorMsg = response.error || "Failed to process deposit";
+        setError(errorMsg);
+        errorManager.addError('TRANSACTION_FAILED', { 
+          error: errorMsg, 
+          action: 'deposit',
+          poolId: selectedPool.id
+        });
       }
     } catch (err) {
-      setError("Failed to process deposit. Please try again.");
+      console.error('Deposit error:', err);
+      
+      // Handle specific error types
+      let errorCode = 'TRANSACTION_FAILED';
+      let errorContext = { action: 'deposit', poolId: selectedPool?.id };
+      
+      if (err.message.includes('network') || err.message.includes('fetch')) {
+        errorCode = 'NETWORK_ERROR';
+      } else if (err.message.includes('timeout')) {
+        errorCode = 'TRANSACTION_TIMEOUT';
+      } else if (err.message.includes('rejected') || err.message.includes('denied')) {
+        errorCode = 'TRANSACTION_REJECTED';
+      } else if (err.message.includes('insufficient')) {
+        errorCode = 'INSUFFICIENT_FUNDS';
+      }
+      
+      errorContext = { ...errorContext, originalError: err.message };
+      errorManager.addError(errorCode, errorContext);
+      setError(err.message || "Failed to process deposit. Please try again.");
     } finally {
       setIsPending(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    if (retryCount >= 3) {
+      setError("Maximum retry attempts reached. Please try again later.");
+      return;
+    }
+    
+    setIsRetrying(true);
+    setRetryCount(prev => prev + 1);
+    
+    try {
+      await handleDeposit();
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -99,6 +214,28 @@ export default function DepositModal({
             </div>
           ) : (
             <>
+              {/* Error State Display */}
+              <ErrorStateDisplay 
+                errorState={errorState}
+                onDismiss={dismissError}
+                onRetry={handleRetry}
+                className="mb-4"
+              />
+
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {validationErrors.map((validationError, index) => (
+                    <InlineError
+                      key={index}
+                      message={validationError}
+                      severity="error"
+                      className="w-full"
+                    />
+                  ))}
+                </div>
+              )}
+
               {/* Pool Info */}
               {selectedPool && (
                 <div className="bg-[#2A0A0A]/50 rounded-lg p-4 mb-4">
@@ -135,22 +272,47 @@ export default function DepositModal({
                   onChange={(e) => {
                     setDepositAmount(e.target.value);
                     setError("");
+                    setValidationErrors([]);
                   }}
                   placeholder="0.00"
-                  className="bg-[#2A0A0A]/70 border-blue-900/20 text-white"
+                  className={`bg-[#2A0A0A]/70 border ${
+                    validationErrors.some(e => e.toLowerCase().includes('amount')) 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}
                   disabled={isPending || success}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Minimum deposit: 0.001 {selectedPool?.token.symbol || "TOKEN"}
-                </p>
+                <div className="flex justify-between items-center mt-1">
+                  <p className="text-xs text-gray-500">
+                    Minimum deposit: 0.001 {selectedPool?.token.symbol || "TOKEN"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Your balance: {userBalance} {selectedPool?.token.symbol || "TOKEN"}
+                  </p>
+                </div>
               </div>
 
-              {/* Error Display */}
+              {/* Insufficient Balance Warning */}
+              {depositAmount && parseFloat(depositAmount) > parseFloat(userBalance) && (
+                <InsufficientBalance
+                  token={selectedPool?.token.symbol || "TOKEN"}
+                  available={userBalance}
+                  required={depositAmount}
+                  onAddFunds={() => {
+                    // Handle add funds action
+                    window.dispatchEvent(new CustomEvent('add_funds'));
+                  }}
+                />
+              )}
+
+              {/* Legacy Error Display (for backwards compatibility) */}
               {error && (
-                <div className="flex items-center gap-2 text-red-500 text-sm mb-4">
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
+                <InlineError
+                  message={error}
+                  severity="error"
+                  onRetry={retryCount < 3 ? handleRetry : undefined}
+                  className="mb-4"
+                />
               )}
 
               {/* Success Display */}
@@ -165,7 +327,26 @@ export default function DepositModal({
               {isPending && (
                 <div className="bg-blue-900/20 text-blue-500 p-3 rounded-md text-sm flex items-center gap-2 mb-4">
                   <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-                  Processing deposit...
+                  {isRetrying ? `Retrying... (Attempt ${retryCount + 1}/3)` : 'Processing deposit...'}
+                </div>
+              )}
+
+              {/* Retry Status */}
+              {retryCount > 0 && !isPending && !success && (
+                <div className="bg-yellow-900/20 text-yellow-400 p-3 rounded-md text-sm flex items-center gap-2 mb-4">
+                  <Clock size={16} />
+                  Retry attempts: {retryCount}/3
+                  {retryCount < 3 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRetry}
+                      className="ml-auto border-yellow-600/50 hover:bg-yellow-600/10"
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Retry
+                    </Button>
+                  )}
                 </div>
               )}
 

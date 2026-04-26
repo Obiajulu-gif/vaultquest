@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AppNav from "@/components/app/AppNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, Users, TrendingUp, Wallet, Droplets, Loader2, Clock, Trophy } from "lucide-react";
+import { Search, Plus, Users, TrendingUp, Wallet, Droplets, Loader2, Clock, Trophy, Filter, RefreshCw, AlertTriangle } from "lucide-react";
 import CreatePoolModal from "@/components/app/CreatePoolModal";
 import DepositModal from "@/components/app/DepositModal";
 import WithdrawModal from "@/components/app/WithdrawModal";

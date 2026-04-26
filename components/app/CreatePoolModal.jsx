@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { X, AlertCircle, Check, Droplets } from "lucide-react";
+import { X, AlertCircle, Check, Droplets, Wallet, Plus, RefreshCw, Clock } from "lucide-react";
+import { createTransaction } from "@/lib/api";
+import { useDripWave } from "@/hooks/useDripWave";
+import { ErrorStateDisplay, InlineError, LoadingState } from "@/components/ui/error-state";
+import { errorManager } from "@/lib/error-handling";
 import {
   Select,
   SelectContent,
@@ -18,23 +23,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createTransaction } from "@/lib/api";
 import { useAccount } from "wagmi";
 
 export default function CreatePoolModal({ isOpen, onClose }) {
   const { address, isConnected } = useAccount();
+  const { 
+    validateAction, 
+    checkPrerequisites, 
+    errorState, 
+    dismissError,
+    clearErrors 
+  } = useDripWave();
   
   // Form state
   const [poolName, setPoolName] = useState("");
   const [poolDescription, setPoolDescription] = useState("");
   const [tokenAddress, setTokenAddress] = useState("0x0000000000000000000000000000000000000000");
   const [duration, setDuration] = useState(30); // days
-  const [interestRate, setInterestRate] = useState(5);
+  const [interestRate, setInterestRate] = useState("5.0"); // percentage
   
   // UI state
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Check prerequisites when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const prerequisites = checkPrerequisites('create_pool');
+      if (!prerequisites.prerequisitesMet) {
+        if (!prerequisites.walletConnected) {
+          errorManager.addError('WALLET_NOT_CONNECTED');
+        }
+        if (!prerequisites.networkSupported) {
+          errorManager.addError('UNSUPPORTED_NETWORK');
+        }
+      }
+    }
+  }, [isOpen, checkPrerequisites]);
+
+  // Clear errors when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      clearErrors();
+      setValidationErrors([]);
+      setRetryCount(0);
+    }
+  }, [isOpen, clearErrors]);
 
   // Token options
   const tokenOptions = [
@@ -59,59 +97,102 @@ export default function CreatePoolModal({ isOpen, onClose }) {
       return;
     }
 
-    // Validate form
-    if (!poolName.trim()) {
-      setError("Please enter a pool name");
-      return;
-    }
-
-    if (!tokenAddress) {
-      setError("Please select a token");
-      return;
-    }
-
-    if (!duration || duration <= 0) {
-      setError("Please select a valid duration");
-      return;
-    }
-
-    if (!interestRate || interestRate <= 0 || interestRate > 100) {
-      setError("Interest rate must be between 0.01% and 100%");
-      return;
-    }
-
     setError("");
+    setValidationErrors([]);
+    
+    const prerequisites = checkPrerequisites('create_pool');
+    if (!prerequisites.prerequisitesMet) {
+      if (!prerequisites.walletConnected) {
+        errorManager.addError('WALLET_NOT_CONNECTED');
+        return;
+      }
+      if (!prerequisites.networkSupported) {
+        errorManager.addError('UNSUPPORTED_NETWORK');
+        return;
+      }
+    }
+
+    const formData = {
+      name: poolName.trim(),
+      description: poolDescription.trim(),
+      tokenAddress,
+      duration,
+      interestRate: parseFloat(interestRate),
+    };
+
+    const validation = validateAction('create_pool', formData);
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      return;
+    }
+
     setIsPending(true);
+    setIsRetrying(false);
 
     try {
-      // Create transaction record
-      const response = await createTransaction(address, "create_pool", {
-        name: poolName,
-        description: poolDescription,
-        token_address: tokenAddress,
-        duration: duration * 24 * 60 * 60, // Convert days to seconds
-        interest_rate: interestRate,
+      const response = await createTransaction(address, "create_vault", {
+        name: formData.name,
+        description: formData.description,
+        token_address: formData.tokenAddress,
+        duration_days: formData.duration,
+        interest_rate: formData.interestRate,
       });
 
       if (response.success) {
         setSuccess(true);
-        // In a real implementation, you would now initiate the blockchain transaction
-        // and update the transaction with the tx_hash
+        clearErrors();
         setTimeout(() => {
           handleClose();
         }, 2000);
       } else {
-        setError(response.error || "Failed to create pool");
+        const errorMsg = response.error || "Failed to create pool";
+        setError(errorMsg);
+        errorManager.addError('TRANSACTION_FAILED', { 
+          error: errorMsg, 
+          action: 'create_pool' 
+        });
       }
     } catch (err) {
-      setError("Failed to create pool. Please try again.");
+      console.error('Create pool error:', err);
+      
+      let errorCode = 'TRANSACTION_FAILED';
+      let errorContext = { action: 'create_pool' };
+      
+      if (err.message.includes('network') || err.message.includes('fetch')) {
+        errorCode = 'NETWORK_ERROR';
+      } else if (err.message.includes('timeout')) {
+        errorCode = 'TRANSACTION_TIMEOUT';
+      } else if (err.message.includes('rejected') || err.message.includes('denied')) {
+        errorCode = 'TRANSACTION_REJECTED';
+      } else if (err.message.includes('insufficient')) {
+        errorCode = 'INSUFFICIENT_FUNDS';
+      }
+      
+      errorContext = { ...errorContext, originalError: err.message };
+      errorManager.addError(errorCode, errorContext);
+      setError(err.message || "Failed to create pool. Please try again.");
     } finally {
       setIsPending(false);
     }
   };
 
+  const handleRetry = async () => {
+    if (retryCount >= 3) {
+      setError("Maximum retry attempts reached. Please try again later.");
+      return;
+    }
+    
+    setIsRetrying(true);
+    setRetryCount(prev => prev + 1);
+    
+    try {
+      await handleCreate();
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   const handleClose = () => {
-    // Reset form
     setPoolName("");
     setPoolDescription("");
     setTokenAddress("0x0000000000000000000000000000000000000000");
@@ -138,163 +219,246 @@ export default function CreatePoolModal({ isOpen, onClose }) {
           </button>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="py-4">
           {!isConnected ? (
             <div className="text-center py-8">
-              <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+              <Wallet className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
               <p className="text-yellow-400">Connect your wallet to create a pool</p>
             </div>
           ) : (
             <>
+              {/* Error State Display */}
+              <ErrorStateDisplay 
+                errorState={errorState}
+                onDismiss={dismissError}
+                onRetry={handleRetry}
+                className="mb-4"
+              />
+
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="mb-4 space-y-2">
+                  {validationErrors.map((validationError, index) => (
+                    <InlineError
+                      key={index}
+                      message={validationError}
+                      severity="error"
+                      className="w-full"
+                    />
+                  ))}
+                </div>
+              )}
+
               {/* Pool Name */}
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">
+              <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-2">
                   Pool Name *
                 </label>
                 <Input
-                  placeholder="e.g. Summer Savings Pool"
-                  className="bg-[#2A0A0A]/80 backdrop-blur-sm border-blue-900/20"
+                  type="text"
                   value={poolName}
                   onChange={(e) => {
                     setPoolName(e.target.value);
                     setError("");
+                    setValidationErrors([]);
                   }}
+                  placeholder="Enter pool name"
+                  className={`bg-[#2A0A0A]/70 border ${
+                    validationErrors.some(e => e.toLowerCase().includes('name')) 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}
                   disabled={isPending || success}
                 />
+                {poolName && (poolName.length < 1 || poolName.length > 100) && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Pool name must be between 1 and 100 characters
+                  </p>
+                )}
               </div>
 
               {/* Description */}
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">
+              <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-2">
                   Description
                 </label>
                 <Textarea
-                  placeholder="Describe your savings pool..."
-                  className="bg-[#2A0A0A]/80 backdrop-blur-sm border-blue-900/20 min-h-[80px]"
                   value={poolDescription}
                   onChange={(e) => {
                     setPoolDescription(e.target.value);
                     setError("");
+                    setValidationErrors([]);
                   }}
+                  placeholder="Describe your pool (optional)"
+                  className={`bg-[#2A0A0A]/70 border ${
+                    poolDescription.length > 500 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}
+                  rows={3}
                   disabled={isPending || success}
                 />
+                {poolDescription && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {poolDescription.length}/500 characters
+                  </p>
+                )}
               </div>
 
               {/* Token Selection */}
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">Token *</label>
-                <Select
-                  value={tokenAddress}
-                  onValueChange={(value) => {
-                    setTokenAddress(value);
-                    setError("");
-                  }}
-                  disabled={isPending || success}
-                >
-                  <SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-blue-900/20">
-                    <SelectValue placeholder="Select Token" />
+              <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-2">
+                  Token *
+                </label>
+                <Select value={tokenAddress} onValueChange={setTokenAddress}>
+                  <SelectTrigger className={`bg-[#2A0A0A]/70 border ${
+                    validationErrors.some(e => e.toLowerCase().includes('token')) 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}>
+                    <SelectValue placeholder="Select token" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1A0808] border border-blue-900/20 text-gray-400">
+                  <SelectContent className="bg-[#1A0808] border-blue-900/20">
                     {tokenOptions.map((token) => (
-                      <SelectItem key={token.value} value={token.value}>
-                        {token.label}
+                      <SelectItem
+                        key={token.value}
+                        value={token.value}
+                        className="text-white hover:bg-blue-600/10"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{token.label}</span>
+                          <span className="text-gray-400">({token.symbol})</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Selected: {tokenOptions.find(t => t.value === tokenAddress)?.label || "None"}
-                </p>
               </div>
 
-              {/* Duration Selection */}
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">
+              {/* Duration */}
+              <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-2">
                   Duration *
                 </label>
-                <Select
-                  value={duration.toString()}
-                  onValueChange={(value) => {
-                    setDuration(Number(value));
-                    setError("");
-                  }}
-                  disabled={isPending || success}
-                >
-                  <SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-blue-900/20">
-                    <SelectValue placeholder="Select Duration" />
+                <Select value={duration.toString()} onValueChange={(value) => setDuration(parseInt(value))}>
+                  <SelectTrigger className={`bg-[#2A0A0A]/70 border ${
+                    validationErrors.some(e => e.toLowerCase().includes('duration')) 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}>
+                    <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1A0808] border border-blue-900/20 text-gray-400">
-                    {durationOptions.map((duration) => (
-                      <SelectItem key={duration.value} value={duration.value.toString()}>
-                        {duration.label}
+                  <SelectContent className="bg-[#1A0808] border-blue-900/20">
+                    {durationOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value.toString()}
+                        className="text-white hover:bg-blue-600/10"
+                      >
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Pool duration determines when prizes are awarded
-                </p>
               </div>
 
               {/* Interest Rate */}
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">
-                  Annual Interest Rate (%) *
+              <div className="mb-4">
+                <label className="block text-sm text-gray-300 mb-2">
+                  Interest Rate (%) *
                 </label>
                 <Input
                   type="number"
-                  placeholder="e.g. 5"
-                  min="0.01"
-                  max="100"
-                  step="0.01"
-                  className="bg-[#2A0A0A]/80 backdrop-blur-sm border-blue-900/20"
                   value={interestRate}
                   onChange={(e) => {
-                    setInterestRate(Number(e.target.value));
+                    setInterestRate(e.target.value);
                     setError("");
+                    setValidationErrors([]);
                   }}
+                  placeholder="5.0"
+                  step="0.1"
+                  min="0.1"
+                  max="100"
+                  className={`bg-[#2A0A0A]/70 border ${
+                    validationErrors.some(e => e.toLowerCase().includes('interest')) 
+                      ? 'border-red-500/50' 
+                      : 'border-blue-900/20'
+                  } text-white`}
                   disabled={isPending || success}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Interest rate that will be paid to participants
-                </p>
+                {interestRate && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Interest rate must be between 0.01% and 100%
+                  </p>
+                )}
               </div>
 
-              {/* Error Display */}
+              {/* Legacy Error Display (for backwards compatibility) */}
               {error && (
-                <div className="flex items-center gap-2 text-red-500 text-sm">
-                  <AlertCircle size={16} />
-                  {error}
-                </div>
+                <InlineError
+                  message={error}
+                  severity="error"
+                  onRetry={retryCount < 3 ? handleRetry : undefined}
+                  className="mb-4"
+                />
               )}
 
               {/* Success Display */}
               {success && (
-                <div className="bg-green-900/20 text-green-500 p-3 rounded-md text-sm flex items-center gap-2">
+                <div className="bg-green-900/20 text-green-500 p-3 rounded-md text-sm flex items-center gap-2 mb-4">
                   <Check size={16} />
-                  Pool created successfully!
+                  Pool created successfully! 🎉
                 </div>
               )}
 
               {/* Transaction Status */}
               {isPending && (
-                <div className="bg-blue-900/20 text-blue-500 p-3 rounded-md text-sm flex items-center gap-2">
+                <div className="bg-blue-900/20 text-blue-500 p-3 rounded-md text-sm flex items-center gap-2 mb-4">
                   <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-                  Creating pool...
+                  {isRetrying ? `Retrying... (Attempt ${retryCount + 1}/3)` : 'Creating pool...'}
                 </div>
               )}
 
-              {/* Form Summary */}
-              <div className="bg-[#2A0A0A]/50 p-3 rounded-md text-xs text-gray-400 space-y-1">
-                <div>Name: {poolName || "Not set"}</div>
-                <div>Token: {tokenOptions.find(t => t.value === tokenAddress)?.symbol || "Not selected"}</div>
-                <div>Duration: {durationOptions.find(d => d.value === duration)?.label || "Not selected"}</div>
-                <div>APY: {interestRate || 0}%</div>
+              {/* Retry Status */}
+              {retryCount > 0 && !isPending && !success && (
+                <div className="bg-yellow-900/20 text-yellow-400 p-3 rounded-md text-sm flex items-center gap-2 mb-4">
+                  <Clock size={16} />
+                  Retry attempts: {retryCount}/3
+                  {retryCount < 3 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRetry}
+                      className="ml-auto border-yellow-600/50 hover:bg-yellow-600/10"
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Retry
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Info Box */}
+              <div className="bg-blue-900/20 rounded-lg p-3 text-xs text-blue-300 mb-4">
+                <p>
+                  💡 Pool creators earn a small fee from all deposits and can set custom terms.
+                  Make sure to provide clear descriptions to attract participants.
+                </p>
               </div>
+
+              {/* Action Button */}
+              {isConnected && (
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={handleCreate}
+                  disabled={isPending || success}
+                >
+                  {isPending ? "Creating Pool..." : success ? "Pool Created!" : "Create Pool"}
+                </Button>
+              )}
             </>
           )}
         </div>
-
         {/* Action Button */}
         {isConnected && (
           <Button

@@ -6,7 +6,7 @@ import {
   UserPosition, 
   TransactionState, 
   LoadingState, 
-  ErrorState,
+  ErrorState as UIErrorState,
   WalletState 
 } from '../lib/types';
 import { 
@@ -16,6 +16,24 @@ import {
   getTransactions,
   formatApiError 
 } from '../lib/api';
+import { 
+  validateWalletState, 
+  validatePoolState, 
+  validateUserPosition,
+  validateCreatePool,
+  validateDeposit,
+  validateWithdraw,
+  checkActionPrerequisites,
+  detectStaleData,
+  ActionPrerequisites,
+  ValidationResult
+} from '../lib/validation';
+import { 
+  errorManager, 
+  handleAsyncError, 
+  convertValidationErrors,
+  ErrorState as ErrorManagerState
+} from '../lib/error-handling';
 
 export function useDripWave() {
   const { address, isConnected } = useAccount();
@@ -37,7 +55,17 @@ export function useDripWave() {
     dashboard: false,
   });
   
-  const [errors, setErrors] = useState<ErrorState>({});
+  const [errors, setErrors] = useState<UIErrorState>({});
+  const [errorState, setErrorState] = useState<ErrorManagerState>({
+    errors: [],
+    hasErrors: false,
+    hasWarnings: false,
+    criticalError: null,
+    recoveryActions: [],
+  });
+  
+  // Data freshness tracking
+  const [lastUpdated, setLastUpdated] = useState<Record<string, number>>({});
 
   // Update wallet state when wagmi state changes
   useEffect(() => {
@@ -45,9 +73,34 @@ export function useDripWave() {
       isConnected,
       address: address || undefined,
     });
+    
+    // Validate wallet state and update error manager
+    const walletErrors = validateWalletState({
+      isConnected,
+      address: address || undefined,
+    });
+    
+    walletErrors.forEach(error => {
+      errorManager.addError(error);
+    });
+    
+    // Clear wallet-related errors when wallet is properly connected
+    if (isConnected && address) {
+      errorManager.removeError('WALLET_NOT_CONNECTED');
+      errorManager.removeError('WALLET_NO_ADDRESS');
+    }
   }, [isConnected, address]);
 
-  // Fetch pools
+  // Subscribe to error manager updates
+  useEffect(() => {
+    const unsubscribe = errorManager.subscribe((state) => {
+      setErrorState(state);
+    });
+    
+    return unsubscribe;
+  }, []);
+
+  // Fetch pools with error handling
   const fetchPools = useCallback(async () => {
     if (loading.pools) return;
     
@@ -55,12 +108,16 @@ export function useDripWave() {
     setErrors(prev => ({ ...prev, pools: undefined }));
     
     try {
-      const response = await getPools();
-      if (response.success) {
-        setPools(response.data);
-      } else {
-        setErrors(prev => ({ ...prev, pools: response.error || 'Failed to fetch pools' }));
-      }
+      await handleAsyncError(async () => {
+        const response = await getPools();
+        if (response.success) {
+          setPools(response.data);
+          setLastUpdated(prev => ({ ...prev, pools: Date.now() }));
+          errorManager.removeError('DATA_STALE');
+        } else {
+          throw new Error(response.error || 'Failed to fetch pools');
+        }
+      });
     } catch (error) {
       setErrors(prev => ({ ...prev, pools: formatApiError(error) }));
     } finally {
@@ -176,6 +233,71 @@ export function useDripWave() {
     tx => tx.status === 'pending' || tx.status === 'submitted'
   );
 
+  // Validation methods
+  const validateAction = useCallback((
+    action: 'create_pool' | 'deposit' | 'withdraw',
+    data: any,
+    pool?: Pool,
+    userBalance?: string
+  ): ValidationResult => {
+    switch (action) {
+      case 'create_pool':
+        return validateCreatePool(data, walletState);
+      case 'deposit':
+        if (!pool || !userBalance) {
+          return {
+            isValid: false,
+            errors: ['Pool and user balance required for deposit validation'],
+          };
+        }
+        return validateDeposit(data, walletState, pool, userBalance);
+      case 'withdraw':
+        if (!pool) {
+          return {
+            isValid: false,
+            errors: ['Pool required for withdraw validation'],
+          };
+        }
+        const userPosition = userPositions.find(pos => pos.poolId === pool.id);
+        return validateWithdraw(data, walletState, pool, userPosition);
+      default:
+        return {
+          isValid: false,
+          errors: ['Unknown action type'],
+        };
+    }
+  }, [walletState, userPositions]);
+
+  const checkPrerequisites = useCallback((
+    action: 'create_pool' | 'deposit' | 'withdraw',
+    pool?: Pool,
+    userBalance?: string
+  ): ActionPrerequisites => {
+    const userPosition = pool ? userPositions.find(pos => pos.poolId === pool.id) : undefined;
+    return checkActionPrerequisites(action, walletState, pool, userPosition, userBalance);
+  }, [walletState, userPositions]);
+
+  // Data freshness checks
+  const isDataStale = useCallback((dataType: 'pools' | 'positions' | 'transactions' | 'dashboard'): boolean => {
+    const lastUpdate = lastUpdated[dataType];
+    if (!lastUpdate) return true;
+    return detectStaleData(lastUpdate);
+  }, [lastUpdated]);
+
+  const markDataFresh = useCallback((dataType: 'pools' | 'positions' | 'transactions' | 'dashboard') => {
+    setLastUpdated(prev => ({ ...prev, [dataType]: Date.now() }));
+    errorManager.removeError('DATA_STALE');
+  }, []);
+
+  // Error management
+  const clearErrors = useCallback(() => {
+    errorManager.clearErrors();
+  }, []);
+
+  const dismissError = useCallback((errorCode: string) => {
+    errorManager.removeError(errorCode);
+  }, []);
+
   return {
     // State
     walletState,
@@ -187,6 +309,7 @@ export function useDripWave() {
     pendingTransactions,
     loading,
     errors,
+    errorState,
     
     // Computed values
     totalDeposits,
@@ -198,5 +321,17 @@ export function useDripWave() {
     fetchUserPositions,
     fetchTransactions,
     fetchDashboardData,
+    
+    // Validation
+    validateAction,
+    checkPrerequisites,
+    
+    // Data freshness
+    isDataStale,
+    markDataFresh,
+    
+    // Error management
+    clearErrors,
+    dismissError,
   };
 }
