@@ -1,0 +1,11 @@
+{
+  "network": "local",
+  "rpcUrl": "http://127.0.0.1:8000",
+  "networkPassphrase": "Localhost Network",
+  "contracts": {
+    "dripPool": "G...CONTRACT_ID..."
+  },
+  "admin": {
+    "address": "G...ADMIN_ADDRESS..."
+  }
+}
