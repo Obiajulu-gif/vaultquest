@@ -28,11 +28,11 @@ fn create_initialises_pool() {
 }
 
 #[test]
-#[should_panic(expected = "pool already created")]
-fn create_twice_panics() {
+fn create_twice_fails() {
     let (_env, client, admin) = setup();
     client.create(&admin);
-    client.create(&admin);
+    let res = client.try_create(&admin);
+    assert_eq!(res, Err(Ok(Error::AlreadyInitialized)));
 }
 
 #[test]
@@ -58,30 +58,46 @@ fn full_lifecycle_create_join_drip_claim_withdraw() {
 }
 
 #[test]
-#[should_panic(expected = "already joined")]
-fn double_join_panics() {
+fn double_join_fails() {
     let (env, client, admin) = setup();
     client.create(&admin);
     let alice = Address::generate(&env);
     client.join(&alice);
-    client.join(&alice);
+    let res = client.try_join(&alice);
+    assert_eq!(res, Err(Ok(Error::AlreadyJoined)));
 }
 
 #[test]
-#[should_panic(expected = "amount must be positive")]
-fn drip_zero_amount_panics() {
+fn drip_zero_amount_fails() {
     let (env, client, admin) = setup();
     client.create(&admin);
     let alice = Address::generate(&env);
     client.join(&alice);
-    client.drip(&alice, &0);
+    let res = client.try_drip(&alice, &0);
+    assert_eq!(res, Err(Ok(Error::InvalidAmount)));
 }
 
 #[test]
-#[should_panic(expected = "not joined")]
-fn drip_without_join_panics() {
+fn drip_without_join_fails() {
     let (env, client, admin) = setup();
     client.create(&admin);
     let alice = Address::generate(&env);
-    client.drip(&alice, &10);
+    let res = client.try_drip(&alice, &10);
+    assert_eq!(res, Err(Ok(Error::NotJoined)));
+}
+
+#[test]
+fn withdraw_without_join_fails() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    let alice = Address::generate(&env);
+    let res = client.try_withdraw(&alice);
+    assert_eq!(res, Err(Ok(Error::NotJoined)));
+}
+
+#[test]
+fn pool_uninitialized_fails() {
+    let (_env, client, _admin) = setup();
+    let res = client.try_pool();
+    assert_eq!(res, Err(Ok(Error::NotInitialized)));
 }
