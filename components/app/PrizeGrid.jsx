@@ -83,8 +83,8 @@ export default function PrizeGrid() {
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <div className="flex items-center gap-2">
               <Image
-                height={1000}
-                width={1000}
+                height={40}
+                width={40}
                 alt="stellar"
                 src="/images/avax.png"
                 className="w-8 h-8 md:w-10 md:h-10"

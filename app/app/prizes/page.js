@@ -142,7 +142,7 @@ export default function PrizesPage() {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <Image src="/images/avax.png" height={1000} width={1000} alt="stellar icon" className="w-10 h-10" />
+                      <Image src="/images/avax.png" height={40} width={40} alt="stellar icon" className="w-10 h-10" />
                       <div>
                         <div className="font-medium">{prize.name}</div>
                         <div className="text-sm text-gray-400">{prize.protocol}</div>
@@ -181,7 +181,7 @@ export default function PrizesPage() {
                       <div className="text-gray-400 text-sm flex items-center gap-1">
                         <Trophy size={14} /> Prize Pool
                       </div>
-                      <div className="text-sm">${(prize.amount * prize.participants).toLocaleString()}</div>
+                      <div className="text-sm">${prize.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
                     </div>
                   </div>
 
@@ -192,17 +192,15 @@ export default function PrizesPage() {
                     >
                       Deposit
                     </Button>
-                    <Link
-                      href={`/app/prize/${prize.id}`}
-                      className="w-full"
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full border-red-900/20 hover:bg-red-600/10 backdrop-blur-sm shadow-lg"
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full border-red-900/20 hover:bg-red-600/10 backdrop-blur-sm shadow-lg"
-                      >
+                      <Link href={`/app/prize/${prize.id}`}>
                         View Details
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               ))}

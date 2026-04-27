@@ -37,7 +37,7 @@ export default function PrizePage() {
 		network: "Stellar",
 		apr: 13.1,
 		distribution: "Every 7 days",
-		nextDrop: "in 3 days",
+		nextDraw: "in 3 days",
 		cadence: "Monthly",
 		participants: 1247,
 		prizes: [
@@ -192,8 +192,8 @@ export default function PrizePage() {
 										<span>{prizeData.distribution}</span>
 									</div>
 									<div className="flex justify-between text-sm">
-										<span className="text-gray-400">Next Drop</span>
-										<span>{prizeData.nextDrop}</span>
+										<span className="text-gray-400">Next Draw</span>
+										<span>{prizeData.nextDraw}</span>
 									</div>
 								</div>
 							</div>
@@ -234,7 +234,7 @@ export default function PrizePage() {
 										<div className="text-gray-400 text-sm flex items-center gap-1">
 											<Clock size={14} /> Next Draw
 										</div>
-										<div className="text-sm">{prizeData.nextDrop}</div>
+										<div className="text-sm">{prizeData.nextDraw}</div>
 									</div>
 									<div className="flex justify-between items-center">
 										<div className="text-gray-400 text-sm flex items-center gap-1">
