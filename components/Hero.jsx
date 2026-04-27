@@ -5,7 +5,7 @@ import LandingWalletConnect from "@/components/app/LandingWalletConnect"
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16 overflow-hidden bg-gradient-to-b from-black to-[#FD181466]">
+    <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16 overflow-hidden bg-gradient-to-b from-black to-[#1483FD66]">
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Desktop Floating Elements */}

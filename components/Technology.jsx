@@ -5,25 +5,24 @@ export default function Technology() {
 		{
 			name: "Stellar",
 			description:
-				"Payment-focused blockchain infrastructure for fast, low-friction asset movement and settlement.",
-			icon: "/images/avax.png",
+				"Energy-efficient blockchain built for speed and low-cost transactions, perfect for micro-savings.",
+			icon: "/images/stellar.png",
 		},
 		{
-			name: "CosmosSDK",
+			name: "Soroban",
 			description:
-				"the first of many interconnected blockchains powered by the interchain stack: CometBFT, CosmosSDK, and IBC",
-			icon: "/images/cosmo.png",
+				"Wasm-based smart contract platform on Stellar, providing secure and efficient core logic for Drip Wave.",
+			icon: "/images/soroban.png",
 		},
     {
-      name: "Next.js",
-      description: "A React framework that enables server-side rendering and static website generation for fast performance.",
-      icon: "/images/nextjs.png",
+      name: "Rust",
+      description: "Memory-safe systems language used for building high-performance and secure smart contracts.",
+      icon: "/images/rust.png",
     },
     {
-      name: "Soroban",
-      description:
-        "Smart contract platform for building Stellar-native applications with explicit on-chain logic.",
-      icon: "/images/aeze.png",
+      name: "Next.js",
+      description: "Modern React framework used for building the Drip Wave DApp with fast performance and SEO.",
+      icon: "/images/nextjs.png",
     },
 	];
 
@@ -40,7 +39,7 @@ export default function Technology() {
         {technologies.map((tech, index) => (
           <div
             key={index}
-            className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-red-900/20 shadow-lg hover:border-red-500/50 transition-all"
+            className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-blue-900/20 shadow-lg hover:border-blue-500/50 transition-all"
           >
             {/* <div className="flex justify-center mb-4">
               <Image
@@ -57,7 +56,7 @@ export default function Technology() {
         ))}
       </div>
 
-      <div className="mt-12 md:mt-16 bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-red-900/20 shadow-lg max-w-5xl mx-auto">
+      <div className="mt-12 md:mt-16 bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-blue-900/20 shadow-lg max-w-5xl mx-auto">
         <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Architecture Overview</h3>
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
           <div className="md:w-1/2 w-full">
@@ -71,7 +70,7 @@ export default function Technology() {
           </div>
           <div className="md:w-1/2 space-y-3 md:space-y-4">
             <p className="text-gray-300 text-sm md:text-base">
-              VaultQuest uses a modular architecture with separate components for vault management, prize distribution,
+              Drip Wave uses a modular architecture with separate components for vault management, prize distribution,
               and user interfaces.
             </p>
             <ul className="list-disc list-inside text-gray-300 space-y-2 text-sm md:text-base">

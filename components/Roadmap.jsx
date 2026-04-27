@@ -3,51 +3,51 @@ import { CheckCircle, Clock } from "lucide-react"
 export default function Roadmap() {
   const phases = [
     {
-      title: "Phase 1: Foundation",
+      title: "Phase 1: Stellar Foundation",
       status: "completed",
-      timeframe: "Q1-Q2 2023",
-      description: "Establishing the core protocol and infrastructure",
+      timeframe: "Q1-Q2 2025",
+      description: "Establishing the core Soroban protocol on Stellar",
       milestones: [
-        { name: "Protocol Design & Architecture", completed: true },
-        { name: "Smart Contract Development", completed: true },
-        { name: "Security Audit & Testing", completed: true },
-        { name: "Testnet Deployment", completed: true },
+        { name: "Soroban Contract Architecture", completed: true },
+        { name: "Drip Wave Core Logic", completed: true },
+        { name: "Initial Safety Hardening", completed: true },
+        { name: "Stellar Wallet Integration", completed: true },
       ],
     },
     {
-      title: "Phase 2: Launch",
-      status: "completed",
-      timeframe: "Q3 2023",
-      description: "Public launch and initial growth",
-      milestones: [
-        { name: "Mainnet Deployment", completed: true },
-        { name: "Public Launch", completed: true },
-        { name: "Initial Partnerships", completed: true },
-        { name: "Community Building", completed: true },
-      ],
-    },
-    {
-      title: "Phase 3: Expansion",
+      title: "Phase 2: Alpha Launch",
       status: "in-progress",
-      timeframe: "Q4 2023 - Q1 2024",
-      description: "Scaling the protocol and expanding features",
+      timeframe: "Q3 2025",
+      description: "Stellar Testnet launch and initial testing",
       milestones: [
-        { name: "Multi-chain Support", completed: true },
-        { name: "Advanced Prize Strategies", completed: true },
-        { name: "Governance Implementation", completed: false },
-        { name: "Protocol Optimization", completed: false },
+        { name: "Testnet Deployment", completed: true },
+        { name: "Frontend Beta Release", completed: true },
+        { name: "Community Testing Program", completed: false },
+        { name: "Initial Pool Strategies", completed: false },
       ],
     },
     {
-      title: "Phase 4: Ecosystem",
+      title: "Phase 3: Mainnet & Growth",
       status: "planned",
-      timeframe: "Q2-Q4 2024",
-      description: "Building a comprehensive ecosystem",
+      timeframe: "Q4 2025",
+      description: "Public launch on Stellar Mainnet",
       milestones: [
-        { name: "Developer SDK & API", completed: false },
-        { name: "Mobile Application", completed: false },
-        { name: "Enterprise Integrations", completed: false },
-        { name: "Global Expansion", completed: false },
+        { name: "Mainnet Deployment", completed: false },
+        { name: "Governance Launch", completed: false },
+        { name: "Ecosystem Partnerships", completed: false },
+        { name: "Advanced Prize Yields", completed: false },
+      ],
+    },
+    {
+      title: "Phase 4: Global Scale",
+      status: "planned",
+      timeframe: "2026+",
+      description: "Expanding Drip Wave to global audiences",
+      milestones: [
+        { name: "Mobile App Release", completed: false },
+        { name: "Fiat On-ramps", completed: false },
+        { name: "Cross-chain Bridges", completed: false },
+        { name: "Institutional Pools", completed: false },
       ],
     },
   ]
@@ -57,11 +57,11 @@ export default function Roadmap() {
       <div className="text-center mb-12 md:mb-16">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Protocol Roadmap</h2>
         <p className="text-gray-300 max-w-2xl mx-auto text-sm sm:text-base">
-          Our strategic plan for building and scaling the VaultQuest protocol
+          Our strategic plan for building and scaling the Drip Wave protocol on Stellar
         </p>
       </div>
 
-      <div className="max-w-6xl mx-auto bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-red-900/20 shadow-lg">
+      <div className="max-w-6xl mx-auto bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-blue-900/20 shadow-lg">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {phases.map((phase, index) => (
             <div
@@ -75,7 +75,7 @@ export default function Roadmap() {
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-                <span className="text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full bg-[#1A0505]/50 border border-red-900/20">
+                <span className="text-xs sm:text-sm px-2 sm:px-3 py-1 rounded-full bg-[#1A0505]/50 border border-blue-900/20">
                   {phase.timeframe}
                 </span>
                 {phase.status === "completed" ? (
@@ -114,28 +114,28 @@ export default function Roadmap() {
       </div>
 
       <div className="mt-8 md:mt-12 max-w-6xl mx-auto">
-        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-red-900/20 shadow-lg">
+        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-blue-900/20 shadow-lg">
           <h3 className="text-lg md:text-xl font-bold mb-4">Long-term Vision</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             <div className="space-y-2">
-              <h4 className="font-bold text-red-500 text-sm md:text-base">2024</h4>
+              <h4 className="font-bold text-blue-500 text-sm md:text-base">2025</h4>
               <p className="text-gray-300 text-xs sm:text-sm">
-                Establish VaultQuest as the leading prize savings protocol across multiple blockchains with a
+                Establish Drip Wave as the leading prize savings protocol on Stellar with a
                 comprehensive ecosystem of tools and integrations.
               </p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-red-500 text-sm md:text-base">2025</h4>
+              <h4 className="font-bold text-blue-500 text-sm md:text-base">2026</h4>
               <p className="text-gray-300 text-xs sm:text-sm">
                 Expand to traditional finance through strategic partnerships, bringing prize savings to millions of
-                users worldwide through both DeFi and CeFi channels.
+                users worldwide through the Stellar network.
               </p>
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-red-500 text-sm md:text-base">2026+</h4>
+              <h4 className="font-bold text-blue-500 text-sm md:text-base">2027+</h4>
               <p className="text-gray-300 text-xs sm:text-sm">
                 Transform global savings behavior by making prize-linked savings the default option for individuals and
-                institutions seeking yield on their assets.
+                institutions on Stellar.
               </p>
             </div>
           </div>

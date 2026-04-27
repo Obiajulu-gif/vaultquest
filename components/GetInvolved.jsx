@@ -13,9 +13,9 @@ export default function GetInvolved() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-red-900/20 shadow-lg">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-red-600/20 rounded-full flex items-center justify-center mb-4">
-            <Users className="text-red-500" size={20} />
+        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-blue-900/20 shadow-lg">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600/20 rounded-full flex items-center justify-center mb-4">
+            <Users className="text-blue-500" size={20} />
           </div>
           <h3 className="text-lg md:text-xl font-bold mb-3">Join the Community</h3>
           <p className="text-gray-300 mb-4 text-sm md:text-base">
@@ -34,9 +34,9 @@ export default function GetInvolved() {
           </div>
         </div>
 
-        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-red-900/20 shadow-lg">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-red-600/20 rounded-full flex items-center justify-center mb-4">
-            <Code className="text-red-500" size={20} />
+        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-blue-900/20 shadow-lg">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600/20 rounded-full flex items-center justify-center mb-4">
+            <Code className="text-blue-500" size={20} />
           </div>
           <h3 className="text-lg md:text-xl font-bold mb-3">Build with Us</h3>
           <p className="text-gray-300 mb-4 text-sm md:text-base">
@@ -55,9 +55,9 @@ export default function GetInvolved() {
           </div>
         </div>
 
-        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-red-900/20 shadow-lg">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-red-600/20 rounded-full flex items-center justify-center mb-4">
-            <Award className="text-red-500" size={20} />
+        <div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-blue-900/20 shadow-lg">
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600/20 rounded-full flex items-center justify-center mb-4">
+            <Award className="text-blue-500" size={20} />
           </div>
           <h3 className="text-lg md:text-xl font-bold mb-3">Hackathon Challenges</h3>
           <p className="text-gray-300 mb-4 text-sm md:text-base">
@@ -77,19 +77,19 @@ export default function GetInvolved() {
         </div>
       </div>
 
-      <div className="mt-12 md:mt-16 bg-gradient-to-r from-red-900/30 to-red-800/30 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-red-900/20 shadow-lg max-w-5xl mx-auto text-center">
+      <div className="mt-12 md:mt-16 bg-gradient-to-r from-blue-900/30 to-blue-800/30 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-blue-900/20 shadow-lg max-w-5xl mx-auto text-center">
         <h3 className="text-xl md:text-2xl font-bold mb-4">Ready to Start Building?</h3>
         <p className="text-gray-300 mb-6 max-w-2xl mx-auto text-sm md:text-base">
-          Join our upcoming hackathon and build innovative applications on top of VaultQuest protocol
+          Join our community and build innovative applications on top of Drip Wave protocol
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/doc">
-            <Button className="bg-red-600 hover:bg-red-700 w-full sm:w-auto">
+            <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
               Read the Docs <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-          <Button variant="outline" className="border-red-600/50 text-white hover:bg-red-600/10 w-full sm:w-auto">
-            Register for Hackathon
+          <Button variant="outline" className="border-blue-600/50 text-white hover:bg-blue-600/10 w-full sm:w-auto">
+            Join the Community
           </Button>
         </div>
       </div>

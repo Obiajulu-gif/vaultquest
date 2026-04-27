@@ -45,14 +45,14 @@ export default function Stats() {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   const stats = [
-    { value: 5.1, prefix: "$", suffix: "Million", label: "Total Prizes Awarded" },
-    { value: 21, prefix: "$", suffix: "Million", label: "Saved With SaveWin" },
-    { value: 86000, prefix: "", suffix: "+", label: "Unique Wallets" },
+    { value: 1.2, prefix: "$", suffix: "Million", label: "Total Prizes Awarded" },
+    { value: 5.4, prefix: "$", suffix: "Million", label: "Saved With Drip Wave" },
+    { value: 12500, prefix: "", suffix: "+", label: "Stellar Wallets" },
     { value: 0, prefix: "", suffix: "", label: "Losses" },
   ];
 
   return (
-    <section className="bg-[#200707] py-12" ref={ref}>
+    <section className="bg-[#070720] py-12" ref={ref}>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((stat, index) => (

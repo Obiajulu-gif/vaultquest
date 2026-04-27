@@ -8,9 +8,9 @@ export default function FAQ() {
 
 	const faqs = [
 		{
-			question: "What is VaultQuest?",
+			question: "What is Drip Wave?",
 			answer:
-				"VaultQuest is a no-loss prize savings protocol where users deposit funds into prize vaults and stand a chance to win prizes through regular draws without risking their deposit. Your principal is always safe and can be withdrawn at any time.",
+				"Drip Wave is a no-loss prize savings protocol where users deposit funds into prize pools and stand a chance to win prizes through regular draws without risking their deposit. Your principal is always safe and can be withdrawn at any time.",
 		},
 		{
 			question: "How are prizes generated?",
@@ -18,24 +18,24 @@ export default function FAQ() {
 				"Prizes are generated from the yield earned by investing user deposits in various DeFi protocols. The yield is collected and distributed as prizes through regular draws, while your original deposit remains untouched.",
 		},
 		{
-			question: "Is VaultQuest secure?",
+			question: "Is Drip Wave secure?",
 			answer:
-				"Yes, VaultQuest has undergone multiple security audits by leading firms in the space. Our smart contracts are open-source and have been thoroughly tested. We also maintain a bug bounty program to continuously improve security.",
+				"Yes, Drip Wave has been built with security-first principles on Stellar. Our Soroban smart contracts are open-source and undergo rigorous testing. We maintain high security standards to protect user capital.",
 		},
 		{
 			question: "How are winners selected?",
 			answer:
-				"Winners are selected using Chainlink's Verifiable Random Function (VRF), which provides cryptographically secure randomness. This ensures that the selection process is fair, transparent, and cannot be manipulated.",
+				"Winners are selected using a secure on-chain randomness mechanism. This ensures that the selection process is fair, transparent, and cannot be manipulated.",
 		},
 		{
-			question: "What networks does VaultQuest support?",
+			question: "What networks does Drip Wave support?",
 			answer:
-				"VaultQuest currently supports Eth, with plans to expand to Cosmos, Polygon, and other major networks in the near future. Our multi-chain strategy aims to provide users with options that best suit their needs.",
+				"Drip Wave is built on Stellar, leveraging its fast transactions and low fees. We focus on providing the best experience within the Stellar ecosystem.",
 		},
 		{
 			question: "How can I participate in governance?",
 			answer:
-				"VaultQuest is governed by a DAO where token holders can propose and vote on changes to the protocol. You can participate by acquiring governance tokens and joining our governance forum discussions.",
+				"Drip Wave is moving towards a DAO structure where community members can participate in key decisions. Stay tuned for more details on our governance roadmap.",
 		},
 	];
 
@@ -46,7 +46,7 @@ export default function FAQ() {
 					Frequently Asked Questions
 				</h2>
 				<p className="text-gray-300 max-w-2xl mx-auto text-sm sm:text-base">
-					Get answers to the most common questions about VaultQuest
+					Get answers to the most common questions about Drip Wave
 				</p>
 			</div>
 
@@ -54,7 +54,7 @@ export default function FAQ() {
 				{faqs.map((faq, index) => (
 					<div
 						key={index}
-						className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl border border-red-900/20 shadow-lg overflow-hidden"
+						className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl border border-blue-900/20 shadow-lg overflow-hidden"
 					>
 						<button
 							className="w-full p-4 md:p-6 text-left flex justify-between items-start md:items-center gap-4"
@@ -62,9 +62,9 @@ export default function FAQ() {
 						>
 							<h3 className="text-base md:text-xl font-bold text-left">{faq.question}</h3>
 							{openIndex === index ? (
-								<ChevronUp className="text-red-500 flex-shrink-0 mt-1 md:mt-0" />
+								<ChevronUp className="text-blue-500 flex-shrink-0 mt-1 md:mt-0" />
 							) : (
-								<ChevronDown className="text-red-500 flex-shrink-0 mt-1 md:mt-0" />
+								<ChevronDown className="text-blue-500 flex-shrink-0 mt-1 md:mt-0" />
 							)}
 						</button>
 						<div
@@ -80,7 +80,7 @@ export default function FAQ() {
 
 			<div className="mt-8 md:mt-12 text-center">
 				<p className="text-gray-300 text-sm md:text-base">Still have questions?</p>
-				<a href="#" className="text-red-500 hover:text-red-400 font-bold text-sm md:text-base">
+				<a href="#" className="text-blue-500 hover:text-blue-400 font-bold text-sm md:text-base">
 					Contact our support team →
 				</a>
 			</div>
