@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:ci": "npm run lint && npm run typecheck"
   },
   "dependencies": {
     "@chain-registry/types": "^0.50.94",

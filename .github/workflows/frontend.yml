@@ -17,7 +17,6 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
   push:
     branches:
@@ -38,7 +37,6 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
 
 permissions:
@@ -70,15 +68,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint --if-present
-
-      - name: Type check
-        if: ${{ hashFiles('tsconfig.json') != '' }}
-        run: pnpm exec tsc --noEmit
-
-      - name: Test
-        run: pnpm test --if-present
+      - name: Run CI quality gates (Lint & Typecheck)
+        run: pnpm test:ci
 
       - name: Build
         env:
