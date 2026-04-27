@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:contracts": "bash contracts/scripts/deploy_soroban.sh",
+    "generate:contract-bindings": "bash contracts/scripts/generate_contract_bindings.sh"
   },
   "dependencies": {
     "@chain-registry/types": "^0.50.94",

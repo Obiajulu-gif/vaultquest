@@ -31,6 +31,9 @@ yarn-error.log*
 !.env.example
 !**/.env.example
 
+# generated Soroban contract bindings
+contracts/config/contract-bindings.json
+
 # local Next.js overrides
 v0-user-next.config.*
 
