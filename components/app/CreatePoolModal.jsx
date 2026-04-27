@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,10 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAccount } from "wagmi";
 
 export default function CreatePoolModal({ isOpen, onClose }) {
-  const { address, isConnected } = useAccount();
+  const { state: walletConnectionState } = useWalletConnection();
+  const { address, isConnected } = walletConnectionState;
   const { 
     validateAction, 
     checkPrerequisites, 

@@ -11,22 +11,12 @@ import WithdrawalModal from "@/components/app/WithdrawalModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RecentDeposits from "@/components/RecentDeposits";
 
-// Wagmi imports
-import {
-	useReadContract,
-	useReadContracts,
-	useAccount,
-	useChainId,
-	useWriteContract,
-	useWaitForTransactionReceipt,
-} from "wagmi";
-import { vaultData } from "@/app/contract/Vault";
-import { parseEther, formatEther } from "viem";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import Image from "next/image";
 
 export default function VaultPage() {
-	const { address } = useAccount();
-	const chainId = useChainId();
+	const { state } = useWalletConnection();
+	const { address } = state;
 
 	// UI State
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -43,324 +33,53 @@ export default function VaultPage() {
 
 	// Form state
 	const [vaultName, setVaultName] = useState("");
-	const [vaultToken, setVaultToken] = useState("0x0000000000000000000000000000000000000000");
+	const [vaultToken, setVaultToken] = useState("");
 	const [vaultDuration, setVaultDuration] = useState(500000000000);
 	const [vaultInterestRate, setVaultInterestRate] = useState(3);
 	const [depositAmount, setDepositAmount] = useState("2");
 	const [withdrawalAmount, setWithdrawalAmount] = useState("0");
 
-	// Contract reads
-	const { data: adminWallet } = useReadContract({
-		...vaultData,
-		functionName: "adminWallet",
-		args: [],
-	});
+	// Contract reads (Mocked for Soroban migration)
+	const adminWallet = "GA...ADMIN";
+	const totalVaults = 0;
+	const isLoadingVaults = false;
+	const isPending = false;
+	const isConfirming = false;
 
-	const { data: totalVaults, refetch: refetchTotalVaults } = useReadContract({
-		...vaultData,
-		functionName: "vaultCount",
-		args: [],
-	});
-
-	// Fetch all vaults with useReadContracts
-	const {
-		data: vaultsData,
-		isLoading: isLoadingVaults,
-		refetch: refetchVaults,
-	} = useReadContracts({
-		contracts: totalVaults
-			? Array.from({ length: Number(totalVaults) }, (_, i) => ({
-				...vaultData,
-				functionName: "getVaultInfo",
-				args: [i],
-			}))
-			: [],
-	});
-
-	// Read depositor balances for connected address 
-	const {
-		data: depositorBalancesData,
-		isLoading: isLoadingDepositorBalances,
-		refetch: refetchDepositorBalances,
-	} = useReadContracts({
-		contracts:
-			address && totalVaults
-				? Array.from({ length: Number(totalVaults) }, (_, i) => ({
-					...vaultData,
-					functionName: "getDepositorBalance",
-					args: [i, address],
-				}))
-				: [],
-	});
-
-	// 1) For each vault, call getVaultDepositors(vaultId)
-	const {
-		data: vaultDepositorsData,
-		isLoading: isLoadingVaultDepositors,
-		refetch: refetchVaultDepositors,
-	} = useReadContracts({
-		contracts: totalVaults
-			? Array.from({ length: Number(totalVaults) }, (_, i) => ({
-				...vaultData,
-				functionName: "getVaultDepositors",
-				args: [i],
-			}))
-			: [],
-	});
-
-	// 2) Build flattened contracts array for getDepositorBalance(vaultId, depositor)
-	// Also build depositorMeta to map results back to vault + depositor address
-	let depositorBalanceContracts = [];
-	let depositorMeta = [];
-
-	if (vaultDepositorsData && vaultDepositorsData.length > 0) {
-		vaultDepositorsData.forEach((entry, vaultIndex) => {
-			const addrs = entry?.result || [];
-			addrs.forEach((addr) => {
-				depositorBalanceContracts.push({
-					...vaultData,
-					functionName: "getDepositorBalance",
-					args: [vaultIndex, addr],
-				});
-				depositorMeta.push({
-					vaultId: vaultIndex,
-					vaultName:
-						// vault name comes from the earlier getVaultInfo result mapped later,
-						// we'll fall back to `Vault ${vaultIndex}` if not ready
-						(vaultsData && vaultsData[vaultIndex]?.result?.[0]) || `Vault ${vaultIndex}`,
-					address: addr,
-				});
-			});
-		});
-	}
-
-	const {
-		data: depositorBalancesAllData,
-		isLoading: isLoadingAllDepositorBalances,
-		refetch: refetchAllDepositorBalances,
-	} = useReadContracts({
-		contracts: depositorBalanceContracts.length ? depositorBalanceContracts : [],
-	});
-
-	// Check which vaults have winners
-	const {
-		data: hasWinnerData,
-		isLoading: isLoadingHasWinner,
-		refetch: refetchHasWinner,
-	} = useReadContracts({
-		contracts: totalVaults
-			? Array.from({ length: Number(totalVaults) }, (_, i) => ({
-				...vaultData,
-				functionName: "hasWinner",
-				args: [i],
-			}))
-			: [],
-	});
+	// Mocked empty data
+	const vaultsData = [];
+	const depositorBalancesData = [];
+	const hasWinnerData = [];
+	const winnerInfoData = [];
 
 	// Memoize vaultsWithWinners to prevent recreation on every render
 	const vaultsWithWinners = useMemo(() => {
-		if (!hasWinnerData) return [];
-		return hasWinnerData
-			.map((result, index) => (result?.result === true ? index : null))
-			.filter((id) => id !== null);
-	}, [hasWinnerData]);
-
-	// Get winner info for vaults that have winners
-	const {
-		data: winnerInfoData,
-		isLoading: isLoadingWinnerInfo,
-		refetch: refetchWinnerInfo,
-	} = useReadContracts({
-		contracts: vaultsWithWinners.length > 0
-			? vaultsWithWinners.map((vaultId) => ({
-				...vaultData,
-				functionName: "getWinnerInfo",
-				args: [vaultId],
-			}))
-			: [],
-	});
-
-	// ---------- END NEW wagmi reads ------------
-
-	// Contract writes
-	const { writeContract, isPending, data: hash } = useWriteContract();
-
-	// Wait for confirmation
-	const {
-		isLoading: isConfirming,
-		isSuccess: isConfirmed,
-		isError: isTxError,
-	} = useWaitForTransactionReceipt({
-		hash,
-	});
-
-	// Refetch vaults and depositor balances after confirmation
-	useEffect(() => {
-		if (isConfirmed) {
-			setSuccess(true);
-			setTimeout(() => {
-				refetchVaults();
-				refetchTotalVaults();
-				refetchDepositorBalances();
-
-				refetchVaultDepositors();
-				refetchAllDepositorBalances();
-				refetchHasWinner();
-				refetchWinnerInfo();
-				setSubmitted(false);
-				setSuccess(false);
-				setIsCreateModalOpen(false);
-				setIsDepositModalOpen(false);
-			}, 2500); // wait for 2.5 secs to show success message
-		}
-	}, [
-		isConfirmed,
-		refetchVaults,
-		refetchTotalVaults,
-		refetchDepositorBalances,
-		refetchVaultDepositors,
-		refetchAllDepositorBalances,
-		refetchHasWinner,
-		refetchWinnerInfo,
-	]);
-
-	// Refetch depositor balances whenever address or totalVaults changes
-	useEffect(() => {
-		if (address && totalVaults) {
-			refetchDepositorBalances();
-		}
-	}, [address, totalVaults, refetchDepositorBalances]);
-
-	// Process winner data
-	useEffect(() => {
-		if (!winnerInfoData || vaultsWithWinners.length === 0) return;
-
-		const winners = {};
-		vaultsWithWinners.forEach((vaultId, index) => {
-			const winnerData = winnerInfoData[index]?.result;
-			if (winnerData) {
-				const [winnerAddress, totalInterest] = winnerData;
-				winners[vaultId] = {
-					address: winnerAddress,
-					totalInterest: formatEther(totalInterest),
-				};
-
-			}
-		});
-
-		// Only update state if winners object has changed
-		setVaultWinners(prevWinners => {
-			const hasChanged = JSON.stringify(prevWinners) !== JSON.stringify(winners);
-			return hasChanged ? winners : prevWinners;
-		});
-	}, [winnerInfoData]);
+		return [];
+	}, []);
 
 	// Helper function to format vault data
 	const formatVaultForDisplay = (vaultData, vaultId) => {
-		if (!vaultData) {
-			return {
-				id: vaultId,
-				name: `Vault ${vaultId}`,
-				network: "AVAX",
-				apy: 0,
-				tvl: 0,
-				tvlToken: "AVAX",
-				balance: 0,
-				balanceToken: "AVAX",
-				users: 0,
-				token: "0x0000000000000000000000000000000000000000",
-				timeLeft: 0,
-				active: false,
-			};
-		}
-
-		const [
-			name,
-			token,
-			totalDeposits,
-			creationTime,
-			duration,
-			interestRate,
-			active,
-			timeLeft,
-			depositorCount,
-		] = vaultData.result || [];
-
-		const isETH = token === "0x0000000000000000000000000000000000000000";
-		const tokenSymbol = isETH ? "AVAX" : "TOKEN";
-		const formattedTVL = totalDeposits ? Number(formatEther(totalDeposits)) : 0;
-		const annualRate = interestRate ? Number(interestRate) / 100 : 0;
-
 		return {
 			id: vaultId,
-			name: name || `Vault ${vaultId}`,
-			network: "AVAX",
-			apy: annualRate,
-			tvl: formattedTVL,
-			tvlToken: tokenSymbol,
-			balance: 0, // will be populated from depositorBalancesData when available
-			balanceToken: tokenSymbol,
-			users: Number(depositorCount) || 0,
-			token,
-			timeLeft: Number(timeLeft) || 0,
-			active: active || false,
+			name: `Vault ${vaultId}`,
+			network: "Stellar",
+			apy: 0,
+			tvl: 0,
+			tvlToken: "XLM",
+			balance: 0,
+			balanceToken: "XLM",
+			users: 0,
+			token: "native",
+			timeLeft: 0,
+			active: false,
 		};
 	};
 
-	// Build blockchainVaults and inject depositor balance for connected address
-	const blockchainVaults =
-		vaultsData
-			?.map((vaultInfo, index) => {
-				const vault = formatVaultForDisplay(vaultInfo, index);
+	// Build blockchainVaults
+	const blockchainVaults = [];
 
-				// depositorBalancesData entries come in the same order as the contracts array
-				const depositorResult = depositorBalancesData?.[index]?.result || null;
-				if (depositorResult) {
-					const principal = depositorResult[0] ?? null;
-					const currentInterest = depositorResult[1] ?? null;
-
-					const principalNum = principal ? Number(formatEther(principal)) : 0;
-					const interestNum = currentInterest ? Number(formatEther(currentInterest)) : 0;
-
-					vault.balance = principalNum + interestNum;
-					vault.balanceToken = vault.tvlToken;
-				}
-
-				return vault;
-			}) || [];
-
-	// ---------- Build globalDeposits from depositorBalancesAllData + depositorMeta ----------
+	// ---------- Build globalDeposits ----------
 	let globalDeposits = [];
-
-	if (depositorBalancesAllData && depositorMeta && depositorMeta.length) {
-		globalDeposits = depositorBalancesAllData
-			.map((entry, idx) => {
-				const meta = depositorMeta[idx];
-				if (!entry || !meta) return null;
-
-				const principal = entry?.result?.[0] ?? 0;
-				const currentInterest = entry?.result?.[1] ?? 0;
-
-				const principalNum = principal ? Number(formatEther(principal)) : 0;
-				const interestNum = currentInterest ? Number(formatEther(currentInterest)) : 0;
-				const amount = principalNum + interestNum;
-
-				if (amount <= 0) return null;
-
-				return {
-					vaultId: meta.vaultId,
-					vaultName: meta.vaultName,
-					address: meta.address,
-					amount,
-					// placeholder timestamp for now (as agreed) — we can replace with real tx timestamp later
-					date: new Date().toISOString(),
-				};
-			})
-			.filter(Boolean);
-
-		// sort newest → oldest (we're using the placeholder timestamp)
-		globalDeposits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-	}
 
 	// Filter vaults
 	const filteredVaults = blockchainVaults
@@ -371,72 +90,17 @@ export default function VaultPage() {
 				vault.tvlToken.toLowerCase().includes(searchQuery.toLowerCase())
 		);
 
-	// Contract interaction handlers
+	// Contract interaction handlers (Disabled for Soroban migration)
 	const handleCreateVault = () => {
-		if (!address || address !== adminWallet) {
-			console.log("Permission denied - not admin wallet");
-			return;
-		}
-
-		const vaultDurationInSeconds = vaultDuration * 60 * 60;
-
-		writeContract({
-			...vaultData,
-			functionName: "createVault",
-			args: [vaultName, vaultToken, vaultDurationInSeconds, (vaultInterestRate * 100)], //multiply the interest rate by 100 (demanded by the smart contract)
-		});
-
-		setSubmitted(true);
+		setError("Soroban migration in progress. Contract writes are currently disabled.");
 	};
 
 	const handleFundVault = async () => {
-		if (!depositAmount || Number(depositAmount) <= 0) {
-			setError("Please enter a valid amount");
-			return;
-		}
-
-		if (vaultId === undefined || vaultId === null) {
-			setError("Vault ID is missing");
-			return;
-		}
-
-		try {
-			setError("");
-			setSubmitted(false);
-			setSuccess(false);
-
-			await writeContract({
-				...vaultData,
-				functionName: "deposit",
-				args: [vaultId, parseEther(depositAmount)], 
-				value: parseEther(depositAmount), // only valid for AVAX vaults
-			});
-
-		} catch (err) {
-			console.error("Deposit error:", err);
-			setError(err?.shortMessage || err?.message || "Deposit failed");
-		}
+		setError("Soroban migration in progress. Contract writes are currently disabled.");
 	};
 
 	const handleWithdrawFromVault = () => {
-		if (vaultId === undefined || vaultId === null || !selectedVault) return;
-
-		const maxWithdraw = selectedVault.balance || 0;
-
-		if (maxWithdraw <= 0) {
-			setError(`You have nothing to withdraw`);
-			return;
-		}
-
-		setError("");
-
-		writeContract({
-			...vaultData,
-			functionName: "withdraw",
-			args: [vaultId],
-		});
-
-		setSubmitted(true);
+		setError("Soroban migration in progress. Contract writes are currently disabled.");
 	};
 
 
@@ -508,13 +172,13 @@ export default function VaultPage() {
 										All
 									</button>
 									<button
-										className={`px-3 py-1 rounded-full text-sm ${activeFilter === "AVAX"
+										className={`px-3 py-1 rounded-full text-sm ${activeFilter === "XLM"
 											? "bg-red-600"
 											: "hover:bg-[#3A0A0A]"
 											}`}
-										onClick={() => setActiveFilter("AVAX")}
+										onClick={() => setActiveFilter("XLM")}
 									>
-										AVAX
+										XLM
 									</button>
 								</div>
 							</div>
@@ -547,7 +211,9 @@ export default function VaultPage() {
 									>
 										<div className="flex items-center justify-between mb-4">
 											<div className="flex items-center gap-2">
-												<Image src="/images/avax.png" height={1000} width={1000} alt="avax icon" className="w-10 h-10" />
+												<div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+													<Droplets className="text-white" />
+												</div>
 												<div>
 													<div className="font-medium">{vault.name}</div>
 													<div className="text-sm text-gray-400 capitalize">
@@ -669,7 +335,7 @@ export default function VaultPage() {
 												{filteredVaults
 													.reduce((sum, vault) => sum + vault.tvl, 0)
 													.toFixed(4)}{" "}
-												AVAX
+												XLM
 											</div>
 											<div className="mt-2 text-sm text-gray-400">
 												Across {filteredVaults.length} active vaults
