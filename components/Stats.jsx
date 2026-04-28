@@ -45,10 +45,10 @@ export default function Stats() {
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   const stats = [
-    { value: 1.2, prefix: "$", suffix: "Million", label: "Total Prizes Awarded" },
-    { value: 5.4, prefix: "$", suffix: "Million", label: "Saved With Drip Wave" },
-    { value: 12500, prefix: "", suffix: "+", label: "Stellar Wallets" },
-    { value: 0, prefix: "", suffix: "", label: "Losses" },
+    { value: 5.1, prefix: "$", suffix: "Million", label: "Total Prizes Awarded" },
+    { value: 21, prefix: "$", suffix: "Million", label: "Total Value Deposited" },
+    { value: 86000, prefix: "", suffix: "+", label: "Unique Wallets" },
+    { value: 0, prefix: "", suffix: "", label: "Principal Losses" },
   ];
 
   return (

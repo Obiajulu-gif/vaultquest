@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AppNav from "@/components/app/AppNav";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, Clock, Users, Trophy, Wallet } from "lucide-react";
 import DepositModal from "@/components/app/DepositModal";
 import WithdrawModal from "@/components/app/WithdrawModal";
 import { Bar } from "react-chartjs-2";
@@ -28,15 +28,18 @@ export default function PrizePage() {
 
 	// Sample data for the prize page
 	const prizeData = {
-		name: "Prize USDC",
+		name: "Grand Prize",
 		lastDeposits: 4330.0,
 		totalDeposited: 2300000,
 		tvl: 2324058,
-		protocol: "Avalanche",
-		protocolUrl: "avalanche.network",
+		protocol: "Drip Wave",
+		protocolUrl: "dripwave.io",
+		network: "Stellar",
 		apr: 13.1,
-		distribution: "Every 7 day",
-		nextDrop: "in 3 days",
+		distribution: "Every 7 days",
+		nextDraw: "in 3 days",
+		cadence: "Monthly",
+		participants: 1247,
 		prizes: [
 			{ amount: 32980, frequency: "Every 3 months" },
 			{ amount: 2938, frequency: "Every 2 weeks" },
@@ -45,9 +48,9 @@ export default function PrizePage() {
 			{ amount: 0.21, frequency: "1024x Daily" },
 		],
 		winners: [
-			{ id: "0x34cgj90rc", date: "July 18", prize: "4.234 Avax" },
-			{ id: "0x34cgsye20", date: "August 28", prize: "0.168 Avax" },
-			{ id: "0x34chjue79", date: "September 5", prize: "4.234 Avax" },
+			{ id: "G...XYZ", date: "July 18", prize: "4.234 XLM" },
+			{ id: "H...ABC", date: "August 28", prize: "0.168 XLM" },
+			{ id: "J...DEF", date: "September 5", prize: "4.234 XLM" },
 		],
 		chartData: [65, 45, 30, 60, 45, 30, 70, 45],
 	};
@@ -98,6 +101,9 @@ export default function PrizePage() {
 							<ArrowLeft className="h-4 w-4" />
 						</Button>
 						<span>{prizeData.name}</span>
+						<div className="bg-red-900/20 text-red-500 px-2 py-1 rounded text-sm ml-2">
+							{prizeData.cadence}
+						</div>
 					</div>
 					<div className="flex gap-2">
 						<Button
@@ -120,8 +126,7 @@ export default function PrizePage() {
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 						<div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 border border-red-900/20 shadow-lg">
 							<div className="flex items-center gap-2 mb-4">
-								{/* <AvaxIcon className="w-5 h-5" /> */}
-								<Image src="/images/avax.png" height={20} width={20} alt="avax" />
+								<Image src="/images/avax.png" height={20} width={20} alt="stellar" />
 								<span className="text-sm text-gray-400">Last 24h Deposits</span>
 							</div>
 							<div className="text-3xl font-bold">
@@ -158,6 +163,9 @@ export default function PrizePage() {
 									<ExternalLink className="h-3 w-3" />
 								</a>
 							</div>
+							<div className="text-sm text-gray-400 mt-2">
+								{prizeData.network}
+							</div>
 						</div>
 					</div>
 
@@ -184,8 +192,8 @@ export default function PrizePage() {
 										<span>{prizeData.distribution}</span>
 									</div>
 									<div className="flex justify-between text-sm">
-										<span className="text-gray-400">Next Drop</span>
-										<span>{prizeData.nextDrop}</span>
+										<span className="text-gray-400">Next Draw</span>
+										<span>{prizeData.nextDraw}</span>
 									</div>
 								</div>
 							</div>
@@ -210,6 +218,30 @@ export default function PrizePage() {
 											<span className="text-gray-400">{prize.frequency}</span>
 										</div>
 									))}
+								</div>
+							</div>
+
+							<div className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 border border-red-900/20 shadow-lg">
+								<h3 className="text-lg font-medium mb-4">Pool Stats</h3>
+								<div className="space-y-3">
+									<div className="flex justify-between items-center">
+										<div className="text-gray-400 text-sm flex items-center gap-1">
+											<Users size={14} /> Participants
+										</div>
+										<div>{prizeData.participants}</div>
+									</div>
+									<div className="flex justify-between items-center">
+										<div className="text-gray-400 text-sm flex items-center gap-1">
+											<Clock size={14} /> Next Draw
+										</div>
+										<div className="text-sm">{prizeData.nextDraw}</div>
+									</div>
+									<div className="flex justify-between items-center">
+										<div className="text-gray-400 text-sm flex items-center gap-1">
+											<Trophy size={14} /> Total Pool
+										</div>
+										<div className="text-sm">${(prizeData.totalDeposited).toLocaleString()}</div>
+									</div>
 								</div>
 							</div>
 						</div>

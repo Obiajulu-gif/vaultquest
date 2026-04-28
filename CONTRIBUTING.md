@@ -27,12 +27,51 @@ For changes that affect wallet connection UI, dashboard UI, transaction flow scr
 
 Run the checks that apply to your change before opening a PR:
 
+### Frontend Checks
+
 ```sh
+# Install dependencies
+npm install
+
+# Run linter
 npm run lint
+
+# Run type check (if TypeScript is used)
+npx tsc --noEmit
+
+# Build the application
 npm run build
+
+# Start development server
+npm run dev
 ```
 
-If you introduce a Soroban workspace, also run the relevant Rust and contract checks for that workspace and include them in the PR description.
+### Soroban Contract Checks (if applicable)
+
+If you introduce or modify a Soroban workspace, also run these checks:
+
+```sh
+# Check formatting
+cargo fmt --all -- --check
+
+# Run clippy linter
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+# Run tests
+cargo test --workspace --all-targets --all-features
+
+# Build release Wasm artifacts
+cargo build --workspace --target wasm32v1-none --release
+```
+
+### CI/CD Pipeline
+
+The repository uses GitHub Actions for automated quality checks:
+
+- **Frontend CI**: Runs on every push to `main`/`develop` and on PRs affecting frontend files. It performs linting, type checking, testing, and building.
+- **Smart Contract CI**: Runs on every push to `main`/`develop` and on PRs affecting contract files. It includes conditional Soroban contract checks that only run when a Rust workspace is detected.
+
+These workflows provide clear failure output to help diagnose broken PRs quickly.
 
 ## Implementation Notes
 
