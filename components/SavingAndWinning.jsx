@@ -37,7 +37,7 @@ export default function SavingAndWinning() {
 			{/* Desktop Version */}
 			<div className="hidden md:block w-full">
 				<h1 className="text-4xl lg:text-5xl font-bold text-white mb-16 text-center">
-					VaultQuest is for Saving & Winning
+					Drip Wave is for Saving & Winning
 				</h1>
 
 				<div
@@ -108,7 +108,7 @@ export default function SavingAndWinning() {
 			{/* Mobile Version */}
 			<div className="md:hidden w-full max-w-sm mx-auto">
 				<h1 className="text-3xl font-bold text-white mb-12 text-center leading-tight">
-					VaultQuest is<br />for Saving & Winning
+					Drip Wave is<br />for Saving & Winning
 				</h1>
 
 				<div className="space-y-6">
