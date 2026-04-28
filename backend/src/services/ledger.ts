@@ -17,6 +17,23 @@ export type ListActionsResult = {
   nextCursor: string | null;
 };
 
+export type DashboardSummary = {
+  walletAddress: string;
+  totalActions: number;
+  byStatus: Record<ActionStatus, number>;
+  pendingTxHashes: string[];
+  /**
+   * `true` when the most recent ledger update is older than `staleAfterMs`,
+   * giving the frontend a deterministic way to render a "data may be stale"
+   * banner without polling the indexer directly (#14).
+   */
+  isStale: boolean;
+  /** Newest createdAt across the wallet's actions, or null if none exist. */
+  latestActivityAt: Date | null;
+  /** Newest confirmedAt across the wallet's actions, or null. */
+  latestConfirmedAt: Date | null;
+};
+
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
@@ -194,6 +211,75 @@ export class LedgerService {
   async findByIdempotencyKey(key: string): Promise<ActionRecord | null> {
     const row = await this.prisma.actionLedger.findUnique({ where: { idempotencyKey: key } });
     return (row as unknown as ActionRecord) ?? null;
+  }
+
+  /**
+   * Aggregated read used by the frontend dashboard (#14).
+   *
+   * Computes per-status counts, pending tx hashes (so the wallet can resume
+   * polling on reload), and a `isStale` flag that lets the UI render partial
+   * data without ad-hoc joins on the client.
+   */
+  async getDashboardSummary(
+    walletAddress: string,
+    options: { staleAfterMs?: number; now?: Date } = {}
+  ): Promise<DashboardSummary> {
+    const staleAfterMs = options.staleAfterMs ?? 5 * 60 * 1000;
+    const now = options.now ?? new Date();
+
+    const grouped = await this.prisma.actionLedger.groupBy({
+      by: ["status"],
+      where: { walletAddress },
+      _count: { _all: true }
+    });
+
+    const byStatus: Record<ActionStatus, number> = {
+      pending: 0,
+      submitted: 0,
+      confirmed: 0,
+      failed: 0,
+      reverted: 0,
+      orphaned: 0
+    };
+    let totalActions = 0;
+    for (const row of grouped) {
+      const key = row.status as ActionStatus;
+      const count = row._count._all;
+      byStatus[key] = count;
+      totalActions += count;
+    }
+
+    const pendingRows = await this.prisma.actionLedger.findMany({
+      where: { walletAddress, status: "submitted", txHash: { not: null } },
+      select: { txHash: true },
+      orderBy: { submittedAt: "desc" },
+      take: 25
+    });
+    const pendingTxHashes = pendingRows
+      .map((r) => r.txHash)
+      .filter((h): h is string => typeof h === "string" && h.length > 0);
+
+    const latestRows = await this.prisma.actionLedger.findMany({
+      where: { walletAddress },
+      orderBy: { updatedAt: "desc" },
+      select: { createdAt: true, confirmedAt: true, updatedAt: true },
+      take: 1
+    });
+    const latestRow = latestRows[0] ?? null;
+    const latestActivityAt = latestRow?.createdAt ?? null;
+    const latestConfirmedAt = latestRow?.confirmedAt ?? null;
+    const isStale =
+      latestRow != null && now.getTime() - latestRow.updatedAt.getTime() > staleAfterMs;
+
+    return {
+      walletAddress,
+      totalActions,
+      byStatus,
+      pendingTxHashes,
+      isStale,
+      latestActivityAt,
+      latestConfirmedAt
+    };
   }
 
   async scrubWallet(walletAddress: string): Promise<{ scrubbed: number }> {

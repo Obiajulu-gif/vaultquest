@@ -32,3 +32,8 @@ export const reconcileBody = z.object({
   event_payload: z.record(z.unknown()),
   status_hint: z.enum(["confirmed", "reverted"])
 });
+
+export const dashboardQuery = z.object({
+  wallet: walletSchema,
+  stale_after_ms: z.coerce.number().int().min(0).max(24 * 60 * 60 * 1000).optional()
+});

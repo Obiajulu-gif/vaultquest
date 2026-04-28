@@ -9,21 +9,20 @@ export default function Technology() {
 			icon: "/images/avax.png",
 		},
 		{
-			name: "CosmosSDK",
+			name: "Soroban",
 			description:
-				"the first of many interconnected blockchains powered by the interchain stack: CometBFT, CosmosSDK, and IBC",
-			icon: "/images/cosmo.png",
+				"Smart contract platform for building Stellar-native applications with explicit on-chain logic.",
+			icon: "/images/aeze.png",
 		},
     {
       name: "Next.js",
-      description: "A React framework that enables server-side rendering and static website generation for fast performance.",
+      description: "React framework for server-side rendering and static site generation with fast performance.",
       icon: "/images/nextjs.png",
     },
     {
-      name: "Soroban",
-      description:
-        "Smart contract platform for building Stellar-native applications with explicit on-chain logic.",
-      icon: "/images/aeze.png",
+      name: "React",
+      description: "Modern JavaScript library for building user interfaces with component-based architecture.",
+      icon: "/images/react.png",
     },
 	];
 
@@ -71,14 +70,14 @@ export default function Technology() {
           </div>
           <div className="md:w-1/2 space-y-3 md:space-y-4">
             <p className="text-gray-300 text-sm md:text-base">
-              VaultQuest uses a modular architecture with separate components for vault management, prize distribution,
+              Drip Wave uses a modular architecture with separate components for prize pool management, prize distribution,
               and user interfaces.
             </p>
             <ul className="list-disc list-inside text-gray-300 space-y-2 text-sm md:text-base">
-              <li>Smart contracts handle deposits, withdrawals, and yield generation</li>
-              <li>Prize distribution is fully automated and verifiably random</li>
-              <li>User funds are secured through multi-layered security protocols</li>
-              <li>All transactions are transparent and auditable on-chain</li>
+              <li>Soroban smart contracts handle deposits, withdrawals, and yield generation</li>
+              <li>Prize distribution is fully automated and verifiably random on-chain</li>
+              <li>User funds are secured through Stellar's proven security protocols</li>
+              <li>All transactions are transparent and auditable on the Stellar network</li>
             </ul>
           </div>
         </div>
@@ -86,4 +85,3 @@ export default function Technology() {
     </section>
   )
 }
-

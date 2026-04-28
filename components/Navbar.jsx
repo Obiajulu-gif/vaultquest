@@ -9,26 +9,26 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-[#10020233] border-b border-red-900/20 z-50">
+    <header className="fixed top-0 left-0 right-0 bg-[#10020233] border-b border-blue-900/20 z-50">
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <Image
               src="/images/logo.png"
-              alt="VaultQuest Logo"
+              alt="Drip Wave Logo"
               width={32}
               height={32}
               className="rounded-full"
             />
             <span className="text-lg font-bold text-white">
-              Vault<span className="text-red-500">Quest</span>
+              Drip <span className="text-blue-500">Wave</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-red-500 hover:text-red-400 transition-colors">
+            <Link href="/" className="text-blue-500 hover:text-blue-400 transition-colors">
               Home
             </Link>
             <Link
@@ -44,7 +44,7 @@ export default function Navbar() {
               Doc
             </Link>
             <Link href="/app">
-              <Button className="bg-red-600 hover:bg-red-700 text-white px-6">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
                 Launch DApp
               </Button>
             </Link>
@@ -64,11 +64,11 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-red-900/20 py-4">
+          <div className="md:hidden border-t border-blue-900/20 py-4">
             <div className="flex flex-col gap-4">
               <Link 
                 href="/" 
-                className="text-red-500 hover:text-red-400 transition-colors px-2 py-1"
+                className="text-blue-500 hover:text-blue-400 transition-colors px-2 py-1"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
@@ -88,7 +88,7 @@ export default function Navbar() {
                 Doc
               </Link>
               <Link href="/app" onClick={() => setIsMenuOpen(false)}>
-                <Button className="bg-red-600 hover:bg-red-700 text-white w-full mt-2">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full mt-2">
                   Launch DApp
                 </Button>
               </Link>

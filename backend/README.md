@@ -31,11 +31,12 @@ pnpm dev
 | PATCH | /actions/:id/submitted | Attach `tx_hash` after wallet broadcasts |
 | POST | /actions/:id/cancel | Mark a pending intent failed |
 | GET  | /actions/:id | Read a single action |
-| GET  | /actions?wallet=G...&status=&cursor=&limit= | Paginated list |
+| GET  | /actions?wallet=G...&status=&cursor=&limit= | Paginated activity history |
+| GET  | /dashboard/summary?wallet=G...&stale_after_ms= | Per-wallet rollup for the dashboard (#14) |
 | DELETE | /actions?wallet=G... | Privacy scrub (nulls payload, sets redacted_at) |
 | POST | /internal/reconcile | Event indexer → ledger (requires `X-Internal-Secret`) |
 
-See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract.
+See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract, and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the service layout, schema, worker runtime, and migration strategy.
 
 ## Environment
 
