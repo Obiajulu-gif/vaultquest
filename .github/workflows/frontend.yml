@@ -17,7 +17,6 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
   push:
     branches:
@@ -38,7 +37,6 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
 
 permissions:
