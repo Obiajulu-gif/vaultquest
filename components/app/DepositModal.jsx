@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +14,9 @@ import {
 } from "@/components/ui/dialog";
 
 export default function DepositModal({
-	isOpen,
-	onClose,
-	selectedVault,
-	onDeposit,
-	depositAmount,
-	setDepositAmount,
-	error,
-	success,
-	isPending,
+  isOpen,
+  onClose,
+  selectedPool,
 }) {
 	const { isConnected } = useAccount();
 
