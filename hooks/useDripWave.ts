@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount } from 'wagmi';
+import { useWalletConnection } from './useWalletConnection';
 import { 
   DashboardData, 
   Pool, 
@@ -36,7 +36,8 @@ import {
 } from '../lib/error-handling';
 
 export function useDripWave() {
-  const { address, isConnected } = useAccount();
+  const { state: walletConnectionState } = useWalletConnection();
+  const { address, isConnected } = walletConnectionState;
   
   // State management
   const [walletState, setWalletState] = useState<WalletState>({
@@ -67,7 +68,6 @@ export function useDripWave() {
   // Data freshness tracking
   const [lastUpdated, setLastUpdated] = useState<Record<string, number>>({});
 
-  // Update wallet state when wagmi state changes
   useEffect(() => {
     setWalletState({
       isConnected,

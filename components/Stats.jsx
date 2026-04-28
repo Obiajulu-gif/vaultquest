@@ -52,7 +52,7 @@ export default function Stats() {
   ];
 
   return (
-    <section className="bg-[#200707] py-12" ref={ref}>
+    <section className="bg-[#070720] py-12" ref={ref}>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {stats.map((stat, index) => (

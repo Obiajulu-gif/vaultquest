@@ -6,7 +6,7 @@ import AppNav from "@/components/app/AppNav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAccount } from "wagmi"
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import { useDripWave } from "@/hooks/useDripWave"
 import { 
   Wallet, 
@@ -23,7 +23,8 @@ import {
 import { TRANSACTION_STATUS_LABELS } from "@/lib/types"
 
 export default function AccountPage() {
-  const { address, isConnected } = useAccount()
+  const { state: walletConnectionState } = useWalletConnection();
+  const { address, isConnected } = walletConnectionState;
   const { 
     userPositions, 
     transactions, 

@@ -33,7 +33,7 @@ export default function SavingAndWinning() {
 	];
 
 	return (
-		<div className="min-h-screen bg-gradient-to-r from-black via-[#FD181499] to-black flex flex-col items-center justify-center overflow-hidden px-4">
+		<div className="min-h-screen bg-gradient-to-r from-black via-[#1483FD99] to-black flex flex-col items-center justify-center overflow-hidden px-4">
 			{/* Desktop Version */}
 			<div className="hidden md:block w-full">
 				<h1 className="text-4xl lg:text-5xl font-bold text-white mb-16 text-center">
@@ -48,7 +48,7 @@ export default function SavingAndWinning() {
 						{cards.map((card, index) => (
 							<motion.div
 								key={card.id}
-								className="absolute w-[280px] h-[380px] rounded-2xl bg-[#2C1211] 
+								className="absolute w-[280px] h-[380px] rounded-2xl bg-[#111A2C] 
                            shadow-2xl overflow-hidden"
 								initial={{
 									rotateZ: 0,
@@ -115,7 +115,7 @@ export default function SavingAndWinning() {
 					{cards.map((card, index) => (
 						<motion.div
 					key={card.id}
-					className="w-full h-64 rounded-2xl bg-[#2C1211] shadow-xl overflow-hidden flex flex-col"
+					className="w-full h-64 rounded-2xl bg-[#111A2C] shadow-xl overflow-hidden flex flex-col"
 					initial={{
 						scale: 0.9,
 						opacity: 0,
