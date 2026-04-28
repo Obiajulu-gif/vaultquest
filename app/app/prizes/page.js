@@ -5,8 +5,9 @@ import Link from "next/link"
 import AppNav from "@/components/app/AppNav"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
+import { Search, Clock, Trophy, Wallet } from "lucide-react"
 import DepositModal from "@/components/app/DepositModal"
+import Image from "next/image"
 
 export default function PrizesPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
@@ -22,54 +23,72 @@ export default function PrizesPage() {
     {
       id: 1,
       name: "Grand Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 23087.0,
-      token: "eth",
+      token: "XLM",
       tokenAmount: 0.23,
+      cadence: "Monthly",
+      participants: 1247,
+      nextDraw: "in 5 days",
     },
     {
       id: 2,
       name: "Weekly Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 12500.0,
-      token: "eth",
+      token: "XLM",
       tokenAmount: 0.15,
+      cadence: "Weekly",
+      participants: 892,
+      nextDraw: "in 2 days",
     },
     {
       id: 3,
       name: "Daily Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 5000.0,
-      token: "eth",
+      token: "XLM",
       tokenAmount: 0.08,
+      cadence: "Daily",
+      participants: 456,
+      nextDraw: "in 12 hours",
     },
     {
       id: 4,
       name: "Hourly Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 1000.0,
-      token: "eth",
+      token: "XLM",
       tokenAmount: 0.02,
+      cadence: "Hourly",
+      participants: 234,
+      nextDraw: "in 45 minutes",
     },
     {
       id: 5,
       name: "Community Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 7500.0,
-      token: "eth",
+      token: "XLM",
       tokenAmount: 0.12,
+      cadence: "Weekly",
+      participants: 678,
+      nextDraw: "in 4 days",
     },
     {
       id: 6,
       name: "Special Prize",
-      network: "Cosmos",
+      protocol: "Drip Wave",
       amount: 15000.0,
-      token: "atpm",
+      token: "XLM",
       tokenAmount: 0.18,
+      cadence: "Monthly",
+      participants: 1023,
+      nextDraw: "in 8 days",
     },
   ]
 
-  const filteredPrizes = activeFilter === "all" ? prizes : prizes.filter((p) => p.network === activeFilter)
+  const filteredPrizes = activeFilter === "all" ? prizes : prizes.filter((p) => p.protocol === activeFilter)
 
   const handleOpenDeposit = (prize) => {
     setIsDepositModalOpen(true)
@@ -83,32 +102,26 @@ export default function PrizesPage() {
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Prize Pools</h1>
             <p className="text-gray-300 mb-6">
-              Deposit funds into prize vaults and stand a chance to win prizes without risking your deposit
+              Deposit into Drip Wave prize pools on Stellar and win rewards without risking your principal
             </p>
           </div>
 
           <div className="bg-[#1A0808]/50 backdrop-blur-sm rounded-xl border border-red-900/20 p-6 shadow-lg">
             <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-medium">Filter Prizes</h2>
+                <h2 className="text-lg font-medium">Filter</h2>
                 <div className="flex items-center gap-2 bg-[#2A0A0A]/80 backdrop-blur-sm rounded-full p-1 border border-red-900/10">
                   <button
                     className={`px-3 py-1 rounded-full text-sm ${activeFilter === "all" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
                     onClick={() => setActiveFilter("all")}
                   >
-                    View All
+                    All
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Cosmos" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
-                    onClick={() => setActiveFilter("Cosmos")}
+                    className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Drip Wave" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
+                    onClick={() => setActiveFilter("Drip Wave")}
                   >
-                    Avax
-                  </button>
-                  <button
-                    className={`px-3 py-1 rounded-full text-sm ${activeFilter === "Eth" ? "bg-red-600" : "hover:bg-[#3A0A0A]"}`}
-                    onClick={() => setActiveFilter("Eth")}
-                  >
-                    Eth
+                    Drip Wave
                   </button>
                 </div>
               </div>
@@ -121,30 +134,72 @@ export default function PrizesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPrizes.map((prize) => (
                 <div
                   key={prize.id}
-                  className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 border border-red-900/20 hover:border-red-500/50 transition-colors shadow-lg">
-                  <div className="text-2xl font-bold mb-1">
+                  className="bg-[#1A0808]/70 backdrop-blur-sm rounded-xl p-6 border border-red-900/20 shadow-lg hover:border-red-500/50 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Image src="/images/avax.png" height={40} width={40} alt="stellar icon" className="w-10 h-10" />
+                      <div>
+                        <div className="font-medium">{prize.name}</div>
+                        <div className="text-sm text-gray-400">{prize.protocol}</div>
+                      </div>
+                    </div>
+                    <div className="bg-red-900/20 text-red-500 px-2 py-1 rounded text-sm">
+                      {prize.cadence}
+                    </div>
+                  </div>
+
+                  <div className="text-3xl font-bold mb-1">
                     {mounted 
                       ? `$${prize.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
                       : `$${prize.amount}`}
                   </div>
-                  {/* Uncomment or import CosmosIcon if needed */}
-                  {/* <CosmosIcon className="w-6 h-6" /> */}
                   <div className="text-gray-400 text-sm mb-4">
                     + {prize.tokenAmount} {prize.token}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <Link
-                      href={`/app/prize/${prize.id}`}
-                      className="text-red-500 text-sm hover:text-red-400 transition-colors"
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between items-center">
+                      <div className="text-gray-400 text-sm flex items-center gap-1">
+                        <Wallet size={14} /> Participants
+                      </div>
+                      <div>{prize.participants}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-gray-400 text-sm flex items-center gap-1">
+                        <Clock size={14} /> Next Draw
+                      </div>
+                      <div className="text-sm">{prize.nextDraw}</div>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <div className="text-gray-400 text-sm flex items-center gap-1">
+                        <Trophy size={14} /> Prize Pool
+                      </div>
+                      <div className="text-sm">${prize.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      className="w-full bg-red-600/90 hover:bg-red-700 backdrop-blur-sm shadow-lg"
+                      onClick={() => handleOpenDeposit(prize)}
                     >
-                      View details
-                    </Link>
-                    <Button size="sm" className="bg-red-600 hover:bg-red-700" onClick={() => handleOpenDeposit(prize)}>
                       Deposit
+                    </Button>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full border-red-900/20 hover:bg-red-600/10 backdrop-blur-sm shadow-lg"
+                    >
+                      <Link href={`/app/prize/${prize.id}`}>
+                        View Details
+                      </Link>
                     </Button>
                   </div>
                 </div>
