@@ -5,10 +5,10 @@ import { Provider } from "@/Provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "VaultQuest - No-Loss Prize Savings Protocol",
+  title: "Drip Wave - No-Loss Prize Savings Protocol",
   icon: "/images/logo.png",
   description:
-    "Save & win with no-loss prize savings. Deposit funds into prize vaults and stand a chance to win prizes without risking your deposit.",
+    "A secure and transparent prize-linked savings protocol built on Stellar/Soroban. Save your deposits while earning interest and a chance to win prizes. Your capital is always safe.",
 };
 
 export default function RootLayout({ children }) {

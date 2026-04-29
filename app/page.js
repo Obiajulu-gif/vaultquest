@@ -16,7 +16,7 @@ import Hero from "@/components/Hero";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1A0505] to-[#2D0A0A] text-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#05051A] to-[#0A0A2D] text-white">
       <Navbar />
       <main className="pt-16">
         <Hero />

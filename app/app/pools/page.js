@@ -11,12 +11,13 @@ import CreatePoolModal from "@/components/app/CreatePoolModal";
 import DepositModal from "@/components/app/DepositModal";
 import WithdrawModal from "@/components/app/WithdrawModal";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAccount } from "wagmi";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import { useDripWave } from "@/hooks/useDripWave";
 import { Pool, UserPosition } from "@/lib/types";
 
 export default function PoolsPage() {
-  const { address, isConnected } = useAccount();
+  const { state: walletConnectionState } = useWalletConnection();
+  const { address, isConnected } = walletConnectionState;
   const { 
     pools, 
     activePools, 

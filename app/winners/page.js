@@ -4,82 +4,83 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Droplets } from "lucide-react";
 
 export default function WinnersPage() {
 	const [activeFilter, setActiveFilter] = useState("all");
 
 	const winners = [
 		{
-			network: "Cosmos",
-			address: "cosm...45ng4f",
+			network: "Stellar",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "100 XLM",
 		},
 		{
 			network: "USDC",
-			address: "cosm...34nf30",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "50 USDC",
 		},
 		{
 			network: "USDT",
-			address: "cosm...gsye20",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "50 USDT",
 		},
 		{
 			network: "USDC",
-			address: "cosm...3if0w3",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "25 USDC",
 		},
 		{
-			network: "Cosmos",
-			address: "cosm...er93j9",
+			network: "Stellar",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "75 XLM",
 		},
 		{
 			network: "USDT",
-			address: "cosm...gsye20",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "30 USDT",
 		},
 		{
-			network: "Cosmos",
-			address: "cosm...it4g45",
+			network: "Stellar",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
-		},
-		{
-			network: "USDC",
-			address: "cosm...93nf34",
-			date: "January 18",
-			price: "0.0009 Eth",
-		},
-		{
-			network: "Cosmos",
-			address: "cosm...gsye20",
-			date: "January 18",
-			price: "0.0009 Eth",
+			price: "120 XLM",
 		},
 		{
 			network: "USDC",
-			address: "cosm...94mg40",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "40 USDC",
+		},
+		{
+			network: "Stellar",
+			address: "GBXK...5B5B",
+			date: "January 18",
+			price: "90 XLM",
+		},
+		{
+			network: "USDC",
+			address: "GBXK...5B5B",
+			date: "January 18",
+			price: "60 USDC",
 		},
 		{
 			network: "USDT",
-			address: "cosm...9g6450",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "45 USDT",
 		},
 		{
 			network: "USDC",
-			address: "cosm...gjr430",
+			address: "GBXK...5B5B",
 			date: "January 18",
-			price: "0.0009 Eth",
+			price: "55 USDC",
 		},
 	];
 
@@ -97,13 +98,13 @@ export default function WinnersPage() {
 					<Link href="/" className="flex items-center gap-2">
 						<Image
 							src="/images/logo.png"
-							alt="VaultQuest Logo"
+							alt="Drip Wave Logo"
 							width={40}
 							height={40}
 							className="rounded-full"
 						/>
 						<span className="text-xl font-bold">
-							Vault<span className="text-red-600">Quest</span>
+							Drip <span className="text-blue-400">Wave</span>
 						</span>
 					</Link>
 					<div className="hidden md:flex items-center gap-8">
@@ -143,37 +144,16 @@ export default function WinnersPage() {
 							</button>
 							<button
 								className={`px-4 py-2 rounded-full text-sm transition-colors flex items-center gap-2 ${
-									activeFilter === "ethereum"
-										? "bg-red-600"
+									activeFilter === "stellar"
+										? "bg-blue-600"
 										: "hover:bg-[#3A0A0A]"
 								}`}
-								onClick={() => setActiveFilter("ethereum")}
+								onClick={() => setActiveFilter("stellar")}
 							>
-								<Image
-									src="/placeholder.svg?height=16&width=16"
-									alt="Cosmos"
-									width={16}
-									height={16}
-									className="rounded-full"
-								/>
-								Cosmos
-							</button>
-							<button
-								className={`px-4 py-2 rounded-full text-sm transition-colors flex items-center gap-2 ${
-									activeFilter === "starknet"
-										? "bg-red-600"
-										: "hover:bg-[#3A0A0A]"
-								}`}
-								onClick={() => setActiveFilter("starknet")}
-							>
-								<Image
-									src="/placeholder.svg?height=16&width=16"
-									alt="Starknet"
-									width={16}
-									height={16}
-									className="rounded-full"
-								/>
-								Cosmos
+								<div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+									<Droplets size={10} className="text-white" />
+								</div>
+								Stellar
 							</button>
 							<button
 								className={`px-4 py-2 rounded-full text-sm transition-colors flex items-center gap-2 ${

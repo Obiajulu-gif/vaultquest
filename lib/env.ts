@@ -24,7 +24,7 @@ if (!parsed.success) {
     .map(([key, msgs]) => `  ${key}: ${msgs?.join("; ")}`)
     .join("\n");
   throw new Error(
-    `\n[VaultQuest] Invalid frontend environment configuration:\n${lines}\n\nCopy .env.example to .env.local and fill in the required values.\n`,
+    `\n[Drip Wave] Invalid frontend environment configuration:\n${lines}\n\nCopy .env.example to .env.local and fill in the required values.\n`,
   );
 }
 

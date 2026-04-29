@@ -5,13 +5,14 @@ import Link from "next/link"
 import AppNav from "@/components/app/AppNav"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useAccount } from "wagmi"
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import { useDripWave } from "@/hooks/useDripWave"
 import { Wallet, TrendingUp, Users, Droplets, Loader2 } from "lucide-react"
 import PrizeGrid from "@/components/app/PrizeGrid"
 
 export default function AppPage() {
-  const { address, isConnected } = useAccount()
+  const { state: walletConnectionState } = useWalletConnection();
+  const { address, isConnected } = walletConnectionState;
   const { 
     walletState, 
     totalDeposits, 
@@ -65,7 +66,7 @@ export default function AppPage() {
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full backdrop-blur-sm shadow-lg text-lg"
                 onClick={() => {
-                  // Wallet connection handled by wagmi through AppNav
+                  // Wallet connection handled by useWalletConnection through AppNav
                 }}
               >
                 Connect Wallet to Start

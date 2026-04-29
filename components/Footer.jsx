@@ -11,32 +11,32 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <Image
               src="/images/logo.png"
-              alt="VaultQuest Logo"
+              alt="Drip Wave Logo"
               width={32}
               height={32}
               className="rounded-full"
             />
             <span className="text-lg font-bold text-white">
-              Vault<span className="text-red-500">Quest</span>
+              Drip <span className="text-blue-500">Wave</span>
             </span>
           </div>
 
           {/* Navigation Links */}
           <div className="flex flex-col items-center space-y-4">
-            <Link href="/" className="text-white hover:text-red-500 text-base transition-colors">
+            <Link href="/" className="text-white hover:text-blue-500 text-base transition-colors">
               Home
             </Link>
-            <Link href="/winners" className="text-white hover:text-red-500 text-base transition-colors">
+            <Link href="/winners" className="text-white hover:text-blue-500 text-base transition-colors">
               Winners
             </Link>
-            <Link href="/doc" className="text-white hover:text-red-500 text-base transition-colors">
+            <Link href="/doc" className="text-white hover:text-blue-500 text-base transition-colors">
               Doc
             </Link>
           </div>
 
           {/* Copyright */}
           <div className="text-gray-400 text-sm">
-            © 2025 Hello, VaultQuest, LLC
+            © 2025 Hello, Drip Wave, LLC
           </div>
         </div>
 
@@ -46,13 +46,13 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <Image
               src="/images/logo.png"
-              alt="VaultQuest Logo"
+              alt="Drip Wave Logo"
               width={24}
               height={24}
               className="rounded-full"
             />
             <span className="text-sm font-bold text-white">
-              Vault<span className="text-red-500">Quest</span>
+              Drip <span className="text-blue-500">Wave</span>
             </span>
           </div>
 
@@ -71,7 +71,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <div className="text-gray-400 text-sm">
-            © 2025 Hello, VaultQuest, LLC
+            © 2025 Hello, Drip Wave, LLC
           </div>
         </div>
       </div>

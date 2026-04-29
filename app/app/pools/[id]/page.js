@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import AppNav from "@/components/app/AppNav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAccount } from "wagmi";
+import { useWalletConnection } from "@/hooks/useWalletConnection";
 import { useDripWave } from "@/hooks/useDripWave";
 import { 
   Droplets, 
@@ -24,7 +24,8 @@ import WithdrawModal from "@/components/app/WithdrawalModal";
 export default function PoolDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { state: walletConnectionState } = useWalletConnection();
+  const { isConnected } = walletConnectionState;
   const { pools, userPositions, loading } = useDripWave();
   
   const [pool, setPool] = useState(null);

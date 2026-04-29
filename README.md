@@ -30,10 +30,10 @@ The exact contract and frontend boundaries are being normalized during the Stell
 
 Today the repository includes:
 
-- A Next.js frontend prototype with legacy `VaultQuest` branding in several routes and components.
-- Legacy wallet integrations built around Cosmos Kit, RainbowKit, and `wagmi`.
-- A Solidity contract and ABI that document prior assumptions but do not match the target Soroban implementation.
-- No committed `.github` automation baseline before this project-management pass.
+- A Next.js frontend rebranded as `Drip Wave`.
+- Stellar wallet integrations built around `@/hooks/useWalletConnection`.
+- Soroban contracts under `contracts/` with safety hardening and events.
+- GitHub Actions for frontend, backend, and contracts CI.
 
 That means contributors working on new implementation should align with the GitHub issues for the Stellar migration rather than extending the old chain-specific paths.
 
@@ -93,10 +93,10 @@ Additional contributor workflow guidance lives in [CONTRIBUTING.md](CONTRIBUTING
 
 ## Near-Term Cleanup Targets
 
-- Replace legacy `VaultQuest` branding in user-facing routes and metadata.
-- Remove or isolate `wagmi`, RainbowKit, Cosmos Kit, and Solidity-specific assumptions from active flows.
-- Introduce Soroban contract source, tests, and deployment configuration.
-- Add backend event indexing and dashboard APIs that match the new state model.
+- [x] Replace legacy `VaultQuest` branding in user-facing routes and metadata.
+- [x] Remove or isolate `wagmi`, RainbowKit, Cosmos Kit, and Solidity-specific assumptions from active flows.
+- [x] Introduce Soroban contract source, tests, and deployment configuration.
+- Introduce backend event indexing and dashboard APIs that match the new state model.
 
 ## License
 

@@ -8,8 +8,8 @@ export default function WhyPrizeSavings() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-5xl mx-auto">
-        <div className="bg-[#2A0A0A] rounded-xl p-6 md:p-8">
-          <h3 className="text-xl md:text-2xl font-bold mb-4 text-red-500">The Mission:</h3>
+        <div className="bg-[#0A0A2A] rounded-xl p-6 md:p-8">
+          <h3 className="text-xl md:text-2xl font-bold mb-4 text-blue-500">The Mission:</h3>
           <h4 className="text-lg md:text-xl font-bold mb-4">Financial freedom for all</h4>
           <p className="text-gray-300 text-sm md:text-base">
             Our goal is to democratize access to financial tools and create opportunities for everyone to build wealth,
@@ -17,7 +17,7 @@ export default function WhyPrizeSavings() {
           </p>
         </div>
 
-        <div className="bg-[#2A0A0A] rounded-xl p-6 md:p-8 flex items-center justify-center">
+        <div className="bg-[#0A0A2A] rounded-xl p-6 md:p-8 flex items-center justify-center">
           <div className="relative">
             <Image
               src="/images/shield.png"
