@@ -1,0 +1,123 @@
+name: Deployment & Release Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # 1. Contract Deployment
+  contracts:
+    name: Deploy Soroban Contracts
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    outputs:
+      contract_ids_updated: ${{ steps.deploy.outputs.updated }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Deploy to Stellar Network
+        id: deploy
+        shell: bash
+        env:
+          SOROBAN_ACCOUNT_SECRET: ${{ secrets.SOROBAN_ACCOUNT_SECRET }}
+          NETWORK: ${{ github.ref == 'refs/heads/main' && 'public' || 'testnet' }}
+          RPC_URL: ${{ github.ref == 'refs/heads/main' && 'https://horizon.stellar.org' || 'https://horizon-testnet.stellar.org' }}
+        run: |
+          echo "Deploying contracts to $NETWORK..."
+          # Placeholder for actual deployment script:
+          # contracts/scripts/deploy.sh $NETWORK
+          
+          # Simulate updating contract IDs
+          mkdir -p contracts/ids
+          echo '{"drip_pool": "C1234567890..."}' > contracts/ids/$NETWORK.json
+          
+          # If on develop, commit the updated IDs so they propagate
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add contracts/ids/$NETWORK.json
+            git commit -m "chore: update $NETWORK contract IDs [skip ci]" || echo "No changes to commit"
+            git push
+          fi
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+
+  # 2. Backend Deployment
+  backend:
+    name: Deploy Backend
+    needs: contracts
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build and Push Docker Image
+        run: |
+          echo "Building backend image..."
+          # docker build -t ghcr.io/${{ github.repository }}/backend:${{ github.sha }} ./backend
+          # docker push ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+
+      - name: Run Database Migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Deploy to Cloud Provider
+        run: |
+          echo "Deploying API to ${{ vars.CLOUD_PROVIDER }}..."
+          # Update API service
+
+  # 3. Indexer Deployment
+  indexer:
+    name: Deploy Event Indexer
+    needs: contracts
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Deploy Indexer Worker
+        run: |
+          echo "Deploying Indexer worker to ${{ vars.CLOUD_PROVIDER }}..."
+          # Update Indexer background service
+
+  # 4. Frontend Deployment
+  frontend:
+    name: Deploy Frontend
+    needs: [contracts, backend, indexer]
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Deploy to Vercel (Production/Staging)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
