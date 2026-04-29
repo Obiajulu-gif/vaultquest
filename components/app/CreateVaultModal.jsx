@@ -6,6 +6,7 @@ import {
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
+	DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,23 +104,31 @@ export default function CreateVaultModal({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="bg-[#1A0808]/90 backdrop-blur-sm border border-red-900/20 text-white sm:max-w-[425px] shadow-lg">
-				<DialogHeader className="flex flex-row items-center justify-between">
-					<DialogTitle>Create A Vault</DialogTitle>
-					<button onClick={handleClose} className="text-gray-400 hover:text-white">
-						<X className="h-4 w-4" />
-					</button>
+			<DialogContent className="bg-zinc-950 border border-white/10 max-w-md max-h-screen overflow-y-auto rounded-2xl shadow-2xl">
+				<DialogHeader className="border-b border-white/5 pb-4">
+					<div className="flex items-start justify-between">
+						<div>
+							<DialogTitle className="text-2xl font-bold text-white tracking-tight">Create New Vault</DialogTitle>
+							<p className="text-sm text-zinc-400 mt-1">
+								Configure a new prize-linked savings vault
+							</p>
+						</div>
+						<button onClick={handleClose} className="rounded-full p-1.5 opacity-70 transition-all hover:bg-white/10 hover:opacity-100">
+							<X className="h-4 w-4 text-white" />
+							<span className="sr-only">Close</span>
+						</button>
+					</div>
 				</DialogHeader>
 
-				<div className="py-4 space-y-4">
+				<div className="py-6 space-y-5">
 					{/* Vault Name Input */}
 					<div>
-						<label className="text-sm text-gray-400 mb-1 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Vault Name
 						</label>
 						<Input
-							placeholder="e.g. Savings Vault"
-							className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20"
+							placeholder="e.g. Summer Savings"
+							className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12"
 							value={vaultName}
 							onChange={(e) => {
 								setVaultName(e.target.value);
@@ -127,11 +136,16 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						/>
+						<p className="text-xs text-zinc-500 mt-1.5">
+							A memorable name for your vault
+						</p>
 					</div>
 
 					{/* Token Selection */}
 					<div>
-						<label className="text-sm text-gray-400 mb-1 block">Token</label>
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
+							Asset Token
+						</label>
 						<Select
 							value={vaultToken}
 							onValueChange={(value) => {
@@ -140,25 +154,25 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						>
-							<SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20">
+							<SelectTrigger className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12">
 								<SelectValue placeholder="Select Token" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20 text-gray-400">
+							<SelectContent className="bg-zinc-950 border border-white/10 rounded-xl">
 								{tokenOptions.map((token) => (
-									<SelectItem key={token.value} value={token.value}>
-										{token.label}
+									<SelectItem key={token.value} value={token.value} className="focus:bg-zinc-800">
+										<span className="text-white">{token.label}</span>
 									</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
-						<p className="text-xs text-gray-500 mt-1">
-							Selected: {tokenOptions.find(t => t.value === vaultToken)?.label || "None"}
+						<p className="text-xs text-zinc-500 mt-1.5">
+							Selected: {tokenOptions.find(t => t.value === vaultToken)?.label || "Select a token"}
 						</p>
 					</div>
 
 					{/* Duration Selection */}
 					<div>
-						<label className="text-sm text-gray-400 mb-1 block">
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
 							Lock Duration
 						</label>
 						<Select
@@ -169,34 +183,34 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						>
-							<SelectTrigger className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20">
+							<SelectTrigger className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12">
 								<SelectValue placeholder="Select Duration" />
 							</SelectTrigger>
-							<SelectContent className="bg-[#1A0808] border border-red-900/20 text-gray-400">
+							<SelectContent className="bg-zinc-950 border border-white/10 rounded-xl">
 								{durationOptions.map((duration) => (
-									<SelectItem key={duration.value} value={duration.value.toString()}>
-										{duration.label}
+									<SelectItem key={duration.value} value={duration.value.toString()} className="focus:bg-zinc-800">
+										<span className="text-white">{duration.label}</span>
 									</SelectItem>
 								))}
 							</SelectContent>
 						</Select>
-						<p className="text-xs text-gray-500 mt-1">
-							Users can withdraw early without interest
+						<p className="text-xs text-zinc-500 mt-1.5">
+							How long deposits are locked
 						</p>
 					</div>
 
 					{/* Interest Rate Input */}
 					<div>
-						<label className="text-sm text-gray-400 mb-1 block">
-							Annual Interest Rate (%)
+						<label className="text-sm font-medium text-zinc-300 mb-2 block">
+							Annual Yield Rate (%)
 						</label>
 						<Input
 							type="number"
-							placeholder="e.g. 5"
+							placeholder="e.g. 5.5"
 							min="0.01"
 							max="100"
 							step="0.01"
-							className="bg-[#2A0A0A]/80 backdrop-blur-sm border-red-900/20"
+							className="bg-zinc-900/80 border-white/10 text-white focus:ring-1 focus:ring-white/20 rounded-xl h-12"
 							value={vaultInterestRate}
 							onChange={(e) => {
 								setVaultInterestRate(Number(e.target.value));
@@ -204,52 +218,78 @@ export default function CreateVaultModal({
 							}}
 							disabled={isPending || success}
 						/>
-						<p className="text-xs text-gray-500 mt-1">
-							Interest only paid after lock period expires
+						<p className="text-xs text-zinc-500 mt-1.5">
+							APY paid after lock period completes
 						</p>
+					</div>
+
+					{/* Configuration Summary */}
+					<div className="bg-zinc-900/50 rounded-xl p-4 border border-white/5 space-y-2">
+						<p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Vault Configuration</p>
+						<div className="space-y-2 text-sm">
+							<div className="flex justify-between">
+								<span className="text-zinc-500">Vault Name:</span>
+								<span className="text-white font-medium">{vaultName || "—"}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-zinc-500">Token:</span>
+								<span className="text-white font-medium">{tokenOptions.find(t => t.value === vaultToken)?.label || "—"}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-zinc-500">Duration:</span>
+								<span className="text-white font-medium">{durationOptions.find(d => d.value.toString() === vaultDuration.toString())?.label || "—"}</span>
+							</div>
+							<div className="flex justify-between">
+								<span className="text-zinc-500">APY:</span>
+								<span className="text-white font-medium">{vaultInterestRate}%</span>
+							</div>
+						</div>
 					</div>
 
 					{/* Error Display */}
 					{error && (
-						<div className="flex items-center gap-2 text-red-500 text-sm">
-							<AlertCircle size={16} />
-							{error}
+						<div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+							<AlertCircle size={18} className="text-red-400 flex-shrink-0" />
+							<p className="text-red-200 text-sm">{error}</p>
 						</div>
 					)}
 
 					{/* Success Display */}
 					{success && (
-						<div className="bg-green-900/20 text-green-500 p-3 rounded-md text-sm flex items-center gap-2">
-							<Check size={16} />
-							Vault created successfully!
+						<div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+							<Check size={18} className="text-emerald-400 flex-shrink-0" />
+							<p className="text-emerald-200 text-sm">Vault created successfully!</p>
 						</div>
 					)}
 
 					{/* Transaction Status */}
 					{isPending && (
-						<div className="bg-blue-900/20 text-blue-500 p-3 rounded-md text-sm flex items-center gap-2">
+						<div className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-3">
 							<div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-							Transaction pending...
+							<p className="text-blue-200 text-sm">Transaction pending...</p>
 						</div>
 					)}
 				</div>
 
-				{/* Form Summary */}
-				<div className="bg-[#2A0A0A]/50 p-3 rounded-md text-xs text-gray-400 space-y-1">
-					<div>Name: {vaultName || "Not set"}</div>
-					<div>Token: {tokenOptions.find(t => t.value === vaultToken)?.symbol || "Not selected"}</div>
-					<div>Duration: {durationOptions.find(d => d.value === vaultDuration)?.label || "Not selected"}</div>
-					<div>APY: {vaultInterestRate || 0}%</div>
-				</div>
+				{/* Action Buttons */}
+				<div className="space-y-3 pt-4 border-t border-white/5">
+					<Button
+						className="w-full bg-white hover:bg-zinc-200 text-zinc-900 font-bold h-12 rounded-xl transition-all disabled:bg-zinc-800 disabled:text-zinc-500 mt-4"
+						onClick={handleCreate}
+						disabled={isPending || success}
+					>
+						{isPending ? "Creating Vault..." : success ? "✓ Vault Created" : "Create Vault"}
+					</Button>
 
-				{/* Create Button */}
-				<Button
-					className="w-full bg-red-600 hover:bg-red-700"
-					onClick={handleCreate}
-					disabled={isPending || success}
-				>
-					{isPending ? "Creating Vault..." : success ? "Vault Created!" : "Create Vault"}
-				</Button>
+					<Button
+						variant="ghost"
+						className="w-full text-zinc-400 hover:text-white hover:bg-zinc-900 h-12 rounded-xl transition-all"
+						onClick={handleClose}
+						disabled={isPending}
+					>
+						Cancel
+					</Button>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
