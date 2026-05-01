@@ -1,0 +1,52 @@
+name: Rollback Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Git SHA to revert to'
+        required: true
+      issue_number:
+        description: 'Linked Issue for tracking'
+        required: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      issue: ${{ github.event.inputs.issue_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check SHA
+        run: git rev-parse "${{ github.event.inputs.version }}"
+
+  rollback:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.version }}
+      - name: Re-deploy Contracts
+        env:
+          SOROBAN_ACCOUNT_SECRET: ${{ secrets.SOROBAN_ACCOUNT_SECRET }}
+        run: |
+          chmod +x contracts/scripts/deploy.sh
+          ./contracts/scripts/deploy.sh testnet
+
+  notify:
+    needs: [validate, rollback]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅' : '❌';
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ needs.validate.outputs.issue }},
+              body: `Rollback status: ${status}`
+            });

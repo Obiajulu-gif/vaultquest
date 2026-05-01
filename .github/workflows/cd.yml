@@ -1,0 +1,103 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  deploy-contracts:
+    name: Deploy Soroban Contracts
+    runs-on: ubuntu-latest
+    outputs:
+      network: ${{ steps.set-env.outputs.network }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: cargo install --locked soroban-cli
+
+      - name: Set Network Environment
+        id: set-env
+        run: |
+          NET="${{ github.ref == 'refs/heads/main' && 'public' || 'testnet' }}"
+          echo "network=$NET" >> "$GITHUB_OUTPUT"
+
+      - name: Run Deploy Script
+        env:
+          SOROBAN_ACCOUNT_SECRET: ${{ secrets.SOROBAN_ACCOUNT_SECRET }}
+        run: |
+          chmod +x contracts/scripts/deploy.sh
+          ./contracts/scripts/deploy.sh "${{ steps.set-env.outputs.network }}"
+
+      - name: Upload Contract IDs
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-ids
+          path: contracts/ids/
+
+  deploy-backend:
+    name: Deploy Backend & Migrations
+    needs: deploy-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run Database Migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Deploy API
+        env:
+          CLOUD_PROVIDER: ${{ secrets.CLOUD_PROVIDER }}
+        run: |
+          echo "Deploying to $CLOUD_PROVIDER..."
+          # Insert your specific cloud deploy command here (e.g. railway up)
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: deploy-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Contract IDs
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-ids
+          path: contracts/ids
+
+      - name: Parse Contract IDs for Vercel
+        id: parse
+        run: |
+          FILE="contracts/ids/${{ needs.deploy-contracts.outputs.network }}.json"
+          ID=$(jq -r '.drip_pool' "$FILE")
+          echo "drip_id=$ID" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+        env:
+          NEXT_PUBLIC_NETWORK: ${{ needs.deploy-contracts.outputs.network }}
+          NEXT_PUBLIC_DRIP_POOL_ID: ${{ steps.parse.outputs.drip_id }}

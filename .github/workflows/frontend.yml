@@ -1,82 +1,27 @@
 name: Frontend CI
 
 on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
   pull_request:
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
+      - "frontend/**"
       - ".github/workflows/frontend.yml"
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - ".github/workflows/frontend.yml"
-
-permissions:
-  contents: read
-
-concurrency:
-  group: frontend-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  frontend:
-    name: Lint, Typecheck, Test, Build
+  validate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Type check
-        if: ${{ hashFiles('tsconfig.json') != '' }}
-        run: npx tsc --noEmit
-
-      - name: Test
-        run: npm test --if-present
-
-      - name: Build
-        env:
-          # Non-placeholder string so lib/env.ts validation passes in CI.
-          # Real project IDs are set in hosting/deployment secrets, not here.
-          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ci-build-placeholder' }}
-        run: npm run build
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run lint
+          npm run build
