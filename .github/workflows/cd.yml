@@ -2,110 +2,59 @@ name: Continuous Deployment
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
 
 jobs:
-  # Deploy Soroban contracts
   deploy-contracts:
+    name: Deploy Soroban Contracts
     runs-on: ubuntu-latest
     outputs:
-      contracts-updated: ${{ steps.deploy.outputs.updated }}
-      network: ${{ steps.set-network.outputs.network }}
-    
+      network: ${{ steps.set-env.outputs.network }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set network
-        id: set-network
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            echo "network=public" >> $GITHUB_OUTPUT
-          else
-            echo "network=testnet" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          target: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown
 
       - name: Install Soroban CLI
-        run: |
-          cargo install --locked soroban-cli --features opt
+        run: cargo install --locked soroban-cli
 
-      - name: Deploy contracts
-        id: deploy
+      - name: Set Network Environment
+        id: set-env
+        run: |
+          NET="${{ github.ref == 'refs/heads/main' && 'public' || 'testnet' }}"
+          echo "network=$NET" >> "$GITHUB_OUTPUT"
+
+      - name: Run Deploy Script
         env:
           SOROBAN_ACCOUNT_SECRET: ${{ secrets.SOROBAN_ACCOUNT_SECRET }}
-          NETWORK: ${{ steps.set-network.outputs.network }}
-          RPC_URL: ${{ github.ref == 'refs/heads/main' && 'https://soroban-mainnet.stellar.org' || 'https://soroban-testnet.stellar.org' }}
         run: |
-          echo "Deploying contracts to $NETWORK..."
-          
-          # Check if deploy script exists
-          if [ ! -f "contracts/scripts/deploy.sh" ]; then
-            echo "Error: contracts/scripts/deploy.sh not found"
-            echo "Please create the deployment script before running this workflow"
-            exit 1
-          fi
-          
-          # Make deploy script executable and run it
           chmod +x contracts/scripts/deploy.sh
-          contracts/scripts/deploy.sh $NETWORK
-          
-          # Check if deployment created the contract IDs file
-          if [ ! -f "contracts/ids/$NETWORK.json" ]; then
-            echo "Error: Deployment did not create contracts/ids/$NETWORK.json"
-            exit 1
-          fi
-          
-          echo "updated=true" >> $GITHUB_OUTPUT
+          ./contracts/scripts/deploy.sh "${{ steps.set-env.outputs.network }}"
 
-      - name: Commit contract IDs (testnet only)
-        if: github.ref == 'refs/heads/develop' && steps.deploy.outputs.updated == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add contracts/ids/${{ steps.set-network.outputs.network }}.json
-          git commit -m "chore: update ${{ steps.set-network.outputs.network }} contract IDs [skip ci]" || echo "No changes to commit"
-          git push
-
-      - name: Upload contract IDs as artifact
+      - name: Upload Contract IDs
         uses: actions/upload-artifact@v4
         with:
-          name: contract-ids-${{ steps.set-network.outputs.network }}
-          path: contracts/ids/${{ steps.set-network.outputs.network }}.json
-          retention-days: 30
-
-  # Deploy backend with migrations
-  deploy-backend:
-    runs-on: ubuntu-latest
-    needs: deploy-contracts
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-    
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Download contract IDs
-        uses: actions/download-artifact@v4
-        with:
-          name: contract-ids-${{ needs.deploy-contracts.outputs.network }}
+          name: contract-ids
           path: contracts/ids/
 
-      - name: Set up Node.js
+  deploy-backend:
+    name: Deploy Backend & Migrations
+    needs: deploy-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
 
-      - name: Install backend dependencies
+      - name: Install Dependencies
         working-directory: backend
         run: npm ci
 
@@ -115,92 +64,40 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx prisma migrate deploy
 
-      - name: Load contract IDs into environment
-        run: |
-          # Read contract IDs and export them as environment variables
-          CONTRACT_IDS=$(cat contracts/ids/${{ needs.deploy-contracts.outputs.network }}.json)
-          echo "CONTRACT_IDS<<EOF" >> $GITHUB_ENV
-          echo "$CONTRACT_IDS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Deploy backend API
+      - name: Deploy API
         env:
           CLOUD_PROVIDER: ${{ secrets.CLOUD_PROVIDER }}
-          NETWORK: ${{ needs.deploy-contracts.outputs.network }}
         run: |
-          echo "Deploying API to $CLOUD_PROVIDER..."
-          
-          # Add your actual deployment command here based on your cloud provider
-          # Examples:
-          # - Vercel: vercel deploy --prod
-          # - Railway: railway up
-          # - Fly.io: fly deploy
-          # - AWS: aws deploy ...
-          # - GCP: gcloud app deploy
-          
-          echo "Please configure your cloud provider deployment command"
-          echo "Current provider: $CLOUD_PROVIDER"
+          echo "Deploying to $CLOUD_PROVIDER..."
+          # Insert your specific cloud deploy command here (e.g. railway up)
 
-  # Deploy event indexer
-  deploy-indexer:
-    runs-on: ubuntu-latest
-    needs: deploy-contracts
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-    
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Download contract IDs
-        uses: actions/download-artifact@v4
-        with:
-          name: contract-ids-${{ needs.deploy-contracts.outputs.network }}
-          path: contracts/ids/
-
-      - name: Load contract IDs into environment
-        run: |
-          CONTRACT_IDS=$(cat contracts/ids/${{ needs.deploy-contracts.outputs.network }}.json)
-          echo "CONTRACT_IDS<<EOF" >> $GITHUB_ENV
-          echo "$CONTRACT_IDS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Deploy indexer
-        env:
-          CLOUD_PROVIDER: ${{ secrets.CLOUD_PROVIDER }}
-          NETWORK: ${{ needs.deploy-contracts.outputs.network }}
-        run: |
-          echo "Deploying indexer to $CLOUD_PROVIDER..."
-          
-          # Add your actual indexer deployment command here
-          echo "Please configure your indexer deployment command"
-
-  # Deploy frontend
   deploy-frontend:
-    runs-on: ubuntu-latest
+    name: Deploy Frontend
     needs: deploy-contracts
-    environment: 
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
-      url: ${{ steps.deploy.outputs.deployment-url }}
-    
+    runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Download contract IDs
+      - uses: actions/checkout@v4
+      
+      - name: Download Contract IDs
         uses: actions/download-artifact@v4
         with:
-          name: contract-ids-${{ needs.deploy-contracts.outputs.network }}
-          path: contracts/ids/
+          name: contract-ids
+          path: contracts/ids
+
+      - name: Parse Contract IDs for Vercel
+        id: parse
+        run: |
+          FILE="contracts/ids/${{ needs.deploy-contracts.outputs.network }}.json"
+          ID=$(jq -r '.drip_pool' "$FILE")
+          echo "drip_id=$ID" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to Vercel
-        id: deploy
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-args: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
         env:
-          # Load contract IDs from the downloaded artifact
           NEXT_PUBLIC_NETWORK: ${{ needs.deploy-contracts.outputs.network }}
+          NEXT_PUBLIC_DRIP_POOL_ID: ${{ steps.parse.outputs.drip_id }}

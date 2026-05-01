@@ -1,83 +1,27 @@
-name: Frontend CI/CD
+name: Frontend CI
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
   pull_request:
     paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend.yml'
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
 
 jobs:
-  # Lint and build check
-  lint-and-build:
+  validate:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-    
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
+      - uses: actions/checkout@v4
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Build frontend
-        env:
-          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ci-build-placeholder' }}
-        run: npm run build
-
-  # Preview deployment for PRs from the same repository
-  deploy-preview:
-    runs-on: ubuntu-latest
-    needs: lint-and-build
-    # Only run for PRs from the same repository (not forks)
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    environment:
-      name: preview
-      url: ${{ steps.deploy.outputs.deployment-url }}
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to Vercel (Preview)
-        id: deploy
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID }}
-          NEXT_PUBLIC_NETWORK: testnet
-
-  # Notice for forked PRs
-  fork-notice:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
-    steps:
-      - name: Comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '👋 Thanks for your contribution! Preview deployments are not available for forked repositories due to security restrictions. A maintainer will review your PR and can trigger a preview deployment if needed.'
-            })
+          node-version: 20
+      - name: Install & Build
+        run: |
+          npm ci
+          npm run lint
+          npm run build
