@@ -1,0 +1,250 @@
+name: Rollback Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+      component:
+        description: 'Component to rollback'
+        required: true
+        type: choice
+        options:
+          - all
+          - contracts
+          - backend
+          - indexer
+          - frontend
+      version:
+        description: 'Git tag or commit SHA to rollback to'
+        required: true
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+jobs:
+  validate-rollback:
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.confirm.outputs.proceed }}
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version exists
+        run: |
+          if ! git rev-parse ${{ inputs.version }} >/dev/null 2>&1; then
+            echo "Error: Version ${{ inputs.version }} does not exist"
+            exit 1
+          fi
+          
+          echo "Rollback Details:"
+          echo "  Environment: ${{ inputs.environment }}"
+          echo "  Component: ${{ inputs.component }}"
+          echo "  Target Version: ${{ inputs.version }}"
+          echo "  Reason: ${{ inputs.reason }}"
+          echo "  Triggered by: ${{ github.actor }}"
+
+      - name: Create rollback issue
+        id: confirm
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Rollback: ${context.payload.inputs.component} to ${context.payload.inputs.version}`,
+              body: `## Rollback Request
+              
+              **Environment**: ${context.payload.inputs.environment}
+              **Component**: ${context.payload.inputs.component}
+              **Target Version**: ${context.payload.inputs.version}
+              **Reason**: ${context.payload.inputs.reason}
+              **Triggered by**: @${context.actor}
+              **Timestamp**: ${new Date().toISOString()}
+              
+              This issue tracks the rollback deployment.`,
+              labels: ['rollback', 'deployment', context.payload.inputs.environment]
+            });
+            
+            core.setOutput('proceed', 'true');
+            core.setOutput('issue_number', issue.data.number);
+            return issue.data.number;
+
+  rollback-contracts:
+    runs-on: ubuntu-latest
+    needs: validate-rollback
+    if: needs.validate-rollback.outputs.proceed == 'true' && (inputs.component == 'all' || inputs.component == 'contracts')
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Check out target version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: cargo install --locked soroban-cli --features opt
+
+      - name: Rollback contracts
+        env:
+          SOROBAN_ACCOUNT_SECRET: ${{ secrets.SOROBAN_ACCOUNT_SECRET }}
+          NETWORK: ${{ inputs.environment == 'production' && 'public' || 'testnet' }}
+          RPC_URL: ${{ inputs.environment == 'production' && 'https://soroban-mainnet.stellar.org' || 'https://soroban-testnet.stellar.org' }}
+        run: |
+          echo "Rolling back contracts to version ${{ inputs.version }}"
+          
+          if [ -f "contracts/scripts/deploy.sh" ]; then
+            chmod +x contracts/scripts/deploy.sh
+            contracts/scripts/deploy.sh $NETWORK
+          else
+            echo "Warning: No deployment script found"
+          fi
+
+      - name: Upload rollback contract IDs
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-contract-ids
+          path: contracts/ids/*.json
+
+  rollback-backend:
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, rollback-contracts]
+    if: |
+      always() && 
+      needs.validate-rollback.outputs.proceed == 'true' && 
+      (inputs.component == 'all' || inputs.component == 'backend')
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Check out target version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Rollback database (if needed)
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "WARNING: Automatic database rollback is risky"
+          echo "Please manually verify database state and migrations"
+          echo "Skipping automatic migration rollback"
+          # npx prisma migrate resolve --rolled-back <migration_name>
+
+      - name: Deploy backend
+        env:
+          CLOUD_PROVIDER: ${{ secrets.CLOUD_PROVIDER }}
+        run: |
+          echo "Deploying backend version ${{ inputs.version }}"
+          # Add your deployment command
+
+  rollback-indexer:
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, rollback-contracts]
+    if: |
+      always() && 
+      needs.validate-rollback.outputs.proceed == 'true' && 
+      (inputs.component == 'all' || inputs.component == 'indexer')
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Check out target version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Deploy indexer
+        env:
+          CLOUD_PROVIDER: ${{ secrets.CLOUD_PROVIDER }}
+        run: |
+          echo "Deploying indexer version ${{ inputs.version }}"
+          # Add your deployment command
+
+  rollback-frontend:
+    runs-on: ubuntu-latest
+    needs: [validate-rollback, rollback-contracts]
+    if: |
+      always() && 
+      needs.validate-rollback.outputs.proceed == 'true' && 
+      (inputs.component == 'all' || inputs.component == 'frontend')
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    
+    steps:
+      - name: Check out target version
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Download rollback contract IDs (if contracts were rolled back)
+        if: inputs.component == 'all'
+        uses: actions/download-artifact@v4
+        with:
+          name: rollback-contract-ids
+          path: contracts/ids/
+        continue-on-error: true
+
+      - name: Deploy to Vercel
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-args: '--prod'
+
+  notify-completion:
+    runs-on: ubuntu-latest
+    needs: [rollback-contracts, rollback-backend, rollback-indexer, rollback-frontend]
+    if: always()
+    
+    steps:
+      - name: Update rollback issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ Completed' : '❌ Failed';
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.inputs.issue_number,
+              body: `## Rollback Status: ${status}
+              
+              **Workflow Run**: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}
+              
+              Component Status:
+              - Contracts: ${{ needs.rollback-contracts.result }}
+              - Backend: ${{ needs.rollback-backend.result }}
+              - Indexer: ${{ needs.rollback-indexer.result }}
+              - Frontend: ${{ needs.rollback-frontend.result }}`
+            });

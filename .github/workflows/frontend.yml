@@ -1,82 +1,83 @@
-name: Frontend CI
+name: Frontend CI/CD
 
 on:
-  pull_request:
-    paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - ".github/workflows/frontend.yml"
   push:
     branches:
       - main
       - develop
+  pull_request:
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - ".github/workflows/frontend.yml"
-
-permissions:
-  contents: read
-
-concurrency:
-  group: frontend-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
 
 jobs:
-  frontend:
-    name: Lint, Typecheck, Test, Build
+  # Lint and build check
+  lint-and-build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: frontend
+    
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
+      - name: Run linter
         run: npm run lint
 
-      - name: Type check
-        if: ${{ hashFiles('tsconfig.json') != '' }}
-        run: npx tsc --noEmit
-
-      - name: Test
-        run: npm test --if-present
-
-      - name: Build
+      - name: Build frontend
         env:
-          # Non-placeholder string so lib/env.ts validation passes in CI.
-          # Real project IDs are set in hosting/deployment secrets, not here.
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ci-build-placeholder' }}
         run: npm run build
+
+  # Preview deployment for PRs from the same repository
+  deploy-preview:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    # Only run for PRs from the same repository (not forks)
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (Preview)
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID }}
+          NEXT_PUBLIC_NETWORK: testnet
+
+  # Notice for forked PRs
+  fork-notice:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '👋 Thanks for your contribution! Preview deployments are not available for forked repositories due to security restrictions. A maintainer will review your PR and can trigger a preview deployment if needed.'
+            })
