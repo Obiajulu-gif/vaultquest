@@ -1,0 +1,8 @@
+{
+  "name": "vaultquest",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix backend run build"
+  }
+}
