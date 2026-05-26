@@ -35,6 +35,20 @@ To see the test results UI:
 npx playwright test --ui
 ```
 
+### Security Checks
+
+Run the secret scan and dependency audit report before opening PRs that touch
+dependencies, CI, deployment, authentication, wallet, contract, or environment
+configuration:
+
+```bash
+npm run security:secrets
+npm run security:audit:report
+```
+
+See `docs/SECURITY_WORKFLOW.md` for false-positive handling and the manual
+security gate.
+
 ## Mocking Wallet States
 
 We use `wagmi` mocks in `tests/mocks/wagmi.ts`. You can override these in individual tests to simulate different states:

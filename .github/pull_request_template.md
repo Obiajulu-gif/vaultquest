@@ -10,7 +10,15 @@
 
 - [ ] `npm run lint`
 - [ ] `npm run build`
+- [ ] `npm run security:secrets`
+- [ ] `npm run security:audit:report` reviewed for dependency changes
 - [ ] Additional contract/backend checks listed below when applicable
+
+## Security
+
+- [ ] No real secrets, private keys, tokens, mnemonics, or production URLs were committed
+- [ ] Environment examples use empty values, localhost values, or obvious placeholders
+- [ ] Any secret-scan false positives are documented and narrowly allowlisted
 
 ## UI Evidence
 

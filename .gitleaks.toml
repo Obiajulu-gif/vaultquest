@@ -1,0 +1,9 @@
+title = "VaultQuest secret scan"
+
+[allowlist]
+description = "Repository-owned placeholders that are safe to commit"
+regexes = [
+  '''CA_PLACEHOLDER_[A-Z0-9_]+''',
+  '''replace-with-[a-z0-9-]+''',
+  '''postgres://postgres:postgres@localhost:5432/vaultquest'''
+]

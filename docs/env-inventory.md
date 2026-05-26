@@ -12,6 +12,10 @@ Anything without the `NEXT_PUBLIC_` prefix is server-only and must never be
 referenced in frontend code. If it has `NEXT_PUBLIC_`, assume anyone who loads
 the site can read it.
 
+Use empty values, localhost development URLs, or obvious placeholders in
+committed env examples. Keep real credentials in local ignored files or the
+deployment provider.
+
 ## Frontend variables
 
 Copy `.env.example` to `.env.local` before running `npm run dev`.
@@ -32,11 +36,10 @@ error message if the variable is missing or is still the literal placeholder
 | CI builds | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is provided by `.github/workflows/frontend.yml` from a repo secret (falls back to a non-placeholder string so the build passes). |
 | Preview / production | Set `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` as a secret in the hosting provider (Vercel, etc.). Use a separate WalletConnect project per environment if you want isolated analytics. |
 
-## CI placeholder guard
+## Secret scanning
 
-`.github/workflows/config-guard.yml` fails any pull request that commits the
-literal string `YOUR_PROJECT_ID` in a JS/TS source file. This prevents the old
-placeholder from silently sneaking back into the codebase.
+Run `npm run security:secrets` before changing env examples or configuration.
+See `docs/SECURITY_WORKFLOW.md` for local commands and false-positive handling.
 
 ## Backend (issue #34 — action ledger)
 
@@ -49,4 +52,3 @@ These are consumed by `backend/src/env.ts`.
 | `ORPHAN_TTL_MINUTES` | Minutes after which `submitted` rows with no event are orphaned | Default 10 |
 | `LOG_LEVEL` | Pino log level | Default `info` |
 | `PORT` | HTTP port | Default 3001 |
-
