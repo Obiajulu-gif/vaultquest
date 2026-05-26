@@ -1,0 +1,20 @@
+
+packages:
+  - "."
+  - "backend"
+allowBuilds:
+  '@prisma/client': false
+  '@prisma/engines': false
+  blake-hash: false
+  bufferutil: false
+  cpu-features: false
+  esbuild: false
+  prisma: false
+  protobufjs: false
+  secp256k1: false
+  sharp: false
+  ssh2: false
+  tiny-secp256k1: false
+  unrs-resolver: false
+  usb: false
+  utf-8-validate: false

@@ -25,6 +25,7 @@ fn create_initialises_pool() {
     let pool = client.pool();
     assert_eq!(pool.admin, admin);
     assert_eq!(pool.total_drips, 0);
+    assert_eq!(pool.total_deposited, 0);
 }
 
 #[test]
@@ -42,19 +43,24 @@ fn full_lifecycle_create_join_drip_claim_withdraw() {
 
     let alice = Address::generate(&env);
     client.join(&alice);
-    client.drip(&alice, &10);
+    client.deposit(&alice, &10);
     client.drip(&alice, &5);
 
     let pool = client.pool();
     assert_eq!(pool.total_drips, 2);
+    assert_eq!(pool.total_deposited, 15);
+
+    let savings = client.savings(&alice);
+    assert_eq!(savings.deposited, 15);
 
     let claimed = client.claim(&alice);
     assert_eq!(claimed, 15);
 
-    let claimed_again = client.claim(&alice);
+    let claimed_again = client.claim_reward(&alice);
     assert_eq!(claimed_again, 0);
 
-    client.withdraw(&alice);
+    let withdrawn = client.withdraw(&alice);
+    assert_eq!(withdrawn, 15);
 }
 
 #[test]
@@ -82,8 +88,10 @@ fn drip_without_join_fails() {
     let (env, client, admin) = setup();
     client.create(&admin);
     let alice = Address::generate(&env);
-    let res = client.try_drip(&alice, &10);
-    assert_eq!(res, Err(Ok(Error::NotJoined)));
+    client.drip(&alice, &10);
+    let savings = client.savings(&alice);
+    assert_eq!(savings.deposited, 10);
+    assert_eq!(savings.claimable, 10);
 }
 
 #[test]

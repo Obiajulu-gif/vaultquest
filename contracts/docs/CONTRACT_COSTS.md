@@ -39,7 +39,7 @@ listed with the trade-off the maintainer should weigh:
   fits under the entry size limit.
 - **Switch `Participant.claimable` to `i64`.** Half the bytes per write,
   caps the per-participant claimable balance at ~9.2e18 stroops (still
-  far above any realistic Drip Wave amount).
+  far above any realistic TrustQuest amount).
 - **Use temporary storage for the hot per-participant `drip` increment
   and flush to persistent storage on `claim`.** Dramatically lower rent
   for active pools; adds a recovery path for participants who never
@@ -59,7 +59,7 @@ optimization pass should report deltas against these three scenarios:
 1. **Small pool** — 1 admin, 5 participants, 10 drips per participant.
    Smoke-test for the API and the worst-case rent on instance storage.
 2. **Mid pool** — 1 admin, 50 participants, 100 drips per participant.
-   The expected steady-state for an active Drip Wave round.
+   The expected steady-state for an active TrustQuest round.
 3. **Wide pool** — 1 admin, 500 participants, 5 drips per participant.
    Stresses the per-participant storage layout.
 
@@ -84,3 +84,4 @@ re-run the full harness without skipped or modified assertions.
 | Date (UTC) | PR | Operation | Delta | Cause |
 |---|---|---|---|---|
 | 2026-04-26 | this PR | scaffold | n/a | Establishes baseline; no real numbers yet. |
+

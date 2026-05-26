@@ -19,10 +19,8 @@ export const mockWagmiHooks = {
   useChainId: vi.fn(() => 43113),
 };
 
-vi.mock('wagmi', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('wagmi')>();
+vi.mock('wagmi', () => {
   return {
-    ...actual,
     useAccount: () => mockWagmiHooks.useAccount(),
     useConnect: () => mockWagmiHooks.useConnect(),
     useDisconnect: () => mockWagmiHooks.useDisconnect(),

@@ -49,7 +49,7 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "drip",
+              "function_name": "deposit",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
@@ -93,6 +93,7 @@
       ]
     ],
     [],
+    [],
     [
       [
         "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
@@ -119,7 +120,7 @@
           "function": {
             "contract_fn": {
               "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "claim",
+              "function_name": "claim_reward",
               "args": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
@@ -220,6 +221,17 @@
                               },
                               "val": {
                                 "u64": 0
+                              }
+                            },
+                            {
+                              "key": {
+                                "symbol": "total_deposited"
+                              },
+                              "val": {
+                                "i128": {
+                                  "hi": 0,
+                                  "lo": 15
+                                }
                               }
                             },
                             {
@@ -653,7 +665,7 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "drip"
+                "symbol": "deposit"
               }
             ],
             "data": {
@@ -686,7 +698,7 @@
                 "symbol": "pool"
               },
               {
-                "symbol": "dripped"
+                "symbol": "deposit"
               }
             ],
             "data": {
@@ -719,7 +731,7 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "drip"
+                "symbol": "deposit"
               }
             ],
             "data": "void"
@@ -776,7 +788,7 @@
                 "symbol": "pool"
               },
               {
-                "symbol": "dripped"
+                "symbol": "deposit"
               }
             ],
             "data": {
@@ -877,10 +889,101 @@
                 },
                 {
                   "key": {
+                    "symbol": "total_deposited"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 15
+                    }
+                  }
+                },
+                {
+                  "key": {
                     "symbol": "total_drips"
                   },
                   "val": {
                     "u64": 2
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": null,
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
+              },
+              {
+                "symbol": "savings"
+              }
+            ],
+            "data": {
+              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "savings"
+              }
+            ],
+            "data": {
+              "map": [
+                {
+                  "key": {
+                    "symbol": "claimable"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 15
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "deposited"
+                  },
+                  "val": {
+                    "i128": {
+                      "hi": 0,
+                      "lo": 15
+                    }
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "joined_at"
+                  },
+                  "val": {
+                    "u64": 0
                   }
                 }
               ]
@@ -990,7 +1093,7 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "claim"
+                "symbol": "claim_reward"
               }
             ],
             "data": {
@@ -1046,7 +1149,7 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "claim"
+                "symbol": "claim_reward"
               }
             ],
             "data": {
@@ -1102,7 +1205,17 @@
               }
             ],
             "data": {
-              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 15
+                  }
+                }
+              ]
             }
           }
         }
@@ -1124,7 +1237,12 @@
                 "symbol": "withdraw"
               }
             ],
-            "data": "void"
+            "data": {
+              "i128": {
+                "hi": 0,
+                "lo": 15
+              }
+            }
           }
         }
       },

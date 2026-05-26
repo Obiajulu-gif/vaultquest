@@ -98,6 +98,17 @@
                             },
                             {
                               "key": {
+                                "symbol": "total_deposited"
+                              },
+                              "val": {
+                                "i128": {
+                                  "hi": 0,
+                                  "lo": 0
+                                }
+                              }
+                            },
+                            {
+                              "key": {
                                 "symbol": "total_drips"
                               },
                               "val": {

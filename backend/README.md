@@ -1,6 +1,6 @@
 # VaultQuest Backend
 
-Action ledger and reconciliation service for Drip Wave (issue #34).
+Action ledger and reconciliation service for TrustQuest (issue #34).
 
 ## Stack
 
@@ -49,3 +49,4 @@ Tests use Testcontainers to spin up Postgres 16 per run. Docker must be availabl
 ```bash
 pnpm test
 ```
+

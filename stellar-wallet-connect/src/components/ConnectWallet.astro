@@ -1,0 +1,105 @@
+---
+import WalletFundingWrapper from "./WalletFundingWrapper.tsx";
+---
+
+<div id="connect-wrap" aria-live="polite" class="relative">
+  <button
+    data-connect
+    aria-controls="connect-wrap"
+    aria-label="Connect wallet"
+    class="h-10 px-6 flex justify-center items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-all duration-200"
+  >
+    <span class="text-sm font-semibold text-gray-900">
+      Connect Wallet
+    </span>
+    <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  </button>
+</div>
+
+<WalletFundingWrapper client:load />
+
+<script>
+  import { connectedPublicKey } from "../core/store";
+  import {
+    initializeConnection,
+    loadedPublicKey,
+    setConnection,
+    disconnect,
+    loadedProvider,
+    checkAndNotifyFunding,
+  } from "../core/walletService";
+  import { kit } from "../core/kit";
+
+  document.addEventListener("astro:page-load", () => {
+    initializeConnection();
+
+    const button = document.querySelector("[data-connect]") as HTMLButtonElement;
+    const textSpan = button.querySelector("span");
+
+    function updateButtonUI(publicKey: string | null) {
+      if (publicKey && textSpan) {
+        textSpan.textContent = `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
+        button.title = publicKey;
+        button.classList.add("bg-black", "text-white");
+        button.classList.remove("bg-white", "text-gray-900");
+        const svg = button.querySelector("svg");
+        if (svg) svg.classList.add("text-gray-300");
+      } else if (textSpan) {
+        textSpan.textContent = "Connect Wallet";
+        button.title = "";
+        button.classList.remove("bg-black", "text-white");
+        button.classList.add("bg-white", "text-gray-900");
+        const svg = button.querySelector("svg");
+        if (svg) svg.classList.remove("text-gray-300");
+      }
+    }
+
+    const initialPublicKey = loadedPublicKey();
+    if (initialPublicKey) {
+      updateButtonUI(initialPublicKey);
+      checkAndNotifyFunding();
+    }
+
+    async function connectWallet() {
+      const provider = loadedProvider();
+
+      if (button.title) {
+        // Simple disconnect for this abstracted version, or emit event
+        window.dispatchEvent(new CustomEvent("openProfileModal"));
+        return;
+      }
+
+      try {
+        await kit.openModal({
+          onWalletSelected: async (option: { id: string }) => {
+            try {
+              kit.setWallet(option.id);
+              const { address } = await kit.getAddress();
+              setConnection(address, option.id);
+              updateButtonUI(address);
+              await checkAndNotifyFunding();
+            } catch (err) {
+              console.error("Connection failed", err);
+            }
+          },
+        });
+      } catch (err) {
+        console.error("Kit modal failed", err);
+      }
+    }
+
+    button.addEventListener("click", connectWallet);
+
+    window.addEventListener("walletDisconnected", () => {
+      disconnect();
+      updateButtonUI(null);
+    });
+
+    const provider = loadedProvider();
+    if (provider) {
+      kit.setWallet(provider);
+    }
+  });
+</script>

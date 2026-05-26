@@ -1,8 +1,8 @@
-# Drip Wave State Model
+# TrustQuest State Model
 
 ## Overview
 
-This document defines the core domain model and state flow for Drip Wave, a prize-linked savings protocol on Stellar. It establishes the data contract between frontend, Soroban contracts, and backend services.
+This document defines the core domain model and state flow for TrustQuest, a prize-linked savings protocol on Stellar. It establishes the data contract between frontend, Soroban contracts, and backend services.
 
 ## Core Entities
 
@@ -18,7 +18,7 @@ interface Vault {
   // Metadata
   name: string;
   description: string;
-  protocol: "Drip Wave";
+  protocol: "TrustQuest";
   network: "Stellar";
   
   // Token configuration
@@ -496,3 +496,4 @@ interface RecoveryState {
 4. **Error Boundaries**: Each state object should have an optional error field to gracefully handle failures without breaking the entire UI.
 
 5. **Type Safety**: All entities should be strongly typed with TypeScript interfaces to prevent data shape mismatches between contract, backend, and frontend.
+

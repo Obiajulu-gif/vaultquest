@@ -17,6 +17,7 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
+      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
   push:
     branches:
@@ -37,6 +38,7 @@ on:
       - "postcss.config.mjs"
       - "components.json"
       - "Provider.jsx"
+      - "AvaxConnectButton.jsx"
       - ".github/workflows/frontend.yml"
 
 permissions:
@@ -59,13 +61,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint --if-present
 
       - name: Type check
         if: ${{ hashFiles('tsconfig.json') != '' }}
@@ -75,8 +77,4 @@ jobs:
         run: npm test --if-present
 
       - name: Build
-        env:
-          # Non-placeholder string so lib/env.ts validation passes in CI.
-          # Real project IDs are set in hosting/deployment secrets, not here.
-          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'ci-build-placeholder' }}
-        run: npm run build
+        run: npm run build --if-present

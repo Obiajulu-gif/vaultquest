@@ -1,14 +1,14 @@
 {
-  "name": "@vaultquest/backend",
+  "name": "@trustquest/backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "^20 || ^22 || ^24"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run",

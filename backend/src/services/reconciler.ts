@@ -16,7 +16,7 @@ export async function sweepOrphans(
 
   if (stuck.length > 0) {
     await prisma.actionLedger.updateMany({
-      where: { id: { in: stuck.map((r) => r.id) } },
+      where: { id: { in: stuck.map((r: { id: string }) => r.id) } },
       data: { status: "orphaned", errorCode: ERROR_CODES.ORPHAN_TTL_EXPIRED }
     });
   }

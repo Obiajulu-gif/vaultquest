@@ -1,6 +1,6 @@
 # Soroban contracts
 
-This workspace is the home of the Drip Wave on-chain contracts (#10, #11,
+This workspace is the home of the TrustQuest on-chain contracts (#10, #11,
 #12). It exists today as a thin scaffold so two cross-stack issues have a
 real artifact to land against:
 
@@ -65,3 +65,4 @@ contract diff stays reviewable in isolation.
   validate the round-trip with the harness here.
 - The frontend imports the generated TypeScript bindings — keep the
   public method names + types stable across releases.
+

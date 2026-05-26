@@ -16,7 +16,7 @@
 //! is intentionally minimal — enough to prove the harness wires up
 //! end-to-end without prejudging the eventual storage layout.
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
@@ -42,6 +42,7 @@ pub enum Error {
 pub struct Pool {
     pub admin: Address,
     pub total_drips: u64,
+    pub total_deposited: i128,
     pub created_at: u64,
 }
 
@@ -49,6 +50,7 @@ pub struct Pool {
 #[contracttype]
 pub struct Participant {
     pub joined_at: u64,
+    pub deposited: i128,
     pub claimable: i128,
 }
 
@@ -65,6 +67,7 @@ impl DripPool {
         let pool = Pool {
             admin: admin.clone(),
             total_drips: 0,
+            total_deposited: 0,
             created_at: env.ledger().timestamp(),
         };
         env.storage().instance().set(&DataKey::Admin, &admin);
@@ -87,6 +90,7 @@ impl DripPool {
             &key,
             &Participant {
                 joined_at: env.ledger().timestamp(),
+                deposited: 0,
                 claimable: 0,
             },
         );
@@ -99,6 +103,10 @@ impl DripPool {
     }
 
     pub fn drip(env: Env, who: Address, amount: i128) -> Result<(), Error> {
+        Self::deposit(env, who, amount)
+    }
+
+    pub fn deposit(env: Env, who: Address, amount: i128) -> Result<(), Error> {
         who.require_auth();
         if amount <= 0 {
             return Err(Error::InvalidAmount);
@@ -108,8 +116,13 @@ impl DripPool {
             .storage()
             .persistent()
             .get(&key)
-            .ok_or(Error::NotJoined)?;
+            .unwrap_or(Participant {
+                joined_at: env.ledger().timestamp(),
+                deposited: 0,
+                claimable: 0,
+            });
         
+        p.deposited += amount;
         p.claimable += amount;
         env.storage().persistent().set(&key, &p);
 
@@ -120,16 +133,21 @@ impl DripPool {
             .ok_or(Error::NotInitialized)?;
         
         pool.total_drips += 1;
+        pool.total_deposited += amount;
         env.storage().instance().set(&DataKey::Pool, &pool);
 
         env.events().publish(
-            (symbol_short!("pool"), symbol_short!("dripped")),
+            (symbol_short!("pool"), symbol_short!("deposit")),
             (who, amount),
         );
         Ok(())
     }
 
     pub fn claim(env: Env, who: Address) -> Result<i128, Error> {
+        Self::claim_reward(env, who)
+    }
+
+    pub fn claim_reward(env: Env, who: Address) -> Result<i128, Error> {
         who.require_auth();
         let key = DataKey::Participant(who.clone());
         let mut p: Participant = env
@@ -149,19 +167,21 @@ impl DripPool {
         Ok(amount)
     }
 
-    pub fn withdraw(env: Env, who: Address) -> Result<(), Error> {
+    pub fn withdraw(env: Env, who: Address) -> Result<i128, Error> {
         who.require_auth();
         let key = DataKey::Participant(who.clone());
-        if !env.storage().persistent().has(&key) {
-            return Err(Error::NotJoined);
-        }
+        let p: Participant = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .ok_or(Error::NotJoined)?;
         env.storage().persistent().remove(&key);
 
         env.events().publish(
             (symbol_short!("pool"), symbol_short!("withdrawn")),
-            who,
+            (who, p.deposited),
         );
-        Ok(())
+        Ok(p.deposited)
     }
 
     pub fn pool(env: Env) -> Result<Pool, Error> {
@@ -169,6 +189,13 @@ impl DripPool {
             .instance()
             .get(&DataKey::Pool)
             .ok_or(Error::NotInitialized)
+    }
+
+    pub fn savings(env: Env, who: Address) -> Result<Participant, Error> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Participant(who))
+            .ok_or(Error::NotJoined)
     }
 }
 

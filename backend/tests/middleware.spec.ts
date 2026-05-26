@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import Fastify from "fastify";
+import Fastify, { type FastifyRequest, type FastifyReply } from "fastify";
 import correlation from "../src/middleware/correlation.js";
 import { requireServiceAuth } from "../src/middleware/service-auth.js";
 
@@ -7,7 +7,7 @@ describe("correlation middleware", () => {
   it("generates a correlation id when none provided", async () => {
     const app = Fastify();
     await app.register(correlation);
-    app.get("/echo", async (req) => ({ id: req.correlationId }));
+    app.get("/echo", async (req: FastifyRequest) => ({ id: req.correlationId }));
     const res = await app.inject({ method: "GET", url: "/echo" });
     expect(res.statusCode).toBe(200);
     expect(res.headers["correlation-id"]).toBeDefined();
@@ -18,7 +18,7 @@ describe("correlation middleware", () => {
   it("echoes an incoming correlation id", async () => {
     const app = Fastify();
     await app.register(correlation);
-    app.get("/echo", async (req) => ({ id: req.correlationId }));
+    app.get("/echo", async (req: FastifyRequest) => ({ id: req.correlationId }));
     const res = await app.inject({
       method: "GET",
       url: "/echo",
@@ -34,7 +34,7 @@ describe("service-auth middleware", () => {
     const app = Fastify();
     const guard = requireServiceAuth("top-secret");
     app.post("/internal", { preHandler: guard }, async () => ({ ok: true }));
-    app.setErrorHandler((err, _req, reply) => {
+    app.setErrorHandler((err: Error, _req: FastifyRequest, reply: FastifyReply) => {
       if (err.name === "AppError") {
         reply.status((err as unknown as { statusCode: number }).statusCode).send({ error: err.message });
         return;
