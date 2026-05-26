@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix backend run build"
+    "build": "npm --prefix backend run build",
+    "security:audit": "pnpm audit --prod --audit-level=moderate && npm --prefix backend audit --omit=dev --audit-level=moderate",
+    "security:audit:report": "pnpm audit --prod --audit-level=moderate || true; npm --prefix backend audit --omit=dev --audit-level=moderate || true",
+    "security:check": "npm run security:secrets && npm run security:audit",
+    "security:secrets": "gitleaks detect --source . --redact --verbose --no-git"
   }
 }
