@@ -31,7 +31,7 @@ model ActionLedger {
   actionType        ActionType   @map("action_type")
   actionPayload     Json?        @map("action_payload")
   status            ActionStatus @default(pending)
-  txHash            String?      @map("tx_hash")
+  txHash            String?      @unique @map("tx_hash")
   sorobanEventId    String?      @map("soroban_event_id")
   correlationId     String       @default(uuid()) @map("correlation_id") @db.Uuid
   errorCode         String?      @map("error_code")
@@ -44,7 +44,6 @@ model ActionLedger {
   confirmedAt       DateTime?    @map("confirmed_at")
 
   @@index([walletAddress, createdAt(sort: Desc)])
-  @@index([txHash])
   @@index([status, updatedAt])
   @@map("action_ledger")
 }

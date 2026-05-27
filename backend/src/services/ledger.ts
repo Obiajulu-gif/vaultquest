@@ -84,14 +84,35 @@ export class LedgerService {
   }
 
   async attachTxHash(id: string, txHash: string): Promise<ActionRecord> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    try {
+      return await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const row = await tx.actionLedger.findUnique({ where: { id } });
       if (!row) throw AppError.notFound(`action ${id} not found`);
+
+      // Retry-safe: re-attaching the same tx_hash to the same action is a
+      // no-op. A client whose request succeeded but whose response was lost can
+      // safely resubmit without tripping the status guard below.
+      if (row.txHash === txHash) {
+        return row as unknown as ActionRecord;
+      }
 
       if (row.status !== "pending") {
         throw AppError.conflict(
           ERROR_CODES.ILLEGAL_TRANSITION,
           `cannot attach tx_hash to action in status ${row.status}`
+        );
+      }
+
+      // A given on-chain tx hash maps to exactly one action. If another action
+      // already owns it, reject rather than creating a duplicate tx-hash record
+      // (also enforced by a unique index as a backstop against races).
+      const owner = await tx.actionLedger.findFirst({
+        where: { txHash, NOT: { id } }
+      });
+      if (owner) {
+        throw AppError.conflict(
+          ERROR_CODES.TX_HASH_ALREADY_ATTACHED,
+          `tx_hash already attached to action ${owner.id}`
         );
       }
 
@@ -125,7 +146,18 @@ export class LedgerService {
         }
       });
       return updated as unknown as ActionRecord;
-    });
+      });
+    } catch (err) {
+      // Backstop for a race that slips past the owner check above: the unique
+      // index on tx_hash rejects the second writer with P2002.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        throw AppError.conflict(
+          ERROR_CODES.TX_HASH_ALREADY_ATTACHED,
+          "tx_hash already attached to another action"
+        );
+      }
+      throw err;
+    }
   }
 
   async cancelAction(id: string, errorCode: string, errorDetail?: string): Promise<ActionRecord> {

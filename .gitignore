@@ -12,6 +12,7 @@ target/
 .env
 .env.local
 *.log
+.DS_Store
 tsc_output.txt
 scratch/
 CUsersgooglAppDataLocalpnpmstorev3/
