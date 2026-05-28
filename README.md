@@ -14,6 +14,7 @@ remains withdrawable in full.
 | [`services/`](./services) | Shared TypeScript service helpers (escrow, quests, savings) |
 | [`e2e/`](./e2e) | Playwright end-to-end tests |
 | [`docs/`](./docs) | Architecture, state model, testing notes |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Cross-stack architecture diagram and action/event flow |
 
 ## Quick start
 

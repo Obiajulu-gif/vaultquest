@@ -45,6 +45,7 @@ vaultquest/
 ├── e2e/                        # Playwright end-to-end tests
 ├── tests/                      # Cross-cutting test utilities
 └── docs/                       # Architecture, state model, testing notes
+    └── ARCHITECTURE.md        # Cross-stack architecture diagram
 ```
 
 Each top-level package has its own `README.md` with stack details and a setup

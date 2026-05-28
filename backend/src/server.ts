@@ -1,9 +1,10 @@
 import { buildApp } from "./app.js";
-import { env } from "./env.js";
+import { getEnv } from "./env.js";
 import { getPrisma } from "./db.js";
 import { createLogger } from "./logger.js";
 import { startReconcilerCron } from "./cron.js";
 
+const env = getEnv();
 const logger = createLogger(env.LOG_LEVEL);
 const prisma = getPrisma(env.DATABASE_URL);
 const app = buildApp({ prisma, internalSecret: env.INTERNAL_SERVICE_SECRET });
