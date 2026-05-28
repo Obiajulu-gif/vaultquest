@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "npm --prefix backend run build"
+    "build": "npm --prefix backend run build",
+    "check:terms": "node ./scripts/check-product-terms.js"
   }
 }

@@ -3,42 +3,14 @@ name: Frontend CI
 on:
   pull_request:
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
+      - "stellar-wallet-connect/**"
       - ".github/workflows/frontend.yml"
   push:
     branches:
       - main
       - develop
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "package-lock.json"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
+      - "stellar-wallet-connect/**"
       - ".github/workflows/frontend.yml"
 
 permissions:
@@ -52,6 +24,9 @@ jobs:
   frontend:
     name: Lint, Typecheck, Test, Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stellar-wallet-connect
 
     steps:
       - name: Check out repository
@@ -62,6 +37,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: stellar-wallet-connect/package-lock.json
 
       - name: Install dependencies
         run: npm ci

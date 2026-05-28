@@ -1,0 +1,32 @@
+[
+  {
+    "term": "TrustQuest",
+    "paths": [
+      "docs/STATE_MODEL.md",
+      "backend/README.md",
+      "backend/package.json",
+      "backend/package-lock.json",
+      "contracts/README.md",
+      "contracts/docs/CONTRACT_COSTS.md",
+      "stellar-wallet-connect/src/components/WalletFundingModal.tsx",
+      "services/questService.ts"
+    ],
+    "reason": "Intentional historical or migration references in documentation and legacy integration text."
+  },
+  {
+    "term": "Trustless Work",
+    "paths": [
+      "docs/env-inventory.md",
+      "services/escrowService.ts"
+    ],
+    "reason": "Intentional integration references that remain part of current config semantics."
+  },
+  {
+    "term": "Drip Wave",
+    "paths": [
+      ".github/ISSUE_TEMPLATE/implementation-task.md",
+      ".github/ISSUE_TEMPLATE/config.yml"
+    ],
+    "reason": "Historical issue template references to legacy product naming."
+  }
+]
