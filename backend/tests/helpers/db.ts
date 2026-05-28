@@ -1,6 +1,8 @@
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from "@testcontainers/postgresql";
 import { PrismaClient } from "@prisma/client";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export type TestDb = {
   prisma: PrismaClient;
@@ -9,6 +11,8 @@ export type TestDb = {
 };
 
 export async function startTestDb(): Promise<TestDb> {
+  const backendDir = fileURLToPath(new URL("../../", import.meta.url));
+  const prismaCliPath = resolve(backendDir, "node_modules/prisma/build/index.js");
   const container: StartedPostgreSqlContainer = await new PostgreSqlContainer("postgres:16-alpine")
     .withDatabase("vaultquest_test")
     .withUsername("test")
@@ -17,7 +21,8 @@ export async function startTestDb(): Promise<TestDb> {
 
   const databaseUrl = container.getConnectionUri();
 
-  execSync("pnpm exec prisma migrate deploy", {
+  execFileSync(process.execPath, [prismaCliPath, "migrate", "deploy"], {
+    cwd: backendDir,
     env: { ...process.env, DATABASE_URL: databaseUrl },
     stdio: "inherit"
   });
