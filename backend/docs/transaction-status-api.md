@@ -3,6 +3,8 @@
 How the frontend should submit actions, poll status, and retry safely against
 the action-ledger service (#72). Every flow here is idempotent, so a dropped
 response, a double click, or a reconnect never creates duplicate records.
+All examples use the shared response envelope documented in
+[`API_RESPONSES.md`](./API_RESPONSES.md).
 
 ## Status lifecycle
 
@@ -40,7 +42,7 @@ After the wallet signs and broadcasts, `PATCH /actions/:id/submitted` with
 
 - First call: `pending → submitted`.
 - Re-sending the **same** `tx_hash` to the **same** action is a no-op and
-  returns the current record — so retrying after a lost response is safe.
+  returns `{ data: <current record> }` — so retrying after a lost response is safe.
 - A `tx_hash` already attached to a **different** action → `409`
   `TX_HASH_ALREADY_ATTACHED` (one action per on-chain hash).
 - Attaching to a non-pending action with a different hash → `409`

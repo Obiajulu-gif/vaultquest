@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { act } from "react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PoolDetail, availableActions } from "./PoolDetail";
+import { ONBOARDING_STORAGE_KEY } from "./OnboardingChecklist";
 import type { PoolSummary, UserPosition } from "../contract/types";
 
 const basePool: PoolSummary = {
@@ -41,6 +43,10 @@ describe("availableActions", () => {
 });
 
 describe("PoolDetail", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("shows a loading state before data arrives", () => {
     render(<PoolDetail pool={null} loading />);
     expect(screen.getAllByText(/loading pool/i).length).toBeGreaterThan(0);
@@ -49,9 +55,30 @@ describe("PoolDetail", () => {
   it("renders overview stats and status", () => {
     render(<PoolDetail pool={basePool} />);
     expect(screen.getByRole("heading", { name: "Weekly USDC" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /first-time wallet checklist/i })).toBeInTheDocument();
     expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("10,000 USDC")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  it("dismisses and reopens onboarding guidance", async () => {
+    const user = userEvent.setup();
+    render(<PoolDetail pool={basePool} />);
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: /got it/i }));
+    });
+    await waitFor(() => {
+      expect(localStorage.getItem(ONBOARDING_STORAGE_KEY)).toBe("true");
+    });
+    expect(screen.getByRole("button", { name: /onboarding checklist/i })).toBeInTheDocument();
+
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: /onboarding checklist/i }));
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /first-time wallet checklist/i })).toBeInTheDocument();
+      expect(localStorage.getItem(ONBOARDING_STORAGE_KEY)).toBe("false");
+    });
   });
 
   it("prompts to connect for the position when wallet is disconnected", () => {
@@ -66,9 +93,12 @@ describe("PoolDetail", () => {
   });
 
   it("fires onAction when an action button is clicked", async () => {
+    const user = userEvent.setup();
     const onAction = vi.fn();
     render(<PoolDetail pool={basePool} position={null} onAction={onAction} />);
-    await userEvent.click(screen.getByRole("button", { name: /join pool/i }));
+    await act(async () => {
+      await user.click(screen.getByRole("button", { name: /join pool/i }));
+    });
     expect(onAction).toHaveBeenCalledWith("join");
   });
 

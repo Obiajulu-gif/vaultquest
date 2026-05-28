@@ -8,3 +8,4 @@ export * from "./lib/format";
 export { usePoolDetail, useRewardHistory, type AsyncResource, type PoolDetailResource } from "./hooks";
 export { RewardHistory, type RewardHistoryProps } from "./components/RewardHistory";
 export { PoolDetail, availableActions, type PoolDetailProps } from "./components/PoolDetail";
+export { OnboardingChecklist, ONBOARDING_STORAGE_KEY, type OnboardingChecklistProps } from "./components/OnboardingChecklist";

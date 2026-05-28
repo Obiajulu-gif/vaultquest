@@ -32,7 +32,7 @@ describe("GET /dashboard/summary (#14)", () => {
       }
     });
     expect(res.statusCode).toBe(201);
-    return res.json().id as string;
+    return res.json().data.id as string;
   }
 
   it("rejects requests without ?wallet=", async () => {
@@ -47,7 +47,7 @@ describe("GET /dashboard/summary (#14)", () => {
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();
-    expect(body).toMatchObject({
+    expect(body.data).toMatchObject({
       wallet_address: "GUNKNOWN",
       total_actions: 0,
       pending_tx_hashes: [],
@@ -55,7 +55,7 @@ describe("GET /dashboard/summary (#14)", () => {
       latest_activity_at: null,
       latest_confirmed_at: null
     });
-    expect(body.by_status).toEqual({
+    expect(body.data.by_status).toEqual({
       pending: 0,
       submitted: 0,
       confirmed: 0,
@@ -88,7 +88,7 @@ describe("GET /dashboard/summary (#14)", () => {
       url: `/dashboard/summary?wallet=${wallet}`
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json();
+    const body = res.json().data;
     expect(body.total_actions).toBe(3);
     expect(body.by_status.submitted).toBe(2);
     expect(body.by_status.pending).toBe(1);
@@ -108,7 +108,7 @@ describe("GET /dashboard/summary (#14)", () => {
       url: `/dashboard/summary?wallet=${wallet}&stale_after_ms=0`
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().is_stale).toBe(true);
+    expect(res.json().data.is_stale).toBe(true);
   });
 
   it("does not leak other wallets' actions into the summary", async () => {
@@ -121,6 +121,6 @@ describe("GET /dashboard/summary (#14)", () => {
       url: "/dashboard/summary?wallet=GA"
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().total_actions).toBe(2);
+    expect(res.json().data.total_actions).toBe(2);
   });
 });

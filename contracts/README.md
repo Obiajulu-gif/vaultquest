@@ -23,7 +23,9 @@ contracts/
 │       ├── lib.rs      # contract scaffold (#10/#11/#12 will replace)
 │       └── test.rs     # lifecycle integration harness (#26)
 ├── docs/
-│   └── CONTRACT_COSTS.md   # cost spec + tracking workflow (#27)
+│   ├── CONTRACT_COSTS.md   # cost spec + tracking workflow (#27)
+│   ├── EVENT_SCHEMA.md     # canonical emitted event schema (#68)
+│   └── PAUSE_RECOVERY.md   # admin pause / recovery model (#76)
 └── scripts/
     └── measure_costs.sh    # runs the lifecycle test under cost reporting
 ```
@@ -60,9 +62,11 @@ contract diff stays reviewable in isolation.
 ## Relationship to the rest of the system
 
 - The backend's `POST /internal/reconcile` endpoint expects events with
-  the shape this contract emits. As real events are added in the
+  the shape documented in [`docs/EVENT_SCHEMA.md`](./docs/EVENT_SCHEMA.md).
+  As real events are added in the
   contract, mirror them in `backend/src/services/reconciler.ts` and
   validate the round-trip with the harness here.
+- Admin pause and incident recovery behavior is documented in
+  [`docs/PAUSE_RECOVERY.md`](./docs/PAUSE_RECOVERY.md).
 - The frontend imports the generated TypeScript bindings — keep the
   public method names + types stable across releases.
-

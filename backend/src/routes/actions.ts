@@ -9,6 +9,7 @@ import {
   idempotencyKeySchema
 } from "../schemas/actions.js";
 import { AppError } from "../errors.js";
+import { ok, page } from "../responses.js";
 
 function serialize(row: Awaited<ReturnType<LedgerService["getAction"]>>) {
   if (!row) return null;
@@ -41,8 +42,11 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       const keyParsed = idempotencyKeySchema.safeParse(keyRaw);
       if (!keyParsed.success) {
         return reply.status(400).send({
-          code: "INVALID_PAYLOAD",
-          message: "Idempotency-Key header must be a UUID"
+          error: {
+            code: "INVALID_PAYLOAD",
+            message: "Idempotency-Key header must be a UUID",
+            issues: keyParsed.error.issues
+          }
         });
       }
       const body = createActionBody.parse(req.body);
@@ -55,25 +59,25 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         actionPayload: body.action_payload
       });
       reply.status(existing ? 200 : 201);
-      return serialize(result);
+      return ok(serialize(result));
     });
 
     app.patch<{ Params: { id: string } }>("/actions/:id/submitted", async (req) => {
       const body = attachTxBody.parse(req.body);
       const result = await svc.attachTxHash(req.params.id, body.tx_hash);
-      return serialize(result);
+      return ok(serialize(result));
     });
 
     app.post<{ Params: { id: string } }>("/actions/:id/cancel", async (req) => {
       const body = cancelBody.parse(req.body);
       const result = await svc.cancelAction(req.params.id, body.error_code, body.error_detail);
-      return serialize(result);
+      return ok(serialize(result));
     });
 
     app.get<{ Params: { id: string } }>("/actions/:id", async (req) => {
       const row = await svc.getAction(req.params.id);
       if (!row) throw AppError.notFound(`action ${req.params.id} not found`);
-      return serialize(row);
+      return ok(serialize(row));
     });
 
     app.get("/actions", async (req) => {
@@ -84,18 +88,15 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         cursor: q.cursor,
         limit: q.limit
       });
-      return {
-        items: result.items.map(serialize),
-        next_cursor: result.nextCursor
-      };
+      return page(result.items.map(serialize), { nextCursor: result.nextCursor, limit: q.limit });
     });
 
     app.delete("/actions", async (req) => {
       const wallet = (req.query as Record<string, string | undefined>).wallet;
       if (!wallet || wallet.length === 0) {
-        return { scrubbed: 0 };
+        return ok({ scrubbed: 0 });
       }
-      return svc.scrubWallet(wallet);
+      return ok(await svc.scrubWallet(wallet));
     });
 
     /**
@@ -111,7 +112,7 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       const summary = await svc.getDashboardSummary(q.wallet, {
         staleAfterMs: q.stale_after_ms
       });
-      return {
+      return ok({
         wallet_address: summary.walletAddress,
         total_actions: summary.totalActions,
         by_status: summary.byStatus,
@@ -119,6 +120,6 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         is_stale: summary.isStale,
         latest_activity_at: summary.latestActivityAt,
         latest_confirmed_at: summary.latestConfirmedAt
-      };
+      });
     });
   };

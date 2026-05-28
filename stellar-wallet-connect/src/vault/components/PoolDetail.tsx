@@ -8,6 +8,7 @@ import {
 } from "../../components/FallbackStates";
 import type { PoolActionType, PoolStatus, PoolSummary, UserPosition } from "../contract/types";
 import { formatAmount, formatDate, truncateAddress } from "../lib/format";
+import { OnboardingChecklist } from "./OnboardingChecklist";
 
 /**
  * Pool detail view (#73): overview, the connected user's position, and the
@@ -27,6 +28,7 @@ export interface PoolDetailProps {
   onRetry?: () => void;
   /** Invoked when the user triggers a pool action. */
   onAction?: (type: PoolActionType) => void;
+  showOnboarding?: boolean;
 }
 
 const STATUS_BADGE: Record<PoolStatus, { label: string; className: string }> = {
@@ -80,6 +82,7 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   onConnect,
   onRetry,
   onAction,
+  showOnboarding = true,
 }) => {
   if (error) {
     return <ErrorState title="Couldn't load pool" message={error} onRetry={onRetry} />;
@@ -96,6 +99,8 @@ export const PoolDetail: FC<PoolDetailProps> = ({
 
   return (
     <section aria-label={`Pool ${pool.name}`} className="space-y-6">
+      {showOnboarding && <OnboardingChecklist />}
+
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-white">{pool.name}</h1>
