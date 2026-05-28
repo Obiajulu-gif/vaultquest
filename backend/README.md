@@ -36,7 +36,7 @@ pnpm dev
 | DELETE | /actions?wallet=G... | Privacy scrub (nulls payload, sets redacted_at) |
 | POST | /internal/reconcile | Event indexer → ledger (requires `X-Internal-Secret`) |
 
-See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract, and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the service layout, schema, worker runtime, and migration strategy.
+See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract, and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the service layout, schema, worker runtime, and migration strategy. For how the frontend should submit, poll, and **retry** these endpoints safely, see [`docs/transaction-status-api.md`](./docs/transaction-status-api.md).
 
 ## Environment
 

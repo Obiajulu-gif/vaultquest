@@ -114,6 +114,29 @@ describe("LedgerService.attachTxHash", () => {
     const consumed = await db.prisma.pendingEvent.findUnique({ where: { txHash: "tx_race_1" } });
     expect(consumed?.consumedAt).not.toBeNull();
   });
+
+  it("is idempotent when re-attaching the same tx_hash to the same action", async () => {
+    const created = await svc.createAction(makeIntentInput());
+    const first = await svc.attachTxHash(created.id, "tx_retry_1");
+    // A dropped response leads the client to retry the same submission.
+    const second = await svc.attachTxHash(created.id, "tx_retry_1");
+    expect(second.id).toBe(first.id);
+    expect(second.status).toBe("submitted");
+    expect(second.txHash).toBe("tx_retry_1");
+  });
+
+  it("rejects a tx_hash already attached to a different action", async () => {
+    const a = await svc.createAction(makeIntentInput({ idempotencyKey: "dup-a" }));
+    const b = await svc.createAction(makeIntentInput({ idempotencyKey: "dup-b" }));
+    await svc.attachTxHash(a.id, "tx_shared");
+    await expect(svc.attachTxHash(b.id, "tx_shared"))
+      .rejects.toMatchObject({ code: "TX_HASH_ALREADY_ATTACHED" });
+
+    // The losing action stays pending; no duplicate tx-hash record is created.
+    const bRow = await svc.getAction(b.id);
+    expect(bRow?.status).toBe("pending");
+    expect(bRow?.txHash).toBeNull();
+  });
 });
 
 describe("LedgerService.cancelAction", () => {
