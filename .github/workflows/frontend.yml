@@ -10,7 +10,7 @@ on:
       - "public/**"
       - "styles/**"
       - "package.json"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - "tsconfig.json"
       - "next.config.mjs"
       - "tailwind.config.js"
@@ -31,7 +31,7 @@ on:
       - "public/**"
       - "styles/**"
       - "package.json"
-      - "package-lock.json"
+      - "pnpm-lock.yaml"
       - "tsconfig.json"
       - "next.config.mjs"
       - "tailwind.config.js"
@@ -61,10 +61,18 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          set -euo pipefail
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Lint
         run: npm run lint --if-present
