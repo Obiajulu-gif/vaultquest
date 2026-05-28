@@ -26,6 +26,7 @@ describe("public /actions routes", () => {
       payload: { wallet_address: "GABC", action_type: "deposit", action_payload: { vault_id: "1" } }
     });
     expect(res.statusCode).toBe(400);
+    expect(res.json().error.code).toBe("INVALID_PAYLOAD");
   });
 
   it("POST /actions creates a pending action", async () => {
@@ -36,7 +37,7 @@ describe("public /actions routes", () => {
       payload: { wallet_address: "GABC", action_type: "deposit", action_payload: { vault_id: "1" } }
     });
     expect(res.statusCode).toBe(201);
-    const body = res.json();
+    const body = res.json().data;
     expect(body.status).toBe("pending");
     expect(body.correlation_id).toBeDefined();
   });
@@ -56,7 +57,7 @@ describe("public /actions routes", () => {
     });
     expect(first.statusCode).toBe(201);
     expect(second.statusCode).toBe(200);
-    expect(second.json().id).toBe(first.json().id);
+    expect(second.json().data.id).toBe(first.json().data.id);
   });
 
   it("POST /actions returns 409 on key reuse with different payload", async () => {
@@ -73,7 +74,7 @@ describe("public /actions routes", () => {
     });
     expect(first.statusCode).toBe(201);
     expect(second.statusCode).toBe(409);
-    expect(second.json().code).toBe("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD");
+    expect(second.json().error.code).toBe("IDEMPOTENCY_KEY_REUSED_WITH_DIFFERENT_PAYLOAD");
   });
 
   it("PATCH /actions/:id/submitted transitions to submitted", async () => {
@@ -83,15 +84,15 @@ describe("public /actions routes", () => {
       headers: { "idempotency-key": key, "content-type": "application/json" },
       payload: { wallet_address: "GABC", action_type: "deposit", action_payload: { vault_id: "1" } }
     });
-    const id = create.json().id;
+    const id = create.json().data.id;
     const patch = await app.inject({
       method: "PATCH", url: `/actions/${id}/submitted`,
       headers: { "content-type": "application/json" },
       payload: { tx_hash: "tx_1" }
     });
     expect(patch.statusCode).toBe(200);
-    expect(patch.json().status).toBe("submitted");
-    expect(patch.json().tx_hash).toBe("tx_1");
+    expect(patch.json().data.status).toBe("submitted");
+    expect(patch.json().data.tx_hash).toBe("tx_1");
   });
 
   it("POST /actions/:id/cancel transitions to failed", async () => {
@@ -101,15 +102,15 @@ describe("public /actions routes", () => {
       headers: { "idempotency-key": key, "content-type": "application/json" },
       payload: { wallet_address: "GABC", action_type: "deposit", action_payload: { vault_id: "1" } }
     });
-    const id = create.json().id;
+    const id = create.json().data.id;
     const cancel = await app.inject({
       method: "POST", url: `/actions/${id}/cancel`,
       headers: { "content-type": "application/json" },
       payload: { error_code: "WALLET_REJECTED", error_detail: "user denied" }
     });
     expect(cancel.statusCode).toBe(200);
-    expect(cancel.json().status).toBe("failed");
-    expect(cancel.json().error_code).toBe("WALLET_REJECTED");
+    expect(cancel.json().data.status).toBe("failed");
+    expect(cancel.json().data.error_code).toBe("WALLET_REJECTED");
   });
 
   it("GET /actions/:id returns record", async () => {
@@ -119,10 +120,10 @@ describe("public /actions routes", () => {
       headers: { "idempotency-key": key, "content-type": "application/json" },
       payload: { wallet_address: "GABC", action_type: "deposit", action_payload: { vault_id: "1" } }
     });
-    const id = create.json().id;
+    const id = create.json().data.id;
     const get = await app.inject({ method: "GET", url: `/actions/${id}` });
     expect(get.statusCode).toBe(200);
-    expect(get.json().id).toBe(id);
+    expect(get.json().data.id).toBe(id);
   });
 
   it("GET /actions lists by wallet", async () => {
@@ -135,7 +136,8 @@ describe("public /actions routes", () => {
     }
     const list = await app.inject({ method: "GET", url: "/actions?wallet=GWALLET&limit=10" });
     expect(list.statusCode).toBe(200);
-    expect(list.json().items).toHaveLength(2);
+    expect(list.json().data).toHaveLength(2);
+    expect(list.json().meta.pagination).toMatchObject({ limit: 10, has_more: false, next_cursor: null });
   });
 
   it("DELETE /actions?wallet=G... scrubs payload", async () => {
@@ -145,13 +147,13 @@ describe("public /actions routes", () => {
       headers: { "idempotency-key": key, "content-type": "application/json" },
       payload: { wallet_address: "GSCRUB", action_type: "deposit", action_payload: { secret: "hidden" } }
     });
-    const id = create.json().id;
+    const id = create.json().data.id;
     const del = await app.inject({ method: "DELETE", url: "/actions?wallet=GSCRUB" });
     expect(del.statusCode).toBe(200);
-    expect(del.json().scrubbed).toBe(1);
+    expect(del.json().data.scrubbed).toBe(1);
 
     const get = await app.inject({ method: "GET", url: `/actions/${id}` });
-    expect(get.json().action_payload).toBeNull();
-    expect(get.json().redacted_at).not.toBeNull();
+    expect(get.json().data.action_payload).toBeNull();
+    expect(get.json().data.redacted_at).not.toBeNull();
   });
 });

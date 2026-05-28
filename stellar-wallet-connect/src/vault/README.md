@@ -5,6 +5,7 @@ Pool-level UI for VaultQuest plus a testable contract seam.
 | Piece | Issue | What it is |
 |---|---|---|
 | `components/PoolDetail.tsx` | #73 | Pool overview, user position, and state-aware actions |
+| `components/OnboardingChecklist.tsx` | #79 | First-time wallet checklist with dismiss/revisit state |
 | `components/RewardHistory.tsx` | #75 | Completed-cycle reward history (table/cards) |
 | `contract/` | #67 | `VaultContractClient` interface + in-memory mock |
 | `hooks.ts` | #73 / #75 | `usePoolDetail` / `useRewardHistory` data adapters |
@@ -12,6 +13,10 @@ Pool-level UI for VaultQuest plus a testable contract seam.
 
 All states (loading, empty, stale, error, wallet-disconnected) reuse the shared
 `components/FallbackStates` from #61, and wallet references render truncated.
+
+`PoolDetail` shows the first-time wallet onboarding checklist by default. Users
+can dismiss it or reopen it from the compact checklist button; the preference is
+stored in `localStorage` under `vaultquest.onboarding.dismissed`.
 
 ## Contract-interface mock strategy (#67)
 

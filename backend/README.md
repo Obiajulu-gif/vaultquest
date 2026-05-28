@@ -36,7 +36,7 @@ pnpm dev
 | DELETE | /actions?wallet=G... | Privacy scrub (nulls payload, sets redacted_at) |
 | POST | /internal/reconcile | Event indexer → ledger (requires `X-Internal-Secret`) |
 
-See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract, and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the service layout, schema, worker runtime, and migration strategy. For how the frontend should submit, poll, and **retry** these endpoints safely, see [`docs/transaction-status-api.md`](./docs/transaction-status-api.md).
+See `docs/superpowers/specs/2026-04-23-action-ledger-design.md` for the full contract, and [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the service layout, schema, worker runtime, and migration strategy. For response envelopes, errors, and pagination, see [`docs/API_RESPONSES.md`](./docs/API_RESPONSES.md). For how the frontend should submit, poll, and **retry** these endpoints safely, see [`docs/transaction-status-api.md`](./docs/transaction-status-api.md). Indexer contributors should also follow the contract [`event schema`](../contracts/docs/EVENT_SCHEMA.md) and [`pause/recovery model`](../contracts/docs/PAUSE_RECOVERY.md).
 
 ## Environment
 
@@ -49,4 +49,3 @@ Tests use Testcontainers to spin up Postgres 16 per run. Docker must be availabl
 ```bash
 pnpm test
 ```
-

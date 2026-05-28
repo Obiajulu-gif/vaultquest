@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import type { LedgerService } from "../services/ledger.js";
 import { reconcileBody } from "../schemas/actions.js";
 import { requireServiceAuth } from "../middleware/service-auth.js";
+import { ok } from "../responses.js";
 
 export const internalRoutes = (svc: LedgerService, secret: string): FastifyPluginAsync =>
   async (app) => {
@@ -16,8 +17,8 @@ export const internalRoutes = (svc: LedgerService, secret: string): FastifyPlugi
       });
       if (!result.matched) {
         reply.status(202);
-        return { parked: true };
+        return ok({ parked: true });
       }
-      return { matched: true };
+      return ok({ matched: true });
     });
   };

@@ -25,6 +25,7 @@ describe("/internal/reconcile", () => {
       payload: { tx_hash: "tx", soroban_event_id: "e", event_payload: {}, status_hint: "confirmed" }
     });
     expect(res.statusCode).toBe(401);
+    expect(res.json().error.code).toBe("UNAUTHORIZED");
   });
 
   it("matches a submitted action and confirms it", async () => {
@@ -34,7 +35,7 @@ describe("/internal/reconcile", () => {
       headers: { "idempotency-key": key, "content-type": "application/json" },
       payload: { wallet_address: "GA", action_type: "deposit", action_payload: { v: 1 } }
     });
-    const id = create.json().id;
+    const id = create.json().data.id;
     await app.inject({
       method: "PATCH", url: `/actions/${id}/submitted`,
       headers: { "content-type": "application/json" },
@@ -47,10 +48,10 @@ describe("/internal/reconcile", () => {
       payload: { tx_hash: "tx_match", soroban_event_id: "evt_1", event_payload: {}, status_hint: "confirmed" }
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().matched).toBe(true);
+    expect(res.json().data.matched).toBe(true);
 
     const row = await app.inject({ method: "GET", url: `/actions/${id}` });
-    expect(row.json().status).toBe("confirmed");
+    expect(row.json().data.status).toBe("confirmed");
   });
 
   it("parks unknown tx_hash", async () => {
@@ -60,6 +61,6 @@ describe("/internal/reconcile", () => {
       payload: { tx_hash: "tx_unknown", soroban_event_id: "evt", event_payload: {}, status_hint: "confirmed" }
     });
     expect(res.statusCode).toBe(202);
-    expect(res.json().parked).toBe(true);
+    expect(res.json().data.parked).toBe(true);
   });
 });
