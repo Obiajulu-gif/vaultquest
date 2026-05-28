@@ -3,42 +3,14 @@ name: Frontend CI
 on:
   pull_request:
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
+      - "stellar-wallet-connect/**"
       - ".github/workflows/frontend.yml"
   push:
     branches:
       - main
       - develop
     paths:
-      - "app/**"
-      - "components/**"
-      - "hooks/**"
-      - "lib/**"
-      - "public/**"
-      - "styles/**"
-      - "package.json"
-      - "pnpm-lock.yaml"
-      - "tsconfig.json"
-      - "next.config.mjs"
-      - "tailwind.config.js"
-      - "postcss.config.mjs"
-      - "components.json"
-      - "Provider.jsx"
-      - "AvaxConnectButton.jsx"
+      - "stellar-wallet-connect/**"
       - ".github/workflows/frontend.yml"
 
 permissions:
@@ -52,6 +24,9 @@ jobs:
   frontend:
     name: Lint, Typecheck, Test, Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: stellar-wallet-connect
 
     steps:
       - name: Check out repository
@@ -61,18 +36,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: |
-          set -euo pipefail
-          if [ -f pnpm-lock.yaml ]; then
-            corepack enable
-            pnpm install --frozen-lockfile
-          elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+        run: npm ci
 
       - name: Lint
         run: npm run lint --if-present
