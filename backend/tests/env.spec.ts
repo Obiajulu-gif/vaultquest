@@ -28,6 +28,15 @@ describe("parseEnv", () => {
     ).toThrow(/INTERNAL_SERVICE_SECRET/);
   });
 
+  it("rejects placeholder INTERNAL_SERVICE_SECRET", () => {
+    expect(() =>
+      parseEnv({
+        DATABASE_URL: "postgres://u:p@localhost:5432/db",
+        INTERNAL_SERVICE_SECRET: "change-me-to-a-long-random-string"
+      })
+    ).toThrow(/placeholder/i);
+  });
+
   it("defaults ORPHAN_TTL_MINUTES to 10", () => {
     const env = parseEnv({
       DATABASE_URL: "postgres://u:p@localhost:5432/db",

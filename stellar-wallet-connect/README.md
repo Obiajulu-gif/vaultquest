@@ -25,6 +25,7 @@ PUBLIC_SOROBAN_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
 PUBLIC_HORIZON_URL="https://horizon-testnet.stellar.org"
 ```
 
+The wallet module now validates required environment configuration at startup and fails loudly if values are missing, invalid, or still set to placeholder values.
 ## Usage
 
 ### In Astro

@@ -1,8 +1,15 @@
 import { z } from "zod";
 
+const placeholderPattern = /PLACEHOLDER|YOUR_|CHANGE-ME|EXAMPLE|<.+?>/i;
+
 const schema = z.object({
   DATABASE_URL: z.string().url().or(z.string().startsWith("postgres")),
-  INTERNAL_SERVICE_SECRET: z.string().min(20),
+  INTERNAL_SERVICE_SECRET: z
+    .string()
+    .min(20)
+    .refine((value) => !placeholderPattern.test(value), {
+      message: "INTERNAL_SERVICE_SECRET must not be a placeholder value"
+    }),
   ORPHAN_TTL_MINUTES: z.coerce.number().int().positive().default(10),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
@@ -26,7 +33,7 @@ export function parseEnv(
   return parsed.data;
 }
 
-export const env = (() => {
+export function getEnv(): Env {
   if (process.env.SKIP_ENV_VALIDATION === "1") {
     return {
       DATABASE_URL: process.env.DATABASE_URL ?? "",
@@ -38,4 +45,4 @@ export const env = (() => {
     } satisfies Env;
   }
   return parseEnv();
-})();
+}

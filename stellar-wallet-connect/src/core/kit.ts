@@ -9,14 +9,12 @@ import {
   WalletNetwork,
 } from "@creit.tech/stellar-wallets-kit";
 import { LedgerModule } from "@creit.tech/stellar-wallets-kit/modules/ledger.module";
+import { getFrontendEnv } from "./env.js";
 
 const resolveWalletNetwork = (networkPassphrase?: string): WalletNetwork => {
+  const env = getFrontendEnv();
   const configuredNetwork =
-    networkPassphrase ||
-    (typeof process !== "undefined"
-      ? process.env.NEXT_PUBLIC_SOROBAN_NETWORK_PASSPHRASE ||
-        process.env.PUBLIC_SOROBAN_NETWORK_PASSPHRASE
-      : undefined);
+    networkPassphrase || env.NEXT_PUBLIC_SOROBAN_NETWORK_PASSPHRASE;
 
   switch (configuredNetwork) {
     case WalletNetwork.PUBLIC:
