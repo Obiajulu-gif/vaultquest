@@ -87,6 +87,7 @@ break anything else. Run the relevant commands for your area:
 | Backend | `pnpm --filter backend exec prisma format` | Prisma schema formatting |
 | Frontend | `pnpm test` (root) | Vitest unit tests |
 | Frontend | `pnpm exec playwright test` | E2E smoke tests |
+| CI / docs | `pnpm run check:terms` | Legacy product name and import guard |
 | Contracts | `cargo test` (in `contracts/`) | Soroban contract tests |
 | Contracts | `cargo fmt --check && cargo clippy -- -D warnings` | Format + lint |
 | Docs | manual preview | Markdown renders correctly on GitHub |
