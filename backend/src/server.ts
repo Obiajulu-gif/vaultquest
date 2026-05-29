@@ -7,7 +7,13 @@ import { startReconcilerCron } from "./cron.js";
 const env = getEnv();
 const logger = createLogger(env.LOG_LEVEL);
 const prisma = getPrisma(env.DATABASE_URL);
-const app = buildApp({ prisma, internalSecret: env.INTERNAL_SERVICE_SECRET });
+const app = buildApp({
+  prisma,
+  internalSecret: env.INTERNAL_SERVICE_SECRET,
+  logger,
+  rateLimitMax: env.RATE_LIMIT_MAX,
+  rateLimitWindowMs: env.RATE_LIMIT_WINDOW_MS
+});
 
 const cronTask = startReconcilerCron({
   prisma,

@@ -15,7 +15,9 @@ const schema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
     .default("info"),
   PORT: z.coerce.number().int().positive().default(3001),
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development")
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000)
 });
 
 export type Env = z.infer<typeof schema>;
@@ -41,7 +43,9 @@ export function getEnv(): Env {
       ORPHAN_TTL_MINUTES: Number(process.env.ORPHAN_TTL_MINUTES ?? 10),
       LOG_LEVEL: (process.env.LOG_LEVEL ?? "info") as Env["LOG_LEVEL"],
       PORT: Number(process.env.PORT ?? 3001),
-      NODE_ENV: (process.env.NODE_ENV ?? "development") as Env["NODE_ENV"]
+      NODE_ENV: (process.env.NODE_ENV ?? "development") as Env["NODE_ENV"],
+      RATE_LIMIT_MAX: Number(process.env.RATE_LIMIT_MAX ?? 100),
+      RATE_LIMIT_WINDOW_MS: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 60_000)
     } satisfies Env;
   }
   return parseEnv();
