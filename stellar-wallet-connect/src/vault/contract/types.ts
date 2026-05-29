@@ -28,6 +28,14 @@ export interface PoolSummary {
   drawsAt: string | null;
 }
 
+export interface SavedPoolEntry extends PoolSummary {
+  walletAddress: string;
+  /** Timestamp when the user saved the pool. */
+  savedAt: string;
+  /** Timestamp of the most recent save metadata update. */
+  updatedAt: string;
+}
+
 export interface UserPosition {
   walletAddress: string;
   deposited: string;

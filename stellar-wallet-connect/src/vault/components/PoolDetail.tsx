@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { Coins, Trophy, Users } from "lucide-react";
+import { Bookmark, Coins, Trophy, Users } from "lucide-react";
 import {
   ErrorState,
   LoadingState,
@@ -30,6 +30,10 @@ export interface PoolDetailProps {
   onRetry?: () => void;
   /** Invoked when the user triggers a pool action. */
   onAction?: (type: PoolActionType) => void;
+  /** Optional saved-pool toggle for watchlist workflows. */
+  onToggleSaved?: () => void;
+  saved?: boolean;
+  savingSavedState?: boolean;
   showOnboarding?: boolean;
   /** When provided, renders an inline transaction timeline below the action buttons. */
   txFlow?: TxFlowResult;
@@ -86,6 +90,9 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   onConnect,
   onRetry,
   onAction,
+  onToggleSaved,
+  saved = false,
+  savingSavedState = false,
   showOnboarding = true,
   txFlow,
 }) => {
@@ -113,7 +120,20 @@ export const PoolDetail: FC<PoolDetailProps> = ({
             {badge.label}
           </span>
         </div>
-        {stale && <StaleIndicator />}
+        <div className="flex items-center gap-3">
+          {walletConnected && onToggleSaved && (
+            <button
+              type="button"
+              onClick={onToggleSaved}
+              disabled={savingSavedState}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/30 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900/20 disabled:cursor-not-allowed disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+            >
+              <Bookmark className="h-4 w-4" aria-hidden="true" />
+              {savingSavedState ? "Saving…" : saved ? "Unsave pool" : "Save pool"}
+            </button>
+          )}
+          {stale && <StaleIndicator />}
+        </div>
       </header>
 
       {/* Overview */}
