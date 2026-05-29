@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "build": "npm --prefix backend run build",
-    "check:terms": "node ./scripts/check-product-terms.js"
+    "check:terms": "node ./scripts/check-product-terms.js",
+    "test:e2e": "playwright test",
+    "test:smoke:routes": "playwright test e2e/route-smoke.spec.ts"
   }
 }
