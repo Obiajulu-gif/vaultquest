@@ -32,13 +32,13 @@ describe("/internal/reconcile", () => {
     const key = randomUUID();
     const create = await app.inject({
       method: "POST", url: "/actions",
-      headers: { "idempotency-key": key, "content-type": "application/json" },
+      headers: { "idempotency-key": key, "content-type": "application/json", "x-wallet-address": "GA" },
       payload: { wallet_address: "GA", action_type: "deposit", action_payload: { v: 1 } }
     });
     const id = create.json().data.id;
     await app.inject({
       method: "PATCH", url: `/actions/${id}/submitted`,
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-wallet-address": "GA" },
       payload: { tx_hash: "tx_match" }
     });
 
@@ -50,7 +50,10 @@ describe("/internal/reconcile", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().data.matched).toBe(true);
 
-    const row = await app.inject({ method: "GET", url: `/actions/${id}` });
+    const row = await app.inject({
+      method: "GET", url: `/actions/${id}`,
+      headers: { "x-wallet-address": "GA" }
+    });
     expect(row.json().data.status).toBe("confirmed");
   });
 

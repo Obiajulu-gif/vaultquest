@@ -18,6 +18,7 @@
     "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
+    "@fastify/rate-limit": "^9.1.0",
     "@prisma/client": "^5.22.0",
     "fastify": "^4.28.1",
     "fastify-plugin": "^4.5.1",

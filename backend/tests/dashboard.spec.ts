@@ -24,7 +24,11 @@ describe("GET /dashboard/summary (#14)", () => {
     const res = await app.inject({
       method: "POST",
       url: "/actions",
-      headers: { "idempotency-key": randomUUID(), "content-type": "application/json" },
+      headers: {
+        "idempotency-key": randomUUID(),
+        "content-type": "application/json",
+        "x-wallet-address": wallet
+      },
       payload: {
         wallet_address: wallet,
         action_type: type,
@@ -36,14 +40,18 @@ describe("GET /dashboard/summary (#14)", () => {
   }
 
   it("rejects requests without ?wallet=", async () => {
-    const res = await app.inject({ method: "GET", url: "/dashboard/summary" });
+    const res = await app.inject({
+      method: "GET", url: "/dashboard/summary",
+      headers: { "x-wallet-address": "GUNKNOWN" }
+    });
     expect(res.statusCode).toBe(400);
   });
 
   it("returns zeroed summary for an unknown wallet", async () => {
     const res = await app.inject({
       method: "GET",
-      url: "/dashboard/summary?wallet=GUNKNOWN"
+      url: "/dashboard/summary?wallet=GUNKNOWN",
+      headers: { "x-wallet-address": "GUNKNOWN" }
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -71,21 +79,23 @@ describe("GET /dashboard/summary (#14)", () => {
     const b = await postAction(wallet);
     await postAction(wallet);
 
-    // Move two actions through pending → submitted with tx hashes.
     await app.inject({
       method: "PATCH",
       url: `/actions/${a}/submitted`,
+      headers: { "content-type": "application/json", "x-wallet-address": wallet },
       payload: { tx_hash: "TX_A_HASH" }
     });
     await app.inject({
       method: "PATCH",
       url: `/actions/${b}/submitted`,
+      headers: { "content-type": "application/json", "x-wallet-address": wallet },
       payload: { tx_hash: "TX_B_HASH" }
     });
 
     const res = await app.inject({
       method: "GET",
-      url: `/dashboard/summary?wallet=${wallet}`
+      url: `/dashboard/summary?wallet=${wallet}`,
+      headers: { "x-wallet-address": wallet }
     });
     expect(res.statusCode).toBe(200);
     const body = res.json().data;
@@ -105,7 +115,8 @@ describe("GET /dashboard/summary (#14)", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: `/dashboard/summary?wallet=${wallet}&stale_after_ms=0`
+      url: `/dashboard/summary?wallet=${wallet}&stale_after_ms=0`,
+      headers: { "x-wallet-address": wallet }
     });
     expect(res.statusCode).toBe(200);
     expect(res.json().data.is_stale).toBe(true);
@@ -118,7 +129,8 @@ describe("GET /dashboard/summary (#14)", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/dashboard/summary?wallet=GA"
+      url: "/dashboard/summary?wallet=GA",
+      headers: { "x-wallet-address": "GA" }
     });
     expect(res.statusCode).toBe(200);
     expect(res.json().data.total_actions).toBe(2);
