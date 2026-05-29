@@ -9,6 +9,8 @@ import {
 } from "../../components/FallbackStates";
 import type { RewardHistoryEntry, RewardOutcome } from "../contract/types";
 import { explorerTxUrl, formatAmount, formatDate, truncateAddress, type StellarNetwork } from "../lib/format";
+import { TransactionTimeline } from "../../components/TransactionTimeline";
+import type { TxFlowResult } from "../lib/txStateMachine";
 
 /**
  * Reward history for completed pool cycles (#75).
@@ -28,6 +30,9 @@ export interface RewardHistoryProps {
   network?: StellarNetwork;
   onRetry?: () => void;
   onConnect?: () => void;
+  /** When provided, renders an inline claim transaction timeline and wires claim buttons. */
+  claimFlow?: TxFlowResult;
+  onClaim?: (entry: RewardHistoryEntry) => void;
 }
 
 const OUTCOME_BADGE: Record<RewardOutcome, { label: string; className: string }> = {
@@ -69,6 +74,8 @@ export const RewardHistory: FC<RewardHistoryProps> = ({
   network = "testnet",
   onRetry,
   onConnect,
+  claimFlow,
+  onClaim,
 }) => {
   if (!walletConnected) {
     return <WalletDisconnectedState onConnect={onConnect} />;
@@ -110,6 +117,7 @@ export const RewardHistory: FC<RewardHistoryProps> = ({
               <th scope="col" className="px-4 py-3 font-medium">Winner</th>
               <th scope="col" className="px-4 py-3 font-medium">Status</th>
               <th scope="col" className="px-4 py-3 font-medium">Tx</th>
+              {onClaim && <th scope="col" className="px-4 py-3 font-medium">Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -123,6 +131,20 @@ export const RewardHistory: FC<RewardHistoryProps> = ({
                 </td>
                 <td className="px-4 py-3"><OutcomeBadge status={entry.status} /></td>
                 <td className="px-4 py-3"><TxLink txHash={entry.txHash} network={network} /></td>
+                {onClaim && (
+                  <td className="px-4 py-3">
+                    {entry.status === "won" && !entry.txHash && (
+                      <button
+                        type="button"
+                        onClick={() => onClaim(entry)}
+                        disabled={claimFlow?.busy}
+                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                      >
+                        Claim
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -156,10 +178,34 @@ export const RewardHistory: FC<RewardHistoryProps> = ({
                 <dt className="text-gray-400">Tx</dt>
                 <dd><TxLink txHash={entry.txHash} network={network} /></dd>
               </div>
+              {onClaim && entry.status === "won" && !entry.txHash && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => onClaim(entry)}
+                    disabled={claimFlow?.busy}
+                    className="w-full rounded-lg bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                  >
+                    Claim reward
+                  </button>
+                </div>
+              )}
             </dl>
           </li>
         ))}
       </ul>
+
+      {/* Claim transaction timeline */}
+      {claimFlow && claimFlow.state.stage !== "idle" && (
+        <TransactionTimeline
+          stage={claimFlow.state.stage === "failed" ? "failed" : claimFlow.state.stage as import("../../components/TransactionTimeline").TimelineStage}
+          failedAtStage={claimFlow.state.stage === "failed" ? claimFlow.state.failedAt : undefined}
+          txHash={"txHash" in claimFlow.state ? claimFlow.state.txHash : undefined}
+          errorMessage={claimFlow.state.stage === "failed" ? claimFlow.state.message : undefined}
+          onRetry={claimFlow.state.stage === "failed" ? claimFlow.reset : undefined}
+          onDismiss={claimFlow.state.stage === "success" || claimFlow.state.stage === "failed" ? claimFlow.reset : undefined}
+        />
+      )}
     </section>
   );
 };

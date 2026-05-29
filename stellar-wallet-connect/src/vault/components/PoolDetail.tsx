@@ -9,6 +9,8 @@ import {
 import type { PoolActionType, PoolStatus, PoolSummary, UserPosition } from "../contract/types";
 import { formatAmount, formatDate, truncateAddress } from "../lib/format";
 import { OnboardingChecklist } from "./OnboardingChecklist";
+import { TransactionTimeline } from "../../components/TransactionTimeline";
+import type { TxFlowResult } from "../lib/txStateMachine";
 
 /**
  * Pool detail view (#73): overview, the connected user's position, and the
@@ -29,6 +31,8 @@ export interface PoolDetailProps {
   /** Invoked when the user triggers a pool action. */
   onAction?: (type: PoolActionType) => void;
   showOnboarding?: boolean;
+  /** When provided, renders an inline transaction timeline below the action buttons. */
+  txFlow?: TxFlowResult;
 }
 
 const STATUS_BADGE: Record<PoolStatus, { label: string; className: string }> = {
@@ -83,6 +87,7 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   onRetry,
   onAction,
   showOnboarding = true,
+  txFlow,
 }) => {
   if (error) {
     return <ErrorState title="Couldn't load pool" message={error} onRetry={onRetry} />;
@@ -169,12 +174,25 @@ export const PoolDetail: FC<PoolDetailProps> = ({
               key={action}
               type="button"
               onClick={() => onAction?.(action)}
-              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+              disabled={txFlow?.busy}
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               {ACTION_LABEL[action]}
             </button>
           ))}
         </div>
+      )}
+
+      {/* Inline transaction timeline (shown when a txFlow is wired in) */}
+      {txFlow && txFlow.state.stage !== "idle" && (
+        <TransactionTimeline
+          stage={txFlow.state.stage === "failed" ? "failed" : txFlow.state.stage as import("../../components/TransactionTimeline").TimelineStage}
+          failedAtStage={txFlow.state.stage === "failed" ? txFlow.state.failedAt : undefined}
+          txHash={"txHash" in txFlow.state ? txFlow.state.txHash : undefined}
+          errorMessage={txFlow.state.stage === "failed" ? txFlow.state.message : undefined}
+          onRetry={txFlow.state.stage === "failed" ? txFlow.reset : undefined}
+          onDismiss={txFlow.state.stage === "success" || txFlow.state.stage === "failed" ? txFlow.reset : undefined}
+        />
       )}
     </section>
   );
