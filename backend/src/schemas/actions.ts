@@ -37,3 +37,11 @@ export const dashboardQuery = z.object({
   wallet: walletSchema,
   stale_after_ms: z.coerce.number().int().min(0).max(24 * 60 * 60 * 1000).optional()
 });
+
+export const exportQuery = z.object({
+  wallet: walletSchema,
+  format: z.enum(["json", "csv"]).default("json"),
+  from: z.string().datetime({ offset: true }).optional(),
+  to: z.string().datetime({ offset: true }).optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(500)
+});

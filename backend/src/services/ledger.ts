@@ -314,6 +314,32 @@ export class LedgerService {
     };
   }
 
+  async exportActivity(params: {
+    walletAddress: string;
+    from?: Date;
+    to?: Date;
+    limit: number;
+  }): Promise<ActionRecord[]> {
+    const { walletAddress, from, to, limit } = params;
+    const rows = await this.prisma.actionLedger.findMany({
+      where: {
+        walletAddress,
+        redactedAt: null,
+        ...(from || to
+          ? {
+              createdAt: {
+                ...(from ? { gte: from } : {}),
+                ...(to ? { lte: to } : {})
+              }
+            }
+          : {})
+      },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit
+    });
+    return rows as unknown as ActionRecord[];
+  }
+
   async scrubWallet(walletAddress: string): Promise<{ scrubbed: number }> {
     const result = await this.prisma.actionLedger.updateMany({
       where: { walletAddress, redactedAt: null },
