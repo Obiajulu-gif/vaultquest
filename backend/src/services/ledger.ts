@@ -324,4 +324,66 @@ export class LedgerService {
     });
     return { scrubbed: result.count };
   }
+
+  async getPortfolioSummary(walletAddress: string) {
+    const actions = await this.prisma.actionLedger.findMany({
+      where: { walletAddress },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const poolBalances: Record<string, { balance: number; token: string }> = {};
+    let totalClaimed = 0;
+
+    const confirmedActions = actions.filter((a) => a.status === "confirmed");
+    for (const action of confirmedActions) {
+      const payload = action.actionPayload as Record<string, any> | null;
+      if (!payload) continue;
+
+      const vaultId = String(payload.vault_id || payload.pool_id || "default");
+      const amount = Number(payload.amount || 0);
+      const token = String(payload.token || payload.asset || "USDC");
+
+      if (!poolBalances[vaultId]) {
+        poolBalances[vaultId] = { balance: 0, token };
+      }
+
+      if (action.actionType === "deposit") {
+        poolBalances[vaultId].balance += amount;
+      } else if (action.actionType === "withdraw") {
+        poolBalances[vaultId].balance -= amount;
+      } else if (action.actionType === "claim") {
+        totalClaimed += amount;
+      }
+    }
+
+    let totalDeposits = 0;
+    const activePositions = Object.entries(poolBalances)
+      .filter(([_, data]) => data.balance > 0)
+      .map(([vaultId, data]) => {
+        totalDeposits += data.balance;
+        return {
+          vault_id: vaultId,
+          balance: data.balance,
+          token: data.token
+        };
+      });
+
+    const recentActivity = actions.slice(0, 5).map((a) => ({
+      id: a.id,
+      action_type: a.actionType,
+      status: a.status,
+      tx_hash: a.txHash,
+      created_at: a.createdAt,
+      payload: a.actionPayload
+    }));
+
+    return {
+      wallet_address: walletAddress,
+      total_deposits: totalDeposits,
+      active_positions: activePositions,
+      pending_rewards: 0,
+      claimable_amount: totalClaimed,
+      recent_activity: recentActivity
+    };
+  }
 }

@@ -6,7 +6,8 @@ import {
   cancelBody,
   listQuery,
   dashboardQuery,
-  idempotencyKeySchema
+  idempotencyKeySchema,
+  portfolioQuery
 } from "../schemas/actions.js";
 import { AppError } from "../errors.js";
 import { ok, page } from "../responses.js";
@@ -121,5 +122,16 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
         latest_activity_at: summary.latestActivityAt,
         latest_confirmed_at: summary.latestConfirmedAt
       });
+    });
+
+    /**
+     * GET /portfolio/summary?wallet=...
+     *
+     * Wallet portfolio summary endpoint returns deposits, positions, and recent activity.
+     */
+    app.get("/portfolio/summary", async (req) => {
+      const q = portfolioQuery.parse(req.query);
+      const summary = await svc.getPortfolioSummary(q.wallet);
+      return ok(summary);
     });
   };

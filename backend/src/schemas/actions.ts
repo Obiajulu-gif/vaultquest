@@ -37,3 +37,10 @@ export const dashboardQuery = z.object({
   wallet: walletSchema,
   stale_after_ms: z.coerce.number().int().min(0).max(24 * 60 * 60 * 1000).optional()
 });
+
+export const stellarWalletAddressSchema = z.string().regex(/^G[A-Z0-9]{55}$/, "Invalid Stellar wallet address");
+
+export const portfolioQuery = z.object({
+  wallet: stellarWalletAddressSchema
+});
+
