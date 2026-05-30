@@ -1,0 +1,506 @@
+tsx
+// app/app/account/page.tsx
+'use client';
+
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  ErrorInfo,
+  Component,
+} from 'react';
+import UserDepositsList from '@/components/app/UserDepositsList';
+
+// =============================================================================
+// Types & Constants
+// =============================================================================
+
+interface Transaction {
+  id: string;
+  type: 'deposit' | 'withdrawal' | 'earning';
+  amount: number;
+  timestamp: string; // ISO 8601
+  status: 'completed' | 'pending';
+}
+
+interface UserProfile {
+  wallet?: string;
+  activeDeposits: number;
+  cumulativeWinnings: number;
+  apy: number; // e.g. 5.25 for 5.25%
+  transactions: Transaction[];
+}
+
+interface AccountPageState {
+  profile: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+  filter: string;
+  currentPage: number;
+}
+
+const SECONDS_IN_YEAR = 365 * 24 * 60 * 60;
+const ITEMS_PER_PAGE = 5;
+
+const FILTER_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'deposit', label: 'Deposits' },
+  { value: 'withdrawal', label: 'Withdrawals' },
+  { value: 'earning', label: 'Earnings' },
+];
+
+// =============================================================================
+// Logger (singleton)
+// =============================================================================
+
+type LogLevel = 'info' | 'warn' | 'error';
+
+class Logger {
+  private readonly prefix: string;
+
+  constructor(prefix: string) {
+    this.prefix = prefix;
+  }
+
+  private log(level: LogLevel, message: string, meta?: unknown): void {
+    const timestamp = new Date().toISOString();
+    const formatted = `[${timestamp}] [${level.toUpperCase()}] ${this.prefix}: ${message}`;
+    switch (level) {
+      case 'info':
+        console.info(formatted, meta ?? '');
+        break;
+      case 'warn':
+        console.warn(formatted, meta ?? '');
+        break;
+      case 'error':
+        console.error(formatted, meta ?? '');
+        break;
+    }
+  }
+
+  info(message: string, meta?: unknown): void {
+    this.log('info', message, meta);
+  }
+
+  warn(message: string, meta?: unknown): void {
+    this.log('warn', message, meta);
+  }
+
+  error(message: string, meta?: unknown): void {
+    this.log('error', message, meta);
+  }
+}
+
+const logger = new Logger('AccountPage');
+
+// =============================================================================
+// Custom Hooks
+// =============================================================================
+
+/**
+ * Simulates real-time yield accumulation using requestAnimationFrame.
+ * Falls back to setInterval when rAF is unavailable.
+ *
+ * @param principal - base deposit amount in USD
+ * @param apy - annual percentage yield (e.g. 5.25 for 5.25%)
+ * @returns current accrued yield in USD (float)
+ */
+function useYieldCounter(principal: number, apy: number): number {
+  const [yieldEarnings, setYieldEarnings] = useState<number>(0);
+  const startTimestampRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (
+      typeof principal !== 'number' ||
+      !Number.isFinite(principal) ||
+      principal <= 0 ||
+      typeof apy !== 'number' ||
+      !Number.isFinite(apy) ||
+      apy <= 0
+    ) {
+      logger.warn('Invalid principal or APY, resetting yield counter', {
+        principal,
+        apy,
+      });
+      setYieldEarnings(0);
+      return;
+    }
+
+    const updateCounter = () => {
+      try {
+        const elapsedSeconds = (Date.now() - startTimestampRef.current) / 1000;
+        const newYield =
+          principal * (apy / 100) * (elapsedSeconds / SECONDS_IN_YEAR);
+
+        if (
+          typeof newYield !== 'number' ||
+          !Number.isFinite(newYield) ||
+          newYield < 0
+        ) {
+          logger.warn('Yield computation produced invalid value', { newYield });
+          startTimestampRef.current = Date.now();
+          return;
+        }
+        setYieldEarnings(newYield);
+      } catch (err) {
+        logger.error('Yield counter update crashed', err);
+        startTimestampRef.current = Date.now();
+      }
+    };
+
+    let animationFrameId: number;
+    let fallbackIntervalId: ReturnType<typeof setInterval> | undefined;
+
+    if (
+      typeof window !== 'undefined' &&
+      typeof requestAnimationFrame === 'function'
+    ) {
+      const animate = () => {
+        updateCounter();
+        animationFrameId = requestAnimationFrame(animate);
+      };
+      animationFrameId = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationFrameId);
+    } else {
+      fallbackIntervalId = setInterval(updateCounter, 1000);
+      return () => clearInterval(fallbackIntervalId);
+    }
+  }, [principal, apy]);
+
+  return yieldEarnings;
+}
+
+/**
+ * Fetches the user profile from the backend.
+ * Validates the response against the expected type.
+ *
+ * @returns A promise resolving to a UserProfile
+ * @throws {Error} if response is invalid or fetch fails
+ */
+async function fetchUserProfile(): Promise<UserProfile> {
+  const response = await fetch('/api/user/profile');
+
+  if (!response.ok) {
+    let errorBody: string | null = null;
+    try {
+      errorBody = await response.text();
+    } catch {
+      // ignore
+    }
+    throw new Error(
+      `HTTP ${response.status} ${response.statusText}: ${errorBody ?? 'no body'}`
+    );
+  }
+
+  const data: unknown = await response.json();
+
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid profile response: not an object');
+  }
+
+  const d = data as Record<string, unknown>;
+
+  if (typeof d.activeDeposits !== 'number' || d.activeDeposits < 0) {
+    throw new Error(`Invalid activeDeposits: ${d.activeDeposits}`);
+  }
+  if (typeof d.cumulativeWinnings !== 'number' || d.cumulativeWinnings < 0) {
+    throw new Error(`Invalid cumulativeWinnings: ${d.cumulativeWinnings}`);
+  }
+  if (typeof d.apy !== 'number' || d.apy < 0) {
+    throw new Error(`Invalid apy: ${d.apy}`);
+  }
+  if (!Array.isArray(d.transactions)) {
+    throw new Error('transactions must be an array');
+  }
+
+  for (const tx of d.transactions) {
+    if (!tx || typeof tx !== 'object') {
+      throw new Error('A transaction is not an object');
+    }
+    const t = tx as Record<string, unknown>;
+    if (typeof t.id !== 'string' || !t.id) {
+      throw new Error('Transaction missing valid id');
+    }
+    if (!['deposit', 'withdrawal', 'earning'].includes(t.type as string)) {
+      throw new Error(`Invalid transaction type: ${t.type}`);
+    }
+    if (typeof t.amount !== 'number' || t.amount < 0) {
+      throw new Error(`Invalid transaction amount: ${t.amount}`);
+    }
+    if (typeof t.timestamp !== 'string') {
+      throw new Error('Transaction missing timestamp');
+    }
+    if (!['completed', 'pending'].includes(t.status as string)) {
+      throw new Error(`Invalid transaction status: ${t.status}`);
+    }
+  }
+
+  return data as UserProfile;
+}
+
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
+/**
+ * Formats a numeric value as US currency with exactly two decimal places.
+ *
+ * @param value - numeric amount
+ * @returns formatted string, e.g. "$1,234.56"
+ */
+function formatCurrency(value: number): string {
+  try {
+    if (typeof value !== 'number' || !Number.isFinite(value)) return '$0.00';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch (err) {
+    logger.error('formatCurrency failed', err);
+    return '$0.00';
+  }
+}
+
+// =============================================================================
+// Error Boundary
+// =============================================================================
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    logger.error('ErrorBoundary caught an error', { error, errorInfo });
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+      return (
+        <div className="error-boundary-fallback">
+          <h2>Something went wrong.</h2>
+          <p>{this.state.error?.message ?? 'An unexpected error occurred.'}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// =============================================================================
+// Main Page Component
+// =============================================================================
+
+export default function AccountPage(): JSX.Element {
+  const [state, setState] = useState<AccountPageState>({
+    profile: null,
+    loading: true,
+    error: null,
+    filter: 'all',
+    currentPage: 1,
+  });
+
+  const { profile, loading, error, filter, currentPage } = state;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
+        const data = await fetchUserProfile();
+        if (!cancelled) {
+          setState((prev) => ({
+            ...prev,
+            profile: data,
+            loading: false,
+            error: null,
+          }));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message =
+            err instanceof Error ? err.message : 'Failed to load profile';
+          logger.error('Profile fetch failed', err);
+          setState((prev) => ({
+            ...prev,
+            loading: false,
+            error: message,
+          }));
+        }
+      }
+    }
+
+    loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Real-time yield counter (example: uses activeDeposits as principal)
+  const activePrincipal = profile?.activeDeposits ?? 0;
+  const apy = profile?.apy ?? 0;
+  const realtimeYield = useYieldCounter(activePrincipal, apy);
+
+  // Filter transactions
+  const filteredTransactions = useMemo(() => {
+    if (!profile?.transactions) return [];
+    if (filter === 'all') return profile.transactions;
+    return profile.transactions.filter((tx) => tx.type === filter);
+  }, [profile?.transactions, filter]);
+
+  // Pagination
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE)
+  );
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredTransactions.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredTransactions, currentPage]);
+
+  const handleFilterChange = useCallback(
+    (newFilter: string) => {
+      setState((prev) => ({
+        ...prev,
+        filter: newFilter,
+        currentPage: 1,
+      }));
+    },
+    []
+  );
+
+  const handlePageChange = useCallback((page: number) => {
+    setState((prev) => ({
+      ...prev,
+      currentPage: page,
+    }));
+  }, []);
+
+  // Loading & error states
+  if (loading) {
+    return (
+      <div className="account-page-loading" role="status">
+        <span>Loading your account...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="account-page-error" role="alert">
+        <h2>Error loading account</h2>
+        <p>{error}</p>
+        <button onClick={() => setState((prev) => ({ ...prev, loading: true, error: null }))}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="account-page-empty">
+        <p>No account data found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="account-page">
+      <header className="account-page-header">
+        <h1>Account Overview</h1>
+        {profile.wallet && (
+          <p className="wallet-address">
+            Wallet: {profile.wallet}
+          </p>
+        )}
+      </header>
+
+      <section className="account-summary">
+        <div className="summary-item">
+          <span className="summary-label">Active Deposits</span>
+          <span className="summary-value">
+            {formatCurrency(profile.activeDeposits)}
+          </span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">Cumulative Winnings</span>
+          <span className="summary-value">
+            {formatCurrency(profile.cumulativeWinnings)}
+          </span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">APY</span>
+          <span className="summary-value">{profile.apy}%</span>
+        </div>
+        <div className="summary-item summary-item--live">
+          <span className="summary-label">Live Accrued Yield</span>
+          <span className="summary-value summary-value--live">
+            {formatCurrency(realtimeYield)}
+          </span>
+        </div>
+      </section>
+
+      <section className="account-transactions">
+        <h2>Transaction History</h2>
+
+        <div className="filter-bar">
+          {FILTER_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              className={`filter-button ${filter === option.value ? 'active' : ''}`}
+              onClick={() => handleFilterChange(option.value)}
+              aria-pressed={filter === option.value}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        <UserDepositsList transactions={paginatedTransactions} />
+
+        {totalPages > 1 && (
+          <div className="pagination" role="navigation" aria-label="Transaction pages">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`page-button ${page === currentPage ? 'active' : ''}`}
+                onClick={() => handlePageChange(page)}
+                aria-current={page === currentPage ? 'page' : undefined}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
