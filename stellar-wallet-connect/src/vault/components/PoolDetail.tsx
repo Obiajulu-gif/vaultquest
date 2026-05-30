@@ -1,6 +1,7 @@
 import type { FC, ReactNode } from "react";
 import { Coins, Trophy, Users } from "lucide-react";
 import { useStore } from "@nanostores/react";
+import { Bookmark, Coins, Trophy, Users } from "lucide-react";
 import {
   ErrorState,
   LoadingState,
@@ -12,6 +13,8 @@ import { formatAmount, formatDate, truncateAddress } from "../lib/format";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 import { isNetworkMismatch } from "../../core/store.js";
 import { NetworkDiagnostics } from "../../components/NetworkDiagnostics";
+import { TransactionTimeline } from "../../components/TransactionTimeline";
+import type { TxFlowResult } from "../lib/txStateMachine";
 
 /**
  * Pool detail view (#73): overview, the connected user's position, and the
@@ -31,7 +34,13 @@ export interface PoolDetailProps {
   onRetry?: () => void;
   /** Invoked when the user triggers a pool action. */
   onAction?: (type: PoolActionType) => void;
+  /** Optional saved-pool toggle for watchlist workflows. */
+  onToggleSaved?: () => void;
+  saved?: boolean;
+  savingSavedState?: boolean;
   showOnboarding?: boolean;
+  /** When provided, renders an inline transaction timeline below the action buttons. */
+  txFlow?: TxFlowResult;
 }
 
 const STATUS_BADGE: Record<PoolStatus, { label: string; className: string }> = {
@@ -85,7 +94,11 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   onConnect,
   onRetry,
   onAction,
+  onToggleSaved,
+  saved = false,
+  savingSavedState = false,
   showOnboarding = true,
+  txFlow,
 }) => {
   const mismatch = useStore(isNetworkMismatch);
 
@@ -115,7 +128,20 @@ export const PoolDetail: FC<PoolDetailProps> = ({
             {badge.label}
           </span>
         </div>
-        {stale && <StaleIndicator />}
+        <div className="flex items-center gap-3">
+          {walletConnected && onToggleSaved && (
+            <button
+              type="button"
+              onClick={onToggleSaved}
+              disabled={savingSavedState}
+              className="inline-flex items-center gap-2 rounded-xl border border-red-500/30 px-4 py-2 text-sm font-semibold text-white hover:bg-red-900/20 disabled:cursor-not-allowed disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+            >
+              <Bookmark className="h-4 w-4" aria-hidden="true" />
+              {savingSavedState ? "Saving…" : saved ? "Unsave pool" : "Save pool"}
+            </button>
+          )}
+          {stale && <StaleIndicator />}
+        </div>
       </header>
 
       {/* Overview */}
@@ -183,11 +209,26 @@ export const PoolDetail: FC<PoolDetailProps> = ({
                   : "bg-red-600 hover:bg-red-700 focus-visible:ring-red-400"
               }`}
               title={mismatch ? "Actions blocked due to network mismatch" : ACTION_LABEL[action]}
+              onClick={() => onAction?.(action)}
+              disabled={txFlow?.busy}
+              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               {ACTION_LABEL[action]}
             </button>
           ))}
         </div>
+      )}
+
+      {/* Inline transaction timeline (shown when a txFlow is wired in) */}
+      {txFlow && txFlow.state.stage !== "idle" && (
+        <TransactionTimeline
+          stage={txFlow.state.stage === "failed" ? "failed" : txFlow.state.stage as import("../../components/TransactionTimeline").TimelineStage}
+          failedAtStage={txFlow.state.stage === "failed" ? txFlow.state.failedAt : undefined}
+          txHash={"txHash" in txFlow.state ? txFlow.state.txHash : undefined}
+          errorMessage={txFlow.state.stage === "failed" ? txFlow.state.message : undefined}
+          onRetry={txFlow.state.stage === "failed" ? txFlow.reset : undefined}
+          onDismiss={txFlow.state.stage === "success" || txFlow.state.stage === "failed" ? txFlow.reset : undefined}
+        />
       )}
     </section>
   );

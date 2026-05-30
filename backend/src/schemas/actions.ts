@@ -51,3 +51,10 @@ export const checkpointBody = z.object({
 });
 
 
+export const exportQuery = z.object({
+  wallet: walletSchema,
+  format: z.enum(["json", "csv"]).default("json"),
+  from: z.string().datetime({ offset: true }).optional(),
+  to: z.string().datetime({ offset: true }).optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(500)
+});

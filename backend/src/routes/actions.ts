@@ -8,6 +8,8 @@ import {
   dashboardQuery,
   idempotencyKeySchema,
   portfolioQuery
+  exportQuery,
+  idempotencyKeySchema
 } from "../schemas/actions.js";
 import { AppError } from "../errors.js";
 import { ok, page } from "../responses.js";
@@ -133,5 +135,56 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       const q = portfolioQuery.parse(req.query);
       const summary = await svc.getPortfolioSummary(q.wallet);
       return ok(summary);
+     * GET /actions/export?wallet=...&format=json|csv&from=...&to=...&limit=...
+     *
+     * Activity export endpoint (#91): returns the authenticated wallet's full
+     * action history as JSON or CSV. Excludes scrubbed rows (redactedAt != null).
+     * Wallet-scoping relies on the `wallet` query param — there is no session
+     * auth on this API; the caller is responsible for passing their own address.
+     *
+     * CSV sets Content-Disposition so browsers trigger a file download.
+     */
+    app.get("/actions/export", async (req, reply) => {
+      const q = exportQuery.parse(req.query);
+      const rows = await svc.exportActivity({
+        walletAddress: q.wallet,
+        from: q.from ? new Date(q.from) : undefined,
+        to: q.to ? new Date(q.to) : undefined,
+        limit: q.limit
+      });
+
+      if (q.format === "csv") {
+        const CSV_HEADERS = [
+          "id", "date", "action_type", "pool_id", "amount", "token",
+          "status", "tx_hash", "error_code", "submitted_at", "confirmed_at"
+        ];
+
+        const csvRows = rows.map((r) => {
+          const payload = (r.actionPayload as Record<string, unknown> | null) ?? {};
+          return [
+            r.id,
+            r.createdAt.toISOString(),
+            r.actionType,
+            String(payload["vault_id"] ?? ""),
+            String(payload["amount"] ?? ""),
+            String(payload["token"] ?? ""),
+            r.status,
+            r.txHash ?? "",
+            r.errorCode ?? "",
+            r.submittedAt?.toISOString() ?? "",
+            r.confirmedAt?.toISOString() ?? ""
+          ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",");
+        });
+
+        const csv = [CSV_HEADERS.join(","), ...csvRows].join("\n");
+        const filename = `vaultquest-activity-${q.wallet.slice(0, 8)}.csv`;
+
+        reply
+          .header("Content-Type", "text/csv; charset=utf-8")
+          .header("Content-Disposition", `attachment; filename="${filename}"`);
+        return reply.send(csv);
+      }
+
+      return ok(rows.map(serialize));
     });
   };

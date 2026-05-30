@@ -3,7 +3,9 @@ import type { PrismaClient } from "@prisma/client";
 import { ZodError } from "zod";
 import correlation from "./middleware/correlation.js";
 import { LedgerService } from "./services/ledger.js";
+import { SavedPoolsService } from "./services/savedPools.js";
 import { actionsRoutes } from "./routes/actions.js";
+import { savedPoolsRoutes } from "./routes/savedPools.js";
 import { internalRoutes } from "./routes/internal.js";
 import { AppError } from "./errors.js";
 import { apiError, ok } from "./responses.js";
@@ -18,6 +20,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.register(correlation);
 
   const svc = new LedgerService(deps.prisma);
+  const savedPoolsSvc = new SavedPoolsService(deps.prisma);
 
   app.get("/health", async () => ok({ ok: true }));
   app.get("/health/indexer", async () => {
@@ -25,6 +28,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     return ok(health);
   });
   app.register(actionsRoutes(svc));
+  app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));
 
   app.setErrorHandler((err, _req, reply) => {
