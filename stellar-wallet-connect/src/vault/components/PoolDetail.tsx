@@ -42,12 +42,12 @@ const STATUS_BADGE: Record<PoolStatus, { label: string; className: string }> = {
 };
 
 const Stat: FC<{ icon: ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="rounded-xl border border-red-900/30 bg-[#1A0505]/60 p-4">
-    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400">
+  <div className="rounded-xl border border-red-900/30 bg-[#1A0505]/60 p-3 sm:p-4">
+    <div className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-wide text-gray-400">
       {icon}
       {label}
     </div>
-    <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+    <p className="mt-1 text-base sm:text-lg font-semibold text-white truncate" title={value}>{value}</p>
   </div>
 );
 
@@ -119,7 +119,7 @@ export const PoolDetail: FC<PoolDetailProps> = ({
       </header>
 
       {/* Overview */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3">
         <Stat icon={<Coins className="h-3.5 w-3.5" aria-hidden="true" />} label="TVL" value={formatAmount(pool.tvl, pool.asset)} />
         <Stat icon={<Users className="h-3.5 w-3.5" aria-hidden="true" />} label="Participants" value={String(pool.participantCount)} />
         <Stat icon={<Trophy className="h-3.5 w-3.5" aria-hidden="true" />} label="Expected yield" value={pool.expectedYield} />

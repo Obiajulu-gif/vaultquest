@@ -12,7 +12,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "types": ["vitest/globals", "@testing-library/jest-dom"]
+    "types": ["vitest/globals", "@testing-library/jest-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "react": ["node_modules/@types/react"]
+    }
   },
   "include": ["src/vault", "vitest.setup.ts", "vitest.config.ts"]
 }
