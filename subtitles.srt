@@ -1,0 +1,717 @@
+tsx
+// File: components/app/UserDepositsList.tsx
+'use client'
+
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import type { ReactNode } from 'react'
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                             */
+/* ------------------------------------------------------------------ */
+
+/** Represents a single on-chain transaction. */
+export interface Transaction {
+  id: string
+  type: 'deposit' | 'withdrawal' | 'yield_payment'
+  amount: number
+  timestamp: number // unix ms
+  status: 'confirmed' | 'pending' | 'failed'
+}
+
+export interface UserDepositsListProps {
+  /** Connected wallet address (hex format). */
+  walletAddress: `0x${string}`
+  /** Optional pre-fetched transactions to reduce initial load. */
+  initialTransactions?: Transaction[]
+  /** Maximum items per page (default 10). */
+  pageSize?: number
+}
+
+/** Internal fetch state. */
+interface FetchState {
+  data: Transaction[] | null
+  loading: boolean
+  error: string | null
+}
+
+/** Valid transaction types for filtering. */
+type FilterType = Transaction['type'] | 'all'
+
+/* ------------------------------------------------------------------ */
+/*  Logging utility                                                    */
+/* ------------------------------------------------------------------ */
+
+const LOG_PREFIX = '[DepositsList]'
+
+const logger = {
+  info: (...args: unknown[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.info(LOG_PREFIX, ...args)
+    }
+  },
+  warn: (...args: unknown[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(LOG_PREFIX, ...args)
+    }
+  },
+  error: (...args: unknown[]) => {
+    console.error(LOG_PREFIX, ...args)
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  Validation helpers                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Validates that the address is a proper 0x-prefixed Ethereum address.
+ * Returns the validated address or throws if invalid.
+ */
+function validateWalletAddress(address: string): asserts address is `0x${string}` {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    throw new Error(`Invalid wallet address format: ${address}`)
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Safe number formatting                                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Formats a numeric amount to a locale-aware string with 2 decimal places.
+ * Returns a fallback value on invalid input.
+ * @param amount - The number to format.
+ * @returns Formatted string (e.g., "1,234.56").
+ */
+function formatAmount(amount: number): string {
+  try {
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) {
+      return '0.00'
+    }
+    return amount.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  } catch (err) {
+    logger.warn('Failed to format amount:', amount, err)
+    return '0.00'
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Date formatting                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Converts a Unix timestamp (ms) into a human-readable date string.
+ * @param timestamp - Millisecond timestamp.
+ * @returns Formatted date (e.g., "Jan 15, 2025, 02:30 PM") or "—" on failure.
+ */
+function formatDate(timestamp: number): string {
+  try {
+    const d = new Date(timestamp)
+    if (isNaN(d.getTime())) {
+      return '—'
+    }
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch (err) {
+    logger.warn('Failed to format date:', timestamp, err)
+    return '—'
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Type-label mapping (i18n ready)                                    */
+/* ------------------------------------------------------------------ */
+
+const TYPE_LABEL: Record<Transaction['type'], string> = {
+  deposit: 'Deposit',
+  withdrawal: 'Withdrawal',
+  yield_payment: 'Yield',
+}
+
+/* ------------------------------------------------------------------ */
+/*  Status badge component                                             */
+/* ------------------------------------------------------------------ */
+
+interface StatusBadgeProps {
+  status: Transaction['status']
+}
+
+/**
+ * Renders a small colored badge indicating transaction status.
+ */
+function StatusBadge({ status }: StatusBadgeProps): ReactNode {
+  const colors: Record<Transaction['status'], { bg: string; text: string }> = {
+    confirmed: { bg: 'rgba(74, 222, 128, 0.2)', text: '#4ade80' },
+    pending: { bg: 'rgba(251, 191, 36, 0.2)', text: '#fbbf24' },
+    failed: { bg: 'rgba(248, 113, 113, 0.2)', text: '#f87171' },
+  }
+
+  const { bg, text } = colors[status] ?? colors.pending
+
+  return (
+    <span
+      style={{
+        borderRadius: '999px',
+        padding: '0.125rem 0.5rem',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        backgroundColor: bg,
+        color: text,
+        textTransform: 'capitalize',
+      }}
+    >
+      {status}
+    </span>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Empty state                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Shown when there are no transactions to display.
+ */
+function EmptyState({ message }: { message: string }): ReactNode {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+        padding: '2rem 1rem',
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: '0.95rem',
+      }}
+    >
+      {message}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Filter bar component                                               */
+/* ------------------------------------------------------------------ */
+
+interface FilterBarProps {
+  filterType: FilterType
+  setFilterType: (v: FilterType) => void
+  searchTerm: string
+  setSearchTerm: (v: string) => void
+}
+
+/**
+ * Filter controls for transaction type and text search.
+ */
+function FilterBar({
+  filterType,
+  setFilterType,
+  searchTerm,
+  setSearchTerm,
+}: FilterBarProps): ReactNode {
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Sanitise: allow only alphanumeric, spaces, hyphens, underscores
+      const sanitised = e.target.value.replace(/[^a-zA-Z0-9\s\-_]/g, '')
+      setSearchTerm(sanitised)
+    },
+    [setSearchTerm],
+  )
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.75rem',
+        alignItems: 'center',
+        marginBottom: '1rem',
+      }}
+    >
+      <select
+        value={filterType}
+        onChange={(e) => setFilterType(e.target.value as FilterType)}
+        aria-label="Filter by transaction type"
+        style={{
+          padding: '0.5rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'rgba(255,255,255,0.08)',
+          color: '#fff',
+          fontSize: '0.875rem',
+        }}
+      >
+        <option value="all">All Types</option>
+        <option value="deposit">Deposit</option>
+        <option value="withdrawal">Withdrawal</option>
+        <option value="yield_payment">Yield</option>
+      </select>
+
+      <input
+        value={searchTerm}
+        onChange={handleSearchChange}
+        placeholder="Search transactions…"
+        aria-label="Search transactions"
+        style={{
+          padding: '0.5rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: 'rgba(255,255,255,0.08)',
+          color: '#fff',
+          fontSize: '0.875rem',
+          flex: '1 1 200px',
+          minWidth: 150,
+        }}
+      />
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Pagination component                                               */
+/* ------------------------------------------------------------------ */
+
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  setPage: (page: number) => void
+}
+
+/**
+ * Page navigation buttons. Hides when only one page exists.
+ */
+function Pagination({ currentPage, totalPages, setPage }: PaginationProps): ReactNode {
+  if (totalPages <= 1) return null
+
+  const goToPrev = useCallback(() => {
+    if (currentPage > 1) setPage(currentPage - 1)
+  }, [currentPage, setPage])
+
+  const goToNext = useCallback(() => {
+    if (currentPage < totalPages) setPage(currentPage + 1)
+  }, [currentPage, totalPages, setPage])
+
+  return (
+    <nav
+      aria-label="Transaction pagination"
+      style={{
+        display: 'flex',
+        gap: '0.25rem',
+        justifyContent: 'center',
+        marginTop: '1rem',
+      }}
+    >
+      <button
+        onClick={goToPrev}
+        disabled={currentPage === 1}
+        aria-label="Previous page"
+        style={{
+          padding: '0.5rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: currentPage === 1 ? 'transparent' : 'rgba(255,255,255,0.08)',
+          color: currentPage === 1 ? 'rgba(255,255,255,0.3)' : '#fff',
+          cursor: currentPage === 1 ? 'default' : 'pointer',
+        }}
+      >
+        &laquo;
+      </button>
+
+      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+        <button
+          key={page}
+          onClick={() => setPage(page)}
+          aria-current={page === currentPage ? 'page' : undefined}
+          style={{
+            padding: '0.5rem 0.75rem',
+            borderRadius: '8px',
+            border: page === currentPage ? '1px solid #6366f1' : '1px solid transparent',
+            background: page === currentPage ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+            color: page === currentPage ? '#a5b4fc' : '#fff',
+            cursor: 'pointer',
+            fontWeight: page === currentPage ? 600 : 400,
+          }}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
+        onClick={goToNext}
+        disabled={currentPage === totalPages}
+        aria-label="Next page"
+        style={{
+          padding: '0.5rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid rgba(255,255,255,0.2)',
+          background: currentPage === totalPages ? 'transparent' : 'rgba(255,255,255,0.08)',
+          color: currentPage === totalPages ? 'rgba(255,255,255,0.3)' : '#fff',
+          cursor: currentPage === totalPages ? 'default' : 'pointer',
+        }}
+      >
+        &raquo;
+      </button>
+    </nav>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component: UserDepositsList                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Displays a filterable, paginated list of the user's deposits and transactions.
+ * Supports an optional initial transactions array (for SSR / initial state)
+ * and falls back to fetching from the API if not provided.
+ *
+ * @param props - Component properties.
+ * @returns A fully accessible transaction list with loading/error/empty states.
+ */
+export default function UserDepositsList({
+  walletAddress,
+  initialTransactions,
+  pageSize = 10,
+}: UserDepositsListProps): ReactNode {
+  // Validate wallet address at runtime (development only)
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      validateWalletAddress(walletAddress)
+    } catch (err) {
+      logger.error('Invalid wallet address in props:', err)
+    }
+  }
+
+  /* ------------------------------------------- */
+  /* State                                       */
+  /* ------------------------------------------- */
+  const [fetchState, setFetchState] = useState<FetchState>({
+    data: initialTransactions ?? null,
+    loading: !initialTransactions,
+    error: null,
+  })
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [filterType, setFilterType] = useState<FilterType>('all')
+  const [searchTerm, setSearchTerm] = useState<string>('')
+
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  /* ------------------------------------------- */
+  /* Data fetching (only if no initial data)     */
+  /* ------------------------------------------- */
+  useEffect(() => {
+    // If transactions are already provided, no need to fetch
+    if (initialTransactions) {
+      logger.info('Using initial transactions')
+      return
+    }
+
+    const fetchTransactions = async () => {
+      // Cancel any previous request
+      abortControllerRef.current?.abort()
+      const controller = new AbortController()
+      abortControllerRef.current = controller
+
+      setFetchState((prev) => ({ ...prev, loading: true, error: null }))
+
+      try {
+        const url = `/api/transactions?address=${encodeURIComponent(walletAddress)}`
+        logger.info('Fetching transactions from:', url)
+
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}: ${response.statusText}`)
+        }
+
+        const data: unknown = await response.json()
+
+        // Basic runtime validation
+        if (!Array.isArray(data)) {
+          throw new Error('API response is not an array')
+        }
+
+        // Optionally validate each item (minimal check)
+        const transactions = data.filter(
+          (item): item is Transaction =>
+            typeof item === 'object' &&
+            item !== null &&
+            typeof (item as Transaction).id === 'string' &&
+            typeof (item as Transaction).type === 'string',
+        )
+
+        setFetchState({ data: transactions, loading: false, error: null })
+        setCurrentPage(1) // Reset to first page on new data
+        logger.info(`Fetched ${transactions.length} transactions`)
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          logger.info('Fetch aborted')
+          return
+        }
+
+        const message =
+          err instanceof Error ? err.message : 'An unexpected error occurred while fetching transactions'
+        logger.error('Fetch error:', err)
+        setFetchState({ data: null, loading: false, error: message })
+      }
+    }
+
+    fetchTransactions()
+
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [walletAddress, initialTransactions])
+
+  /* ------------------------------------------- */
+  /* Computed values                             */
+  /* ------------------------------------------- */
+
+  /** All transactions from the fetch state. */
+  const transactions = fetchState.data ?? []
+
+  /** Filtered transactions based on type and search. */
+  const filteredTransactions = useMemo(() => {
+    let result = transactions
+
+    // Filter by type
+    if (filterType !== 'all') {
+      result = result.filter((tx) => tx.type === filterType)
+    }
+
+    // Filter by search term (case-insensitive, matches id or amount)
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase()
+      result = result.filter((tx) => {
+        const idMatch = tx.id.toLowerCase().includes(lowerSearch)
+        const amountMatch = tx.amount.toString().includes(lowerSearch)
+        return idMatch || amountMatch
+      })
+    }
+
+    return result
+  }, [transactions, filterType, searchTerm])
+
+  /** Total pages for pagination. */
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredTransactions.length / pageSize)),
+    [filteredTransactions.length, pageSize],
+  )
+
+  /** Ensure current page is within bounds. */
+  const safePage = useMemo(() => Math.min(Math.max(1, currentPage), totalPages), [currentPage, totalPages])
+
+  /** Transactions for the current page. */
+  const paginatedTransactions = useMemo(() => {
+    const start = (safePage - 1) * pageSize
+    const end = start + pageSize
+    return filteredTransactions.slice(start, end)
+  }, [filteredTransactions, safePage, pageSize])
+
+  /* ------------------------------------------- */
+  /* Handlers                                    */
+  /* ------------------------------------------- */
+
+  const handleSetPage = useCallback(
+    (page: number) => {
+      const clamped = Math.min(Math.max(1, page), totalPages)
+      setCurrentPage(clamped)
+      logger.info('Page changed to:', clamped)
+    },
+    [totalPages],
+  )
+
+  /* ------------------------------------------- */
+  /* Render                                      */
+  /* ------------------------------------------- */
+
+  // No wallet connected case (additional guard)
+  if (!walletAddress || walletAddress === '0x') {
+    return (
+      <div style={{ minHeight: 200 }}>
+        <EmptyState message="Please connect your wallet to view transactions." />
+      </div>
+    )
+  }
+
+  // Loading state
+  if (fetchState.loading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 200,
+          color: 'rgba(255,255,255,0.7)',
+        }}
+      >
+        <span>Loading transactions…</span>
+      </div>
+    )
+  }
+
+  // Error state
+  if (fetchState.error) {
+    return (
+      <div
+        style={{
+          background: 'rgba(248, 113, 113, 0.1)',
+          border: '1px solid rgba(248, 113, 113, 0.3)',
+          borderRadius: '12px',
+          padding: '1rem',
+          color: '#f87171',
+          textAlign: 'center',
+        }}
+        role="alert"
+      >
+        <p>Unable to load transactions. Please try again later.</p>
+        <p style={{ fontSize: '0.8rem', opacity: 0.8 }}>{fetchState.error}</p>
+      </div>
+    )
+  }
+
+  // Empty state after successful load
+  if (transactions.length === 0) {
+    return (
+      <div style={{ minHeight: 200 }}>
+        <EmptyState message="No transactions found. Deposits and withdrawals will appear here." />
+      </div>
+    )
+  }
+
+  // Filtered empty state
+  if (filteredTransactions.length === 0) {
+    return (
+      <div>
+        <FilterBar
+          filterType={filterType}
+          setFilterType={setFilterType}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
+        <EmptyState message="No transactions match your current filters." />
+      </div>
+    )
+  }
+
+  // Main render
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.05)',
+        borderRadius: '16px',
+        padding: '1.5rem',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+      }}
+    >
+      <FilterBar
+        filterType={filterType}
+        setFilterType={setFilterType}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+      />
+
+      <div role="table" aria-label="Transaction history">
+        {/* Header row */}
+        <div
+          role="row"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1fr 1fr 1fr',
+            gap: '0.5rem',
+            padding: '0.75rem 0.5rem',
+            borderBottom: '1px solid rgba(255,255,255,0.1)',
+            fontWeight: 600,
+            fontSize: '0.8rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            color: 'rgba(255,255,255,0.5)',
+          }}
+        >
+          <div role="columnheader">Transaction</div>
+          <div role="columnheader" style={{ textAlign: 'right' }}>
+            Amount
+          </div>
+          <div role="columnheader">Date</div>
+          <div role="columnheader" style={{ textAlign: 'center' }}>
+            Status
+          </div>
+        </div>
+
+        {/* Data rows */}
+        {paginatedTransactions.map((tx) => (
+          <div
+            key={tx.id}
+            role="row"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr 1fr 1fr',
+              gap: '0.5rem',
+              padding: '0.75rem 0.5rem',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+              alignItems: 'center',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          >
+            <div role="cell" style={{ fontSize: '0.9rem' }}>
+              <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                {TYPE_LABEL[tx.type] ?? tx.type}
+              </span>
+              <br />
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'rgba(255,255,255,0.4)',
+                  fontFamily: 'monospace',
+                  wordBreak: 'break-all',
+                }}
+                title={tx.id}
+              >
+                {tx.id.slice(0, 12)}…
+              </span>
+            </div>
+
+            <div
+              role="cell"
+              style={{
+                textAlign: 'right',
+                fontVariantNumeric: 'tabular-nums',
+                color: tx.type === 'withdrawal' ? '#f87171' : '#4ade80',
+                fontWeight: 600,
+              }}
+            >
+              {tx.type === 'withdrawal' ? '-' : '+'}${formatAmount(tx.amount)}
+            </div>
+
+            <div role="cell" style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>
+              {formatDate(tx.timestamp)}
+            </div>
+
+            <div role="cell" style={{ textAlign: 'center' }}>
+              <StatusBadge status={tx.status} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        setPage={handleSetPage}
+      />
+    </div>
+  )
+}
