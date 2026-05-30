@@ -20,6 +20,10 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   const svc = new LedgerService(deps.prisma);
 
   app.get("/health", async () => ok({ ok: true }));
+  app.get("/health/indexer", async () => {
+    const health = await svc.getIndexerHealth();
+    return ok(health);
+  });
   app.register(actionsRoutes(svc));
   app.register(internalRoutes(svc, deps.internalSecret));
 

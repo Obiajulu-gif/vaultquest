@@ -1,12 +1,13 @@
 import type { FastifyPluginAsync } from "fastify";
 import type { LedgerService } from "../services/ledger.js";
-import { reconcileBody } from "../schemas/actions.js";
+import { reconcileBody, checkpointBody } from "../schemas/actions.js";
 import { requireServiceAuth } from "../middleware/service-auth.js";
 import { ok } from "../responses.js";
 
 export const internalRoutes = (svc: LedgerService, secret: string): FastifyPluginAsync =>
   async (app) => {
     const guard = requireServiceAuth(secret);
+    
     app.post("/internal/reconcile", { preHandler: guard }, async (req, reply) => {
       const body = reconcileBody.parse(req.body);
       const result = await svc.reconcileEvent({
@@ -20,5 +21,15 @@ export const internalRoutes = (svc: LedgerService, secret: string): FastifyPlugi
         return ok({ parked: true });
       }
       return ok({ matched: true });
+    });
+
+    app.post("/internal/checkpoint", { preHandler: guard }, async (req, reply) => {
+      const body = checkpointBody.parse(req.body);
+      await svc.updateIndexerCheckpoint({
+        latestLedger: body.latest_ledger,
+        lastError: body.last_error,
+        success: body.success
+      });
+      return ok({ updated: true });
     });
   };

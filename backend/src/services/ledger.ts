@@ -386,4 +386,73 @@ export class LedgerService {
       recent_activity: recentActivity
     };
   }
+
+  async updateIndexerCheckpoint(input: {
+    latestLedger: number;
+    lastError?: string | null;
+    success: boolean;
+  }): Promise<any> {
+    const now = new Date();
+    return this.prisma.indexerCheckpoint.upsert({
+      where: { id: "singleton" },
+      create: {
+        id: "singleton",
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastError: input.lastError || null,
+        lastSuccessSyncTime: input.success ? now : undefined
+      },
+      update: {
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastError: input.lastError !== undefined ? input.lastError : undefined,
+        lastSuccessSyncTime: input.success ? now : undefined
+      }
+    });
+  }
+
+  async getIndexerHealth(options: { staleAfterMs?: number; now?: Date } = {}): Promise<any> {
+    const staleAfterMs = options.staleAfterMs ?? 5 * 60 * 1000;
+    const now = options.now ?? new Date();
+
+    const checkpoint = await this.prisma.indexerCheckpoint.findUnique({
+      where: { id: "singleton" }
+    });
+
+    if (!checkpoint) {
+      return {
+        status: "degraded",
+        latest_ledger: 0,
+        last_sync_time: null,
+        last_success_sync_time: null,
+        last_error: null,
+        sync_lag: 0,
+        message: "No indexer checkpoint found"
+      };
+    }
+
+    const elapsedSinceLastSuccess = now.getTime() - checkpoint.lastSuccessSyncTime.getTime();
+    const estimatedLedgerLag = Math.max(0, Math.floor(elapsedSinceLastSuccess / 5000));
+
+    let status = "healthy";
+    let message = "Indexer is healthy and syncing";
+
+    if (checkpoint.lastError) {
+      status = "degraded";
+      message = `Indexer reported error: ${checkpoint.lastError}`;
+    } else if (elapsedSinceLastSuccess > staleAfterMs) {
+      status = "lagging";
+      message = `Indexer is lagging. Last successful sync was ${Math.round(elapsedSinceLastSuccess / 1000)}s ago`;
+    }
+
+    return {
+      status,
+      latest_ledger: checkpoint.latestLedger,
+      last_sync_time: checkpoint.lastSyncTime,
+      last_success_sync_time: checkpoint.lastSuccessSyncTime,
+      last_error: checkpoint.lastError,
+      sync_lag: estimatedLedgerLag,
+      message
+    };
+  }
 }

@@ -44,3 +44,10 @@ export const portfolioQuery = z.object({
   wallet: stellarWalletAddressSchema
 });
 
+export const checkpointBody = z.object({
+  latest_ledger: z.number().int().nonnegative(),
+  last_error: z.string().nullable().optional(),
+  success: z.boolean().default(true)
+});
+
+
