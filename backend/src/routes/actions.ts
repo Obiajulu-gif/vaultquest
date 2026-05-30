@@ -6,6 +6,8 @@ import {
   cancelBody,
   listQuery,
   dashboardQuery,
+  idempotencyKeySchema,
+  portfolioQuery
   exportQuery,
   idempotencyKeySchema
 } from "../schemas/actions.js";
@@ -125,6 +127,14 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
     });
 
     /**
+     * GET /portfolio/summary?wallet=...
+     *
+     * Wallet portfolio summary endpoint returns deposits, positions, and recent activity.
+     */
+    app.get("/portfolio/summary", async (req) => {
+      const q = portfolioQuery.parse(req.query);
+      const summary = await svc.getPortfolioSummary(q.wallet);
+      return ok(summary);
      * GET /actions/export?wallet=...&format=json|csv&from=...&to=...&limit=...
      *
      * Activity export endpoint (#91): returns the authenticated wallet's full

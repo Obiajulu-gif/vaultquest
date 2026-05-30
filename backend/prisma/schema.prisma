@@ -59,6 +59,16 @@ model PendingEvent {
   @@map("pending_events")
 }
 
+model IndexerCheckpoint {
+  id                  String   @id @default("singleton")
+  latestLedger        Int      @map("latest_ledger")
+  lastSyncTime        DateTime @map("last_sync_time")
+  lastError           String?  @map("last_error")
+  lastSuccessSyncTime DateTime @default(now()) @map("last_success_sync_time")
+
+  @@map("indexer_checkpoints")
+}
+
 model SavedPool {
   id               String   @id @default(uuid()) @db.Uuid
   walletAddress    String   @map("wallet_address")

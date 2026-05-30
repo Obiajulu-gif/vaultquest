@@ -1,4 +1,6 @@
 import type { FC, ReactNode } from "react";
+import { Coins, Trophy, Users } from "lucide-react";
+import { useStore } from "@nanostores/react";
 import { Bookmark, Coins, Trophy, Users } from "lucide-react";
 import {
   ErrorState,
@@ -9,6 +11,8 @@ import {
 import type { PoolActionType, PoolStatus, PoolSummary, UserPosition } from "../contract/types";
 import { formatAmount, formatDate, truncateAddress } from "../lib/format";
 import { OnboardingChecklist } from "./OnboardingChecklist";
+import { isNetworkMismatch } from "../../core/store.js";
+import { NetworkDiagnostics } from "../../components/NetworkDiagnostics";
 import { TransactionTimeline } from "../../components/TransactionTimeline";
 import type { TxFlowResult } from "../lib/txStateMachine";
 
@@ -47,12 +51,12 @@ const STATUS_BADGE: Record<PoolStatus, { label: string; className: string }> = {
 };
 
 const Stat: FC<{ icon: ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
-  <div className="rounded-xl border border-red-900/30 bg-[#1A0505]/60 p-4">
-    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-gray-400">
+  <div className="rounded-xl border border-red-900/30 bg-[#1A0505]/60 p-3 sm:p-4">
+    <div className="flex items-center gap-2 text-[10px] sm:text-xs uppercase tracking-wide text-gray-400">
       {icon}
       {label}
     </div>
-    <p className="mt-1 text-lg font-semibold text-white">{value}</p>
+    <p className="mt-1 text-base sm:text-lg font-semibold text-white truncate" title={value}>{value}</p>
   </div>
 );
 
@@ -96,6 +100,8 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   showOnboarding = true,
   txFlow,
 }) => {
+  const mismatch = useStore(isNetworkMismatch);
+
   if (error) {
     return <ErrorState title="Couldn't load pool" message={error} onRetry={onRetry} />;
   }
@@ -112,6 +118,8 @@ export const PoolDetail: FC<PoolDetailProps> = ({
   return (
     <section aria-label={`Pool ${pool.name}`} className="space-y-6">
       {showOnboarding && <OnboardingChecklist />}
+
+      <NetworkDiagnostics />
 
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -137,7 +145,7 @@ export const PoolDetail: FC<PoolDetailProps> = ({
       </header>
 
       {/* Overview */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3">
         <Stat icon={<Coins className="h-3.5 w-3.5" aria-hidden="true" />} label="TVL" value={formatAmount(pool.tvl, pool.asset)} />
         <Stat icon={<Users className="h-3.5 w-3.5" aria-hidden="true" />} label="Participants" value={String(pool.participantCount)} />
         <Stat icon={<Trophy className="h-3.5 w-3.5" aria-hidden="true" />} label="Expected yield" value={pool.expectedYield} />
@@ -193,6 +201,14 @@ export const PoolDetail: FC<PoolDetailProps> = ({
             <button
               key={action}
               type="button"
+              onClick={() => !mismatch && onAction?.(action)}
+              disabled={mismatch}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505] ${
+                mismatch
+                  ? "bg-gray-600 opacity-50 cursor-not-allowed focus-visible:ring-gray-400"
+                  : "bg-red-600 hover:bg-red-700 focus-visible:ring-red-400"
+              }`}
+              title={mismatch ? "Actions blocked due to network mismatch" : ACTION_LABEL[action]}
               onClick={() => onAction?.(action)}
               disabled={txFlow?.busy}
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"

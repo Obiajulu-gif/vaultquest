@@ -1,5 +1,5 @@
-import { connectedPublicKey } from "./store";
-import { kit } from "./kit";
+import { connectedPublicKey, connectedNetwork, isNetworkMismatch } from "./store.js";
+import { kit } from "./kit.js";
 import { getFrontendEnv } from "./env.js";
 import type { ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 import {
@@ -8,7 +8,7 @@ import {
   type NetworkType,
   type WalletType,
   normalizeStellarNetwork,
-} from "@/lib/wallets";
+} from "../lib/wallets.js";
 
 export interface WalletConnectionResult {
   address: string;
@@ -80,6 +80,15 @@ function setConnection(publicKey: string, provider: string): void {
   }
 
   connectedPublicKey.set(publicKey);
+
+  // Set the network in the background and check for mismatch
+  getConnectedNetwork().then((net) => {
+    connectedNetwork.set(net);
+    isNetworkMismatch.set(net !== EXPECTED_NETWORK);
+  }).catch(() => {
+    connectedNetwork.set(EXPECTED_NETWORK);
+    isNetworkMismatch.set(false);
+  });
 }
 
 function disconnect(): void {
@@ -92,6 +101,8 @@ function disconnect(): void {
   }
 
   connectedPublicKey.set("");
+  connectedNetwork.set(null);
+  isNetworkMismatch.set(false);
 }
 
 export async function checkAndNotifyFunding(): Promise<void> {
@@ -183,6 +194,15 @@ function initializeConnection(): StoredWalletConnection | null {
     connectionState.publicKey = storedPublicKey;
     connectionState.provider = appProvider;
     connectedPublicKey.set(storedPublicKey);
+
+    // Verify network and mismatch in the background
+    getConnectedNetwork().then((net) => {
+      connectedNetwork.set(net);
+      isNetworkMismatch.set(net !== EXPECTED_NETWORK);
+    }).catch(() => {
+      connectedNetwork.set(EXPECTED_NETWORK);
+      isNetworkMismatch.set(false);
+    });
 
     return {
       publicKey: storedPublicKey,

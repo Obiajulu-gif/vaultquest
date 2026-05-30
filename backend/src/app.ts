@@ -23,6 +23,10 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   const savedPoolsSvc = new SavedPoolsService(deps.prisma);
 
   app.get("/health", async () => ok({ ok: true }));
+  app.get("/health/indexer", async () => {
+    const health = await svc.getIndexerHealth();
+    return ok(health);
+  });
   app.register(actionsRoutes(svc));
   app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));

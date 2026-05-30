@@ -38,6 +38,19 @@ export const dashboardQuery = z.object({
   stale_after_ms: z.coerce.number().int().min(0).max(24 * 60 * 60 * 1000).optional()
 });
 
+export const stellarWalletAddressSchema = z.string().regex(/^G[A-Z0-9]{55}$/, "Invalid Stellar wallet address");
+
+export const portfolioQuery = z.object({
+  wallet: stellarWalletAddressSchema
+});
+
+export const checkpointBody = z.object({
+  latest_ledger: z.number().int().nonnegative(),
+  last_error: z.string().nullable().optional(),
+  success: z.boolean().default(true)
+});
+
+
 export const exportQuery = z.object({
   wallet: walletSchema,
   format: z.enum(["json", "csv"]).default("json"),
