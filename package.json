@@ -23,6 +23,7 @@
     "react-dom": "^18.3.1",
     "viem": "^2.21.54",
     "wagmi": "^2.14.6",
+    "@rainbow-me/rainbowkit": "^2.2.1",
     "@rainbow-me/rainbowkit": "^2.2.1"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
     "autoprefixer": "^10.4.20",
+    "sonner": "^1.5.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.21",
     "jsdom": "^25.0.1",
