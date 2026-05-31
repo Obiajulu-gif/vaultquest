@@ -15,12 +15,14 @@
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "db:setup": "prisma migrate dev && prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "fastify": "^4.28.1",
     "fastify-plugin": "^4.5.1",
+    "ioredis": "^5.11.0",
     "node-cron": "^3.0.3",
     "pino": "^9.5.0",
     "pino-pretty": "^11.3.0",
@@ -40,5 +42,8 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.4",
     "vitest": "^2.1.1"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

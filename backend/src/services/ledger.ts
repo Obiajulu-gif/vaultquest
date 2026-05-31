@@ -4,6 +4,7 @@ import { ERROR_CODES } from "../constants.js";
 import { AppError } from "../errors.js";
 import type { IntentInput, ActionRecord } from "../types.js";
 import type { ActionStatus } from "../constants.js";
+import type { CacheService } from "./cacheService.js";
 
 export type ListActionsParams = {
   walletAddress: string;
@@ -51,7 +52,10 @@ function stableStringify(value: unknown): string {
 }
 
 export class LedgerService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly cacheService?: CacheService
+  ) {}
 
   async createAction(input: IntentInput): Promise<ActionRecord> {
     const existing = await this.prisma.actionLedger.findUnique({
@@ -116,13 +120,18 @@ export class LedgerService {
         );
       }
 
-      const pending = await tx.pendingEvent.findUnique({ where: { txHash } });
+      const pending = this.cacheService
+        ? await this.cacheService.getPendingEvent(txHash)
+        : await tx.pendingEvent.findUnique({ where: { txHash } });
 
       if (pending) {
         await tx.pendingEvent.update({
           where: { txHash },
           data: { consumedAt: new Date() }
         });
+        if (this.cacheService) {
+          await this.cacheService.deletePendingEvent(txHash);
+        }
         const confirmed = await tx.actionLedger.update({
           where: { id },
           data: {
@@ -220,6 +229,16 @@ export class LedgerService {
           },
           update: {}
         });
+        if (this.cacheService) {
+          await this.cacheService.setPendingEvent({
+            txHash: input.txHash,
+            sorobanEventId: input.sorobanEventId,
+            eventPayload: input.eventPayload,
+            statusHint: input.statusHint,
+            receivedAt: new Date(),
+            consumedAt: null
+          });
+        }
         return { matched: false };
       }
 
@@ -419,6 +438,19 @@ export class LedgerService {
     success: boolean;
   }): Promise<any> {
     const now = new Date();
+    if (this.cacheService) {
+      const existing = await this.cacheService.getCheckpoint();
+      const lastSuccessSyncTime = input.success ? now : (existing?.lastSuccessSyncTime ?? now);
+      const lastError = input.lastError !== undefined ? input.lastError : (existing?.lastError ?? null);
+      await this.cacheService.setCheckpoint({
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastSuccessSyncTime,
+        lastError
+      });
+      return { id: "singleton" };
+    }
+
     return this.prisma.indexerCheckpoint.upsert({
       where: { id: "singleton" },
       create: {
@@ -441,9 +473,11 @@ export class LedgerService {
     const staleAfterMs = options.staleAfterMs ?? 5 * 60 * 1000;
     const now = options.now ?? new Date();
 
-    const checkpoint = await this.prisma.indexerCheckpoint.findUnique({
-      where: { id: "singleton" }
-    });
+    const checkpoint = this.cacheService
+      ? await this.cacheService.getCheckpoint()
+      : await this.prisma.indexerCheckpoint.findUnique({
+          where: { id: "singleton" }
+        });
 
     if (!checkpoint) {
       return {
@@ -457,7 +491,8 @@ export class LedgerService {
       };
     }
 
-    const elapsedSinceLastSuccess = now.getTime() - checkpoint.lastSuccessSyncTime.getTime();
+    const lastSuccessSyncTime = checkpoint.lastSuccessSyncTime || now;
+    const elapsedSinceLastSuccess = now.getTime() - lastSuccessSyncTime.getTime();
     const estimatedLedgerLag = Math.max(0, Math.floor(elapsedSinceLastSuccess / 5000));
 
     let status = "healthy";
@@ -474,8 +509,8 @@ export class LedgerService {
     return {
       status,
       latest_ledger: checkpoint.latestLedger,
-      last_sync_time: checkpoint.lastSyncTime,
-      last_success_sync_time: checkpoint.lastSuccessSyncTime,
+      last_sync_time: checkpoint.lastSyncTime || now,
+      last_success_sync_time: lastSuccessSyncTime,
       last_error: checkpoint.lastError,
       sync_lag: estimatedLedgerLag,
       message
