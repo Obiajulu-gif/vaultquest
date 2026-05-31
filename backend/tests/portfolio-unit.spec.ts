@@ -101,8 +101,8 @@ describe("LedgerService.getPortfolioSummary Unit Tests (No Database Required)", 
 
     // Verify recent activity is limited and properly ordered
     expect(summary.recent_activity).toHaveLength(5);
-    expect(summary.recent_activity[0].id).toBe("act-pending");
-    expect(summary.recent_activity[0].status).toBe("pending");
-    expect(summary.recent_activity[4].id).toBe("act-deposit-1");
+    expect(summary.recent_activity[0]?.id).toBe("act-pending");
+    expect(summary.recent_activity[0]?.status).toBe("pending");
+    expect(summary.recent_activity[4]?.id).toBe("act-deposit-1");
   });
 });
