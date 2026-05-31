@@ -51,9 +51,16 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
   }, [amount, onWithdraw]);
 
   return (
-    <Modal onClose={step === "broadcasting" ? () => {} : onClose} ariaLabel="Withdraw from pool">
+    <Modal
+      onClose={step === "broadcasting" ? () => {} : onClose}
+      ariaLabelledBy="withdraw-modal-title"
+      ariaDescribedBy="withdraw-modal-desc"
+    >
       <div className="space-y-5">
-        <h2 className="text-xl font-bold text-white">Withdraw</h2>
+        <h2 id="withdraw-modal-title" className="text-xl font-bold text-white">Withdraw</h2>
+        <p id="withdraw-modal-desc" className="sr-only">
+          Enter the amount of assets you wish to withdraw from the prize pool.
+        </p>
 
         {step === "input" && (
           <div className="space-y-4">
@@ -92,7 +99,7 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
             <button
               type="button"
               onClick={handleMax}
-              className="w-full rounded-lg border border-red-600/40 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300"
+              className="w-full rounded-lg border border-red-600/40 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               Withdraw all ({formatAmount(position.deposited, pool.asset)})
             </button>
@@ -103,7 +110,7 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
               type="button"
               onClick={handleContinue}
               disabled={!isValid}
-              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               Continue
             </button>
@@ -139,14 +146,14 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
               <button
                 type="button"
                 onClick={() => setStep("input")}
-                className="flex-1 rounded-xl border border-red-900/30 py-3 text-sm font-semibold text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white"
+                className="flex-1 rounded-xl border border-red-900/30 py-3 text-sm font-semibold text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Confirm withdrawal
               </button>
@@ -175,7 +182,7 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
               <button
                 type="button"
                 onClick={() => { setStep("review"); setError(null); }}
-                className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white"
+                className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Try again
               </button>
