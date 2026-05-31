@@ -8,6 +8,7 @@ import { Sparkles } from "lucide-react";
 import OnboardingCards from "@/components/app/OnboardingCards";
 import PublicStatsBar from "@/components/app/PublicStatsBar";
 import UnsupportedNetworkBanner from "@/components/app/UnsupportedNetworkBanner";
+import RecentWinners from "@/components/app/RecentWinners";
 
 export default function AppDashboardPage() {
   const { isConnected } = useAccount();
@@ -44,6 +45,8 @@ export default function AppDashboardPage() {
       <PublicStatsBar />
 
       <OnboardingCards />
+
+      <RecentWinners />
 
       <section className="vq-glass mx-auto max-w-xl p-6 text-center sm:p-8">
         <h2 className="text-xl font-semibold text-vault-text">Ready to join a pool?</h2>
