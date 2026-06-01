@@ -298,11 +298,25 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000001"
               },
               {
-                "symbol": "withdraw"
+                "symbol": "propose"
               }
             ],
             "data": {
-              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+              "vec": [
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                },
+                {
+                  "vec": [
+                    {
+                      "symbol": "AddAdmin"
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    }
+                  ]
+                }
+              ]
             }
           }
         }
@@ -321,12 +335,12 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "withdraw"
+                "symbol": "propose"
               }
             ],
             "data": {
               "error": {
-                "contract": 4
+                "contract": 8
               }
             }
           }
@@ -347,7 +361,7 @@
               },
               {
                 "error": {
-                  "contract": 4
+                  "contract": 8
                 }
               }
             ],
@@ -372,7 +386,7 @@
               },
               {
                 "error": {
-                  "contract": 4
+                  "contract": 8
                 }
               }
             ],
@@ -382,12 +396,22 @@
                   "string": "contract try_call failed"
                 },
                 {
-                  "symbol": "withdraw"
+                  "symbol": "propose"
                 },
                 {
                   "vec": [
                     {
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    },
+                    {
+                      "vec": [
+                        {
+                          "symbol": "AddAdmin"
+                        },
+                        {
+                          "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                        }
+                      ]
                     }
                   ]
                 }

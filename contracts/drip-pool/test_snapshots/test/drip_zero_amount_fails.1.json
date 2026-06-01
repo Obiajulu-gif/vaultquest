@@ -50,9 +50,9 @@
     "timestamp": 0,
     "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
     "base_reserve": 0,
-    "min_persistent_entry_ttl": 4096,
-    "min_temp_entry_ttl": 16,
-    "max_entry_ttl": 6312000,
+    "min_persistent_entry_ttl": 500000,
+    "min_temp_entry_ttl": 500000,
+    "max_entry_ttl": 500000,
     "ledger_entries": [
       [
         {
@@ -120,6 +120,14 @@
                       "val": {
                         "u64": 0
                       }
+                    },
+                    {
+                      "key": {
+                        "symbol": "locked_until"
+                      },
+                      "val": {
+                        "u32": 120960
+                      }
                     }
                   ]
                 }
@@ -127,7 +135,7 @@
             },
             "ext": "v0"
           },
-          4095
+          499999
         ]
       ],
       [
@@ -163,6 +171,22 @@
                         },
                         "val": {
                           "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                        }
+                      },
+                      {
+                        "key": {
+                          "vec": [
+                            {
+                              "symbol": "Admins"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "vec": [
+                            {
+                              "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                            }
+                          ]
                         }
                       },
                       {
@@ -212,6 +236,18 @@
                             }
                           ]
                         }
+                      },
+                      {
+                        "key": {
+                          "vec": [
+                            {
+                              "symbol": "ProposalNonce"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "u32": 0
+                        }
                       }
                     ]
                   }
@@ -220,7 +256,7 @@
             },
             "ext": "v0"
           },
-          4095
+          499999
         ]
       ],
       [
@@ -253,7 +289,7 @@
             },
             "ext": "v0"
           },
-          6311999
+          499999
         ]
       ],
       [
@@ -286,7 +322,7 @@
             },
             "ext": "v0"
           },
-          6311999
+          499999
         ]
       ],
       [
@@ -307,7 +343,7 @@
             },
             "ext": "v0"
           },
-          4095
+          499999
         ]
       ]
     ]
