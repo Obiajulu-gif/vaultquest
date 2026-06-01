@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/app/prizes", label: "Prizes", icon: Gift },
   { href: "/app/vaults", label: "Vaults", icon: Wallet },
   { href: "/app/account", label: "Account", icon: User },
+  { href: "/app/admin/proposals", label: "Admin", icon: Menu },
 ];
 
 export default function AppNav() {
@@ -60,7 +61,11 @@ export default function AppNav() {
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-vault-text transition-all duration-300 hover:shadow-glow md:hidden"
             onClick={() => setMenuOpen((o) => !o)}
           >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {menuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </div>
@@ -83,7 +88,9 @@ export default function AppNav() {
                     href={href}
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                      active ? "bg-red-500/15 text-red-600 dark:text-red-400" : "text-vault-muted"
+                      active
+                        ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                        : "text-vault-muted"
                     }`}
                   >
                     <Icon className="h-5 w-5" aria-hidden="true" />
