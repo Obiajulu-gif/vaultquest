@@ -11,17 +11,32 @@ const TYPE_LABELS = {
   reward: "Prize won",
 };
 
+const getAssetForTx = (tx) => {
+  if (tx.asset) return tx.asset;
+  const pool = (tx.pool || "").toLowerCase();
+  if (pool.includes("usdc") || pool.includes("community drip")) return "USDC";
+  if (pool.includes("xlm") || pool.includes("high-yield")) return "XLM";
+  if (pool.includes("avax") || pool.includes("starter")) return "AVAX";
+  return "USDC";
+};
+
 /**
- * @param {{ transactions: Array<{ id: string, type: string, pool: string, amount: number, date: string, status: string }> }} props
+ * @param {{ transactions: Array<{ id: string, type: string, pool: string, asset?: string, amount: number, date: string, status: string }>, selectedAsset?: string, onClearAsset?: () => void }} props
  */
-export default function UserDepositsList({ transactions = [] }) {
+export default function UserDepositsList({ transactions = [], selectedAsset = "all", onClearAsset }) {
   const [filter, setFilter] = useState("all");
   const [page, setPage] = useState(0);
 
   const filtered = useMemo(() => {
-    if (filter === "all") return transactions;
-    return transactions.filter((tx) => tx.type === filter);
-  }, [transactions, filter]);
+    let result = transactions;
+    if (filter !== "all") {
+      result = result.filter((tx) => tx.type === filter);
+    }
+    if (selectedAsset !== "all") {
+      result = result.filter((tx) => getAssetForTx(tx) === selectedAsset);
+    }
+    return result;
+  }, [transactions, filter, selectedAsset]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount - 1);
@@ -30,9 +45,24 @@ export default function UserDepositsList({ transactions = [] }) {
   return (
     <section className="vq-glass p-4 sm:p-6" aria-label="Transaction history">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-vault-text">Past transactions</h2>
-          <p className="text-sm text-vault-muted">Filter and browse your pool activity</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-vault-text">Past transactions</h2>
+            <p className="text-sm text-vault-muted">Filter and browse your pool activity</p>
+          </div>
+          {selectedAsset !== "all" && (
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-1 text-xs font-semibold text-red-500 dark:text-red-400">
+              <span>Asset: {selectedAsset}</span>
+              <button
+                type="button"
+                onClick={onClearAsset}
+                className="hover:text-red-700 dark:hover:text-red-300 font-bold ml-0.5 px-0.5 transition-colors focus:outline-none"
+                aria-label={`Clear ${selectedAsset} filter`}
+              >
+                &times;
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-vault-muted" aria-hidden="true" />

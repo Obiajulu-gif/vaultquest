@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
 import UserDepositsList from "@/components/app/UserDepositsList";
+import DepositAnalyticsCard from "@/components/app/DepositAnalyticsCard";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
 import { DEMO_PORTFOLIO, DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
@@ -26,6 +28,8 @@ function MetricCard({ icon: Icon, label, value, sub, highlight }) {
 }
 
 function ConnectedDashboard() {
+  const [selectedAsset, setSelectedAsset] = useState("all");
+
   const accrued = useYieldCounter(
     DEMO_PORTFOLIO.activeDeposits,
     DEMO_PORTFOLIO.apyPercent,
@@ -56,7 +60,18 @@ function ConnectedDashboard() {
           highlight
         />
       </div>
-      <UserDepositsList transactions={DEMO_TRANSACTIONS} />
+
+      <DepositAnalyticsCard
+        transactions={DEMO_TRANSACTIONS}
+        selectedAsset={selectedAsset}
+        onSelectAsset={setSelectedAsset}
+      />
+
+      <UserDepositsList
+        transactions={DEMO_TRANSACTIONS}
+        selectedAsset={selectedAsset}
+        onClearAsset={() => setSelectedAsset("all")}
+      />
     </>
   );
 }
@@ -82,7 +97,19 @@ function EmptyAccount() {
 }
 
 export default function AccountPage() {
-  const { isConnected } = useAccount();
+  const { isConnected: wagmiConnected } = useAccount();
+  const [isMockConnected, setIsMockConnected] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("mockConnected") === "true") {
+        setIsMockConnected(true);
+      }
+    }
+  }, []);
+
+  const isConnected = wagmiConnected || isMockConnected;
 
   return (
     <div className="space-y-8">
