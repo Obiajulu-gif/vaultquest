@@ -13,20 +13,19 @@ import YieldCalculator from "@/components/app/YieldCalculator";
 import BridgeStatusTracker from "@/components/app/BridgeStatusTracker";
 import WinnerCelebration from "@/components/app/WinnerCelebration";
 import PrizeCountdown from "@/components/app/PrizeCountdown";
+import FaqAccordion from "@/components/app/FaqAccordion";
 
 export default function AppDashboardPage() {
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const { openConnectModal } = useConnectModal();
   const [onboardingStep, setOnboardingStep] = useState(0);
 
-  // Mock winner status - replace with actual API call
-  const isWinner = false; // Set to true to test celebration modal
+  const isWinner = false;
 
-  // Calculate next Friday at 18:00 UTC as mock draw date
   const getNextDrawDate = () => {
     const now = new Date();
     const nextFriday = new Date(now);
-    nextFriday.setUTCDate(now.getUTCDate() + (5 - now.getUTCDay() + 7) % 7);
+    nextFriday.setUTCDate(now.getUTCDate() + ((5 - now.getUTCDay() + 7) % 7));
     nextFriday.setUTCHours(18, 0, 0, 0);
     if (nextFriday <= now) {
       nextFriday.setUTCDate(nextFriday.getUTCDate() + 7);
@@ -65,20 +64,16 @@ export default function AppDashboardPage() {
           Save together. Win together.
         </h1>
         <p className="mt-3 max-w-2xl text-vault-muted">
-          VaultQuest pools your deposits, routes yield to weekly prizes, and
-          keeps every saver&apos;s principal withdrawable in full—no-loss by
-          design.
+          VaultQuest pools your deposits, routes yield to weekly prizes, and keeps every saver&apos;s
+          principal withdrawable in full—no-loss by design.
         </p>
       </section>
 
       <PrizeCountdown targetDate={nextDrawDate} />
 
       <PublicStatsBar />
-
       <YieldCalculator />
-
       <OnboardingCards />
-
       <RecentWinners />
 
       {isConnected && (
@@ -92,10 +87,10 @@ export default function AppDashboardPage() {
         />
       )}
 
+      <FaqAccordion />
+
       <section className="vq-glass mx-auto max-w-xl p-6 text-center sm:p-8">
-        <h2 className="text-xl font-semibold text-vault-text">
-          Ready to join a pool?
-        </h2>
+        <h2 className="text-xl font-semibold text-vault-text">Ready to join a pool?</h2>
         <p className="mt-2 text-sm text-vault-muted">
           {isConnected
             ? "Explore prizes or manage your vault positions."
@@ -103,11 +98,7 @@ export default function AppDashboardPage() {
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {onboardingStep === 0 ? (
-            <button
-              type="button"
-              onClick={handleStartSaving}
-              className="vq-btn-primary"
-            >
+            <button type="button" onClick={handleStartSaving} className="vq-btn-primary">
               Start Saving
             </button>
           ) : (
@@ -121,11 +112,7 @@ export default function AppDashboardPage() {
             </>
           )}
           {!isConnected && onboardingStep === 0 && (
-            <button
-              type="button"
-              onClick={() => openConnectModal?.()}
-              className="vq-btn-ghost"
-            >
+            <button type="button" onClick={() => openConnectModal?.()} className="vq-btn-ghost">
               Connect wallet
             </button>
           )}
