@@ -9,6 +9,7 @@ import OnboardingCards from "@/components/app/OnboardingCards";
 import PublicStatsBar from "@/components/app/PublicStatsBar";
 import UnsupportedNetworkBanner from "@/components/app/UnsupportedNetworkBanner";
 import RecentWinners from "@/components/app/RecentWinners";
+import YieldCalculator from "@/components/app/YieldCalculator";
 
 export default function AppDashboardPage() {
   const { isConnected } = useAccount();
@@ -37,19 +38,24 @@ export default function AppDashboardPage() {
           Save together. Win together.
         </h1>
         <p className="mt-3 max-w-2xl text-vault-muted">
-          VaultQuest pools your deposits, routes yield to weekly prizes, and keeps every saver&apos;s
-          principal withdrawable in full—no-loss by design.
+          VaultQuest pools your deposits, routes yield to weekly prizes, and
+          keeps every saver&apos;s principal withdrawable in full—no-loss by
+          design.
         </p>
       </section>
 
       <PublicStatsBar />
+
+      <YieldCalculator />
 
       <OnboardingCards />
 
       <RecentWinners />
 
       <section className="vq-glass mx-auto max-w-xl p-6 text-center sm:p-8">
-        <h2 className="text-xl font-semibold text-vault-text">Ready to join a pool?</h2>
+        <h2 className="text-xl font-semibold text-vault-text">
+          Ready to join a pool?
+        </h2>
         <p className="mt-2 text-sm text-vault-muted">
           {isConnected
             ? "Explore prizes or manage your vault positions."
@@ -57,7 +63,11 @@ export default function AppDashboardPage() {
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {onboardingStep === 0 ? (
-            <button type="button" onClick={handleStartSaving} className="vq-btn-primary">
+            <button
+              type="button"
+              onClick={handleStartSaving}
+              className="vq-btn-primary"
+            >
               Start Saving
             </button>
           ) : (
@@ -71,7 +81,11 @@ export default function AppDashboardPage() {
             </>
           )}
           {!isConnected && onboardingStep === 0 && (
-            <button type="button" onClick={() => openConnectModal?.()} className="vq-btn-ghost">
+            <button
+              type="button"
+              onClick={() => openConnectModal?.()}
+              className="vq-btn-ghost"
+            >
               Connect wallet
             </button>
           )}
