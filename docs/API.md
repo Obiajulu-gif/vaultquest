@@ -1,8 +1,9 @@
 # VaultQuest API Contract Reference
 
 Developer-facing reference for the VaultQuest backend REST API. Covers pool
-actions, dashboard summary, and activity export. Frontend contributors can build
-UI integrations against these shapes without reading the backend source.
+actions, dashboard summary, saved-pools watchlist, and activity export.
+Frontend contributors can build UI integrations against these shapes without
+reading the backend source.
 
 All responses use `application/json` unless noted. Successful responses wrap
 data in `{ "data": ... }`. Paginated responses include a `meta.pagination`
@@ -265,6 +266,114 @@ in-flight tx hashes the wallet should keep polling, and a freshness flag.
     "latest_confirmed_at": "2025-05-29T11:55:00.000Z"
   }
 }
+```
+
+---
+
+### Saved pools / watchlist
+
+#### GET /saved-pools
+
+Return the saved pools for a wallet, newest first.
+
+**Query parameters**
+
+| Param | Required | Default | Description |
+|---|---|---|---|
+| `wallet` | Yes | — | Wallet address |
+
+**Response — 200 OK**
+
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-...",
+      "wallet_address": "GABCDEF1234567890",
+      "pool_id": "pool-42",
+      "pool_name": "Weekly USDC",
+      "status": "open",
+      "tvl": "12500.5",
+      "asset": "USDC",
+      "participant_count": 24,
+      "expected_yield": "5.2% APY",
+      "prize": "50 USDC",
+      "opens_at": "2026-05-29T12:00:00.000Z",
+      "locks_at": "2026-06-05T12:00:00.000Z",
+      "draws_at": "2026-06-12T12:00:00.000Z",
+      "created_at": "2026-05-29T12:00:00.000Z",
+      "updated_at": "2026-05-29T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### POST /saved-pools
+
+Create or update a saved pool entry for a wallet. Reusing the same wallet and
+pool ID updates the stored summary instead of creating duplicates.
+
+**Request body**
+
+```json
+{
+  "wallet_address": "GABCDEF1234567890",
+  "pool": {
+    "pool_id": "pool-42",
+    "pool_name": "Weekly USDC",
+    "status": "open",
+    "tvl": "12500.5",
+    "asset": "USDC",
+    "participant_count": 24,
+    "expected_yield": "5.2% APY",
+    "prize": "50 USDC",
+    "opens_at": "2026-05-29T12:00:00.000Z",
+    "locks_at": "2026-06-05T12:00:00.000Z",
+    "draws_at": "2026-06-12T12:00:00.000Z"
+  }
+}
+```
+
+**Response — 201 Created** for a new saved pool, or **200 OK** when updating an existing entry
+
+```json
+{
+  "data": {
+    "saved": {
+      "id": "550e8400-...",
+      "wallet_address": "GABCDEF1234567890",
+      "pool_id": "pool-42",
+      "pool_name": "Weekly USDC",
+      "status": "open",
+      "tvl": "12500.5",
+      "asset": "USDC",
+      "participant_count": 24,
+      "expected_yield": "5.2% APY",
+      "prize": "50 USDC",
+      "opens_at": "2026-05-29T12:00:00.000Z",
+      "locks_at": "2026-06-05T12:00:00.000Z",
+      "draws_at": "2026-06-12T12:00:00.000Z",
+      "created_at": "2026-05-29T12:00:00.000Z",
+      "updated_at": "2026-05-29T12:00:00.000Z"
+    }
+  }
+}
+```
+
+#### DELETE /saved-pools/:poolId
+
+Remove a saved pool entry for the wallet supplied in the query string.
+
+**Query parameters**
+
+| Param | Required | Default | Description |
+|---|---|---|---|
+| `wallet` | Yes | — | Wallet address |
+
+**Response — 200 OK**
+
+```json
+{ "data": { "deleted": 1 } }
 ```
 
 ---

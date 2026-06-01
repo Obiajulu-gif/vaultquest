@@ -17,7 +17,8 @@ Action ledger and reconciliation service for TrustQuest (issue #34).
 ```bash
 cp .env.example .env
 pnpm install
-pnpm exec prisma migrate deploy
+# Setup database (migrations and mock seed data)
+npm run db:setup
 pnpm test
 pnpm dev
 ```
@@ -33,6 +34,9 @@ pnpm dev
 | GET  | /actions/:id | Read a single action |
 | GET  | /actions?wallet=G...&status=&cursor=&limit= | Paginated activity history |
 | GET  | /dashboard/summary?wallet=G...&stale_after_ms= | Per-wallet rollup for the dashboard (#14) |
+| GET  | /saved-pools?wallet=G... | Saved-pools watchlist entries |
+| POST | /saved-pools | Save or update a pool watchlist entry |
+| DELETE | /saved-pools/:poolId?wallet=G... | Remove a saved pool from a wallet watchlist |
 | DELETE | /actions?wallet=G... | Privacy scrub (nulls payload, sets redacted_at) |
 | POST | /internal/reconcile | Event indexer → ledger (requires `X-Internal-Secret`) |
 

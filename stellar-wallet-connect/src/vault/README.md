@@ -4,11 +4,12 @@ Pool-level UI for VaultQuest plus a testable contract seam.
 
 | Piece | Issue | What it is |
 |---|---|---|
-| `components/PoolDetail.tsx` | #73 | Pool overview, user position, and state-aware actions |
+| `components/PoolDetail.tsx` | #73 / #90 | Pool overview, user position, save toggle, and state-aware actions |
 | `components/OnboardingChecklist.tsx` | #79 | First-time wallet checklist with dismiss/revisit state |
 | `components/RewardHistory.tsx` | #75 | Completed-cycle reward history (table/cards) |
+| `components/SavedPoolsWatchlist.tsx` | #89 / #90 | Saved-pools dashboard section (table/cards) |
 | `contract/` | #67 | `VaultContractClient` interface + in-memory mock |
-| `hooks.ts` | #73 / #75 | `usePoolDetail` / `useRewardHistory` data adapters |
+| `hooks.ts` | #73 / #75 / #89 / #90 | `usePoolDetail`, `useRewardHistory`, `useSavedPools` data adapters |
 | `lib/format.ts` | #73 / #75 | Address truncation, amount/date formatting, explorer links |
 
 All states (loading, empty, stale, error, wallet-disconnected) reuse the shared

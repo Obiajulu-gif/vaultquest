@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --vq-bg: #f8fafc;
+  --vq-surface: rgba(255, 255, 255, 0.72);
+  --vq-text: #0f172a;
+  --vq-muted: #475569;
+  --vq-border: rgba(148, 163, 184, 0.45);
+  --vq-accent: #dc2626;
+  --vq-accent-glow: rgba(220, 38, 38, 0.35);
+  --vq-glass-gradient: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(241, 245, 249, 0.75) 50%,
+    rgba(226, 232, 240, 0.55) 100%
+  );
+  --vq-shadow-glass: 0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04);
+  --vq-shadow-glow: 0 0 0 1px rgba(220, 38, 38, 0.12), 0 0 24px rgba(220, 38, 38, 0.08);
+}
+
+.dark {
+  --vq-bg: #020617;
+  --vq-surface: rgba(15, 23, 42, 0.55);
+  --vq-text: #f8fafc;
+  --vq-muted: #94a3b8;
+  --vq-border: rgba(148, 163, 184, 0.2);
+  --vq-accent: #f87171;
+  --vq-accent-glow: rgba(248, 113, 113, 0.45);
+  --vq-glass-gradient: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.65) 0%,
+    rgba(15, 23, 42, 0.5) 50%,
+    rgba(2, 6, 23, 0.4) 100%
+  );
+  --vq-shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --vq-shadow-glow: 0 0 0 1px rgba(248, 113, 113, 0.25), 0 0 28px rgba(248, 113, 113, 0.12);
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply min-h-screen bg-vault-bg text-vault-text antialiased transition-all duration-300;
+    background-image: radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        var(--vq-accent-glow),
+        transparent 70%
+      ),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(148, 163, 184, 0.08), transparent);
+  }
+}
+
+@layer components {
+  .vq-glass {
+    @apply rounded-2xl border border-vault-border bg-glass-gradient shadow-glass backdrop-blur-xl transition-all duration-300;
+  }
+
+  .vq-glass-hover {
+    @apply vq-glass hover:shadow-glow hover:border-red-400/30 dark:hover:border-red-400/25;
+  }
+
+  .vq-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-vault-bg dark:bg-red-600 dark:hover:bg-red-500;
+  }
+
+  .vq-btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-vault-border bg-vault-surface px-4 py-2 text-sm font-medium text-vault-text backdrop-blur-md transition-all duration-300 hover:border-red-400/40 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400;
+  }
+}

@@ -58,3 +58,35 @@ model PendingEvent {
 
   @@map("pending_events")
 }
+
+model IndexerCheckpoint {
+  id                  String   @id @default("singleton")
+  latestLedger        Int      @map("latest_ledger")
+  lastSyncTime        DateTime @map("last_sync_time")
+  lastError           String?  @map("last_error")
+  lastSuccessSyncTime DateTime @default(now()) @map("last_success_sync_time")
+
+  @@map("indexer_checkpoints")
+}
+
+model SavedPool {
+  id               String   @id @default(uuid()) @db.Uuid
+  walletAddress    String   @map("wallet_address")
+  poolId           String   @map("pool_id")
+  poolName         String   @map("pool_name")
+  status           String
+  tvl              String
+  asset            String
+  participantCount Int      @map("participant_count")
+  expectedYield    String   @map("expected_yield")
+  prize            String?
+  opensAt          DateTime? @map("opens_at")
+  locksAt          DateTime? @map("locks_at")
+  drawsAt          DateTime? @map("draws_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@unique([walletAddress, poolId])
+  @@index([walletAddress, createdAt(sort: Desc)])
+  @@map("saved_pools")
+}

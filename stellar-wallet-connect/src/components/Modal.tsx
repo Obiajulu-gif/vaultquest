@@ -63,6 +63,16 @@ const Modal: FC<ModalProps> = ({
     const last = focusables[focusables.length - 1];
     const active = document.activeElement;
 
+    if (!active || !root.contains(active)) {
+      event.preventDefault();
+      if (event.shiftKey) {
+        last.focus();
+      } else {
+        first.focus();
+      }
+      return;
+    }
+
     if (event.shiftKey && active === first) {
       event.preventDefault();
       last.focus();
@@ -110,12 +120,12 @@ const Modal: FC<ModalProps> = ({
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
         tabIndex={-1}
-        className={`bg-[#1A0505] border border-red-900/40 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden animate-in zoom-in-95 duration-300 outline-none ${className}`}
+        className={`bg-[#1A0505] border border-red-900/40 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden animate-in zoom-in-95 duration-300 outline-none max-h-[90vh] flex flex-col ${className}`}
       >
-        <div className="p-8">{children}</div>
+        <div className="p-6 sm:p-8 overflow-y-auto max-h-[calc(90vh-3rem)]">{children}</div>
         <button
           type="button"
-          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505] z-10"
           onClick={onClose}
           aria-label="Close dialog"
         >

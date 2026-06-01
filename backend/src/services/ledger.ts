@@ -4,6 +4,7 @@ import { ERROR_CODES } from "../constants.js";
 import { AppError } from "../errors.js";
 import type { IntentInput, ActionRecord } from "../types.js";
 import type { ActionStatus } from "../constants.js";
+import type { CacheService } from "./cacheService.js";
 
 export type ListActionsParams = {
   walletAddress: string;
@@ -51,7 +52,10 @@ function stableStringify(value: unknown): string {
 }
 
 export class LedgerService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly cacheService?: CacheService
+  ) {}
 
   async createAction(input: IntentInput): Promise<ActionRecord> {
     const existing = await this.prisma.actionLedger.findUnique({
@@ -116,13 +120,18 @@ export class LedgerService {
         );
       }
 
-      const pending = await tx.pendingEvent.findUnique({ where: { txHash } });
+      const pending = this.cacheService
+        ? await this.cacheService.getPendingEvent(txHash)
+        : await tx.pendingEvent.findUnique({ where: { txHash } });
 
       if (pending) {
         await tx.pendingEvent.update({
           where: { txHash },
           data: { consumedAt: new Date() }
         });
+        if (this.cacheService) {
+          await this.cacheService.deletePendingEvent(txHash);
+        }
         const confirmed = await tx.actionLedger.update({
           where: { id },
           data: {
@@ -220,6 +229,16 @@ export class LedgerService {
           },
           update: {}
         });
+        if (this.cacheService) {
+          await this.cacheService.setPendingEvent({
+            txHash: input.txHash,
+            sorobanEventId: input.sorobanEventId,
+            eventPayload: input.eventPayload,
+            statusHint: input.statusHint,
+            receivedAt: new Date(),
+            consumedAt: null
+          });
+        }
         return { matched: false };
       }
 
@@ -349,5 +368,152 @@ export class LedgerService {
       }
     });
     return { scrubbed: result.count };
+  }
+
+  async getPortfolioSummary(walletAddress: string) {
+    const actions = await this.prisma.actionLedger.findMany({
+      where: { walletAddress },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const poolBalances: Record<string, { balance: number; token: string }> = {};
+    let totalClaimed = 0;
+
+    const confirmedActions = actions.filter((a) => a.status === "confirmed");
+    for (const action of confirmedActions) {
+      const payload = action.actionPayload as Record<string, any> | null;
+      if (!payload) continue;
+
+      const vaultId = String(payload.vault_id || payload.pool_id || "default");
+      const amount = Number(payload.amount || 0);
+      const token = String(payload.token || payload.asset || "USDC");
+
+      if (!poolBalances[vaultId]) {
+        poolBalances[vaultId] = { balance: 0, token };
+      }
+
+      if (action.actionType === "deposit") {
+        poolBalances[vaultId].balance += amount;
+      } else if (action.actionType === "withdraw") {
+        poolBalances[vaultId].balance -= amount;
+      } else if (action.actionType === "claim") {
+        totalClaimed += amount;
+      }
+    }
+
+    let totalDeposits = 0;
+    const activePositions = Object.entries(poolBalances)
+      .filter(([_, data]) => data.balance > 0)
+      .map(([vaultId, data]) => {
+        totalDeposits += data.balance;
+        return {
+          vault_id: vaultId,
+          balance: data.balance,
+          token: data.token
+        };
+      });
+
+    const recentActivity = actions.slice(0, 5).map((a) => ({
+      id: a.id,
+      action_type: a.actionType,
+      status: a.status,
+      tx_hash: a.txHash,
+      created_at: a.createdAt,
+      payload: a.actionPayload
+    }));
+
+    return {
+      wallet_address: walletAddress,
+      total_deposits: totalDeposits,
+      active_positions: activePositions,
+      pending_rewards: 0,
+      claimable_amount: totalClaimed,
+      recent_activity: recentActivity
+    };
+  }
+
+  async updateIndexerCheckpoint(input: {
+    latestLedger: number;
+    lastError?: string | null;
+    success: boolean;
+  }): Promise<any> {
+    const now = new Date();
+    if (this.cacheService) {
+      const existing = await this.cacheService.getCheckpoint();
+      const lastSuccessSyncTime = input.success ? now : (existing?.lastSuccessSyncTime ?? now);
+      const lastError = input.lastError !== undefined ? input.lastError : (existing?.lastError ?? null);
+      await this.cacheService.setCheckpoint({
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastSuccessSyncTime,
+        lastError
+      });
+      return { id: "singleton" };
+    }
+
+    return this.prisma.indexerCheckpoint.upsert({
+      where: { id: "singleton" },
+      create: {
+        id: "singleton",
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastError: input.lastError || null,
+        lastSuccessSyncTime: input.success ? now : undefined
+      },
+      update: {
+        latestLedger: input.latestLedger,
+        lastSyncTime: now,
+        lastError: input.lastError !== undefined ? input.lastError : undefined,
+        lastSuccessSyncTime: input.success ? now : undefined
+      }
+    });
+  }
+
+  async getIndexerHealth(options: { staleAfterMs?: number; now?: Date } = {}): Promise<any> {
+    const staleAfterMs = options.staleAfterMs ?? 5 * 60 * 1000;
+    const now = options.now ?? new Date();
+
+    const checkpoint = this.cacheService
+      ? await this.cacheService.getCheckpoint()
+      : await this.prisma.indexerCheckpoint.findUnique({
+          where: { id: "singleton" }
+        });
+
+    if (!checkpoint) {
+      return {
+        status: "degraded",
+        latest_ledger: 0,
+        last_sync_time: null,
+        last_success_sync_time: null,
+        last_error: null,
+        sync_lag: 0,
+        message: "No indexer checkpoint found"
+      };
+    }
+
+    const lastSuccessSyncTime = checkpoint.lastSuccessSyncTime || now;
+    const elapsedSinceLastSuccess = now.getTime() - lastSuccessSyncTime.getTime();
+    const estimatedLedgerLag = Math.max(0, Math.floor(elapsedSinceLastSuccess / 5000));
+
+    let status = "healthy";
+    let message = "Indexer is healthy and syncing";
+
+    if (checkpoint.lastError) {
+      status = "degraded";
+      message = `Indexer reported error: ${checkpoint.lastError}`;
+    } else if (elapsedSinceLastSuccess > staleAfterMs) {
+      status = "lagging";
+      message = `Indexer is lagging. Last successful sync was ${Math.round(elapsedSinceLastSuccess / 1000)}s ago`;
+    }
+
+    return {
+      status,
+      latest_ledger: checkpoint.latestLedger,
+      last_sync_time: checkpoint.lastSyncTime || now,
+      last_success_sync_time: lastSuccessSyncTime,
+      last_error: checkpoint.lastError,
+      sync_lag: estimatedLedgerLag,
+      message
+    };
   }
 }

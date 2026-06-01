@@ -91,10 +91,16 @@ break anything else. Run the relevant commands for your area:
 | CI / docs | `pnpm run check:terms` | Legacy product name and import guard |
 | Contracts | `cargo test` (in `contracts/`) | Soroban contract tests |
 | Contracts | `cargo fmt --check && cargo clippy -- -D warnings` | Format + lint |
+| Security | `pnpm audit` | Dependency vulnerabilities |
+| Security | `trufflehog filesystem .` | Secret scanning |
 | Docs | manual preview | Markdown renders correctly on GitHub |
 
 If you skip a check, **say so explicitly in the PR description and why** —
 that's far more useful than silent gaps.
+
+### Handling False Positives in Secret Scans
+
+If the secret scanner (e.g., TruffleHog or Gitleaks) flags a safe placeholder or a mock value in a test file as a secret, you can handle the false positive by updating the scanner's ignore rules (e.g., using a `.gitleaksignore` file or appending the specific exception to the test suite configuration). Do not commit real secrets to bypass validation.
 
 ## 5. Pull request expectations
 
