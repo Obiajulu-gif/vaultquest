@@ -58,3 +58,10 @@ export const exportQuery = z.object({
   to: z.string().datetime({ offset: true }).optional(),
   limit: z.coerce.number().int().min(1).max(1000).default(500)
 });
+
+export const actionHistoryQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  type: z.enum(ACTION_TYPES).optional(),
+  status: z.enum(ACTION_STATUSES).optional(),
+});
