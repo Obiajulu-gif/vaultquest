@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { checkA11y, injectAxe } from 'axe-playwright';
+import { injectMockWallet } from './helpers/wallet-mock';
 
 test.describe('Core Page Flows', () => {
   test('Landing page renders and is accessible', async ({ page }) => {
@@ -67,5 +68,27 @@ test.describe('Core Page Flows', () => {
     // Accessibility check using Axe
     await injectAxe(page);
     await checkA11y(page);
+  });
+
+  test('Connect mock wallet and verify dashboard connected state', async ({ page }) => {
+    // Inject mock wallet
+    await injectMockWallet(page);
+
+    await page.goto('/app');
+    
+    const connectBtn = page.locator('text=Connect wallet');
+    if (await connectBtn.isVisible()) {
+      await connectBtn.click();
+      
+      // Simulate clicking MetaMask option inside RainbowKit
+      const metaMaskBtn = page.locator('text=MetaMask');
+      if (await metaMaskBtn.isVisible()) {
+        await metaMaskBtn.click();
+      }
+    }
+    
+    // Check that we see the connected UI buttons
+    await expect(page.locator('text=View All Prizes')).toBeVisible();
+    await expect(page.locator('text=Manage Vaults')).toBeVisible();
   });
 });
