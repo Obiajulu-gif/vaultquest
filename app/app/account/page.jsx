@@ -7,6 +7,7 @@ import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
 import UserDepositsList from "@/components/app/UserDepositsList";
 import ProfileEditor from "@/components/app/ProfileEditor";
 import LevelOnboarding from "@/components/app/LevelOnboarding";
+import BadgesGallery from "@/components/app/BadgesGallery";
 import PrizeChart from "@/components/app/PrizeChart";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
@@ -66,6 +67,8 @@ function ConnectedDashboard() {
           highlight
         />
       </div>
+
+      <BadgesGallery />
 
       <LevelOnboarding activeBalance={DEMO_PORTFOLIO.activeDeposits} />
 
