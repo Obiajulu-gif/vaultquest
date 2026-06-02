@@ -22,6 +22,12 @@ remains withdrawable in full.
 git clone https://github.com/Obiajulu-gif/vaultquest.git
 cd vaultquest
 pnpm install
+
+# Setup database (migrations and mock seed data)
+pnpm db:setup
+
+# Start development
+pnpm dev
 ```
 
 For per-package setup, see the README inside each folder.

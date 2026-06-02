@@ -1,12 +1,69 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import GasPrioritySelector from "@/components/app/GasPrioritySelector";
 import DepositModal from "@/components/app/DepositModal";
+import VaultFilters from "@/components/app/VaultFilters";
+import VaultList, { MOCK_VAULTS } from "@/components/app/VaultList";
+
+const INITIAL_FILTERS = {
+  search: "",
+  networks: [],
+  minApy: 0,
+  minTvl: 0,
+  lockups: [],
+};
 
 export default function VaultsPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+
+  const filteredVaults = useMemo(() => {
+    return MOCK_VAULTS.filter((vault) => {
+      // Search
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        if (
+          !vault.name.toLowerCase().includes(search) &&
+          !vault.asset.toLowerCase().includes(search)
+        ) {
+          return false;
+        }
+      }
+
+      // Networks
+      if (filters.networks.length > 0 && !filters.networks.includes(vault.network)) {
+        return false;
+      }
+
+      // APY
+      if (vault.apy < filters.minApy) {
+        return false;
+      }
+
+      // TVL (in millions)
+      if (vault.tvl / 1000000 < filters.minTvl) {
+        return false;
+      }
+
+      // Lockups
+      if (filters.lockups.length > 0) {
+        const isMatch = filters.lockups.some((l) => {
+          if (l === 0) return vault.lockup === 0;
+          if (l === "short") return vault.lockup >= 1 && vault.lockup <= 14;
+          if (l === "medium") return vault.lockup >= 15 && vault.lockup <= 30;
+          if (l === "long") return vault.lockup > 30;
+          return false;
+        });
+        if (!isMatch) return false;
+      }
+
+      return true;
+    });
+  }, [filters]);
+
+  const clearFilters = () => setFilters(INITIAL_FILTERS);
 
   return (
     <div className="space-y-6">
@@ -17,42 +74,50 @@ export default function VaultsPage() {
         </p>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <GasPrioritySelector nativeBalance={0.0018} />
+      <div className="flex flex-col gap-8 lg:flex-row">
+        <VaultFilters
+          filters={filters}
+          setFilters={setFilters}
+          onClear={clearFilters}
+        />
 
-        <section className="vq-glass-hover flex flex-col justify-between p-6">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-[0.24em] text-vault-muted">
-              Deposit review
-            </p>
-            <h2 className="mt-1 text-xl font-semibold text-vault-text">
-              Open the guarded deposit flow
-            </h2>
-            <p className="mt-2 text-sm text-vault-muted">
-              The modal shows the selected fee payload, live network estimates, and a balance warning when the native wallet buffer is too low.
-            </p>
+        <div className="flex-1 space-y-6">
+          <div className="grid gap-6 xl:grid-cols-2">
+            <GasPrioritySelector nativeBalance={0.0018} />
+
+            <section className="vq-glass-hover flex flex-col justify-between p-6">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.24em] text-vault-muted">
+                  Deposit review
+                </p>
+                <h2 className="mt-1 text-xl font-semibold text-vault-text">
+                  Quick Deposit Flow
+                </h2>
+                <p className="mt-2 text-sm text-vault-muted">
+                  Select a vault below to begin your deposit. Live network estimates will be calculated automatically.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsDepositModalOpen(true)}
+                className="vq-btn-primary mt-6 self-start"
+              >
+                Open deposit modal
+              </button>
+            </section>
           </div>
 
-          <div className="mt-6 rounded-2xl border border-vault-border/50 bg-vault-surface/30 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-vault-muted">
-              Demo balance state
-            </p>
-            <p className="mt-1 text-lg font-semibold text-amber-500 dark:text-amber-400">
-              Low gas balance
-            </p>
-            <p className="mt-1 text-sm text-vault-muted">
-              This is intentionally configured for screenshot coverage of the warning banner state.
-            </p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-vault-text">Available Pools</h3>
+              <p className="text-sm text-vault-muted">
+                Showing {filteredVaults.length} of {MOCK_VAULTS.length} vaults
+              </p>
+            </div>
+            <VaultList vaults={filteredVaults} />
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsDepositModalOpen(true)}
-            className="vq-btn-primary mt-6 self-start"
-          >
-            Open deposit modal
-          </button>
-        </section>
+        </div>
       </div>
 
       <DepositModal

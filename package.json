@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:backend": "pnpm --filter backend run build",
+    "db:setup": "pnpm --filter backend run db:setup",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
