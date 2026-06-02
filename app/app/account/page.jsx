@@ -5,8 +5,9 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
 import UserDepositsList from "@/components/app/UserDepositsList";
-import DepositAnalyticsCard from "@/components/app/DepositAnalyticsCard";
 import ProfileEditor from "@/components/app/ProfileEditor";
+import LevelOnboarding from "@/components/app/LevelOnboarding";
+import PrizeChart from "@/components/app/PrizeChart";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
 import { DEMO_PORTFOLIO, DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
@@ -66,13 +67,11 @@ function ConnectedDashboard() {
         />
       </div>
 
+      <LevelOnboarding activeBalance={DEMO_PORTFOLIO.activeDeposits} />
+
       <ProfileEditor />
 
-      <DepositAnalyticsCard
-        transactions={DEMO_TRANSACTIONS}
-        selectedAsset={selectedAsset}
-        onSelectAsset={setSelectedAsset}
-      />
+      <PrizeChart />
 
       <UserDepositsList
         transactions={DEMO_TRANSACTIONS}
