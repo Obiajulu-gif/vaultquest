@@ -6,10 +6,10 @@ import {
   cancelBody,
   listQuery,
   dashboardQuery,
-  idempotencyKeySchema,
-  portfolioQuery
+  portfolioQuery,
   exportQuery,
-  idempotencyKeySchema
+  idempotencyKeySchema,
+  actionHistoryQuery
 } from "../schemas/actions.js";
 import { AppError } from "../errors.js";
 import { ok, page } from "../responses.js";
@@ -135,6 +135,9 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       const q = portfolioQuery.parse(req.query);
       const summary = await svc.getPortfolioSummary(q.wallet);
       return ok(summary);
+    });
+
+    /**
      * GET /actions/export?wallet=...&format=json|csv&from=...&to=...&limit=...
      *
      * Activity export endpoint (#91): returns the authenticated wallet's full
@@ -186,5 +189,22 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       }
 
       return ok(rows.map(serialize));
+    });
+
+    app.get<{ Params: { walletAddress: string } }>("/api/actions/:walletAddress", async (req) => {
+      const q = actionHistoryQuery.parse(req.query);
+      const skip = (q.page - 1) * q.limit;
+      const result = await svc.getHistoryPaginated({
+        walletAddress: req.params.walletAddress,
+        status: q.status,
+        type: q.type,
+        skip,
+        limit: q.limit
+      });
+      return ok({
+        totalCount: result.total,
+        currentPage: q.page,
+        data: result.items.map(serialize)
+      });
     });
   };

@@ -8,11 +8,18 @@ import { Sparkles } from "lucide-react";
 import OnboardingCards from "@/components/app/OnboardingCards";
 import PublicStatsBar from "@/components/app/PublicStatsBar";
 import UnsupportedNetworkBanner from "@/components/app/UnsupportedNetworkBanner";
+import RecentWinners from "@/components/app/RecentWinners";
+import YieldCalculator from "@/components/app/YieldCalculator";
+import BridgeStatusTracker from "@/components/app/BridgeStatusTracker";
+import WinnerCelebration from "@/components/app/WinnerCelebration";
 
 export default function AppDashboardPage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { openConnectModal } = useConnectModal();
   const [onboardingStep, setOnboardingStep] = useState(0);
+
+  // Mock winner status - replace with actual API call
+  const isWinner = false; // Set to true to test celebration modal
 
   const handleStartSaving = () => {
     if (!isConnected) {
@@ -27,6 +34,13 @@ export default function AppDashboardPage() {
     <div className="space-y-8">
       <UnsupportedNetworkBanner />
 
+      <WinnerCelebration
+        isWinner={isWinner}
+        prizeAmount="250.00"
+        prizeCurrency="USDC"
+        drawDate={new Date().toISOString()}
+      />
+
       <section className="text-center sm:text-left">
         <div className="inline-flex items-center gap-2 rounded-full border border-vault-border bg-vault-surface px-3 py-1 text-xs font-medium text-vault-muted backdrop-blur-md transition-all duration-300">
           <Sparkles className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
@@ -36,17 +50,35 @@ export default function AppDashboardPage() {
           Save together. Win together.
         </h1>
         <p className="mt-3 max-w-2xl text-vault-muted">
-          VaultQuest pools your deposits, routes yield to weekly prizes, and keeps every saver&apos;s
-          principal withdrawable in full—no-loss by design.
+          VaultQuest pools your deposits, routes yield to weekly prizes, and
+          keeps every saver&apos;s principal withdrawable in full—no-loss by
+          design.
         </p>
       </section>
 
       <PublicStatsBar />
 
+      <YieldCalculator />
+
       <OnboardingCards />
 
+      <RecentWinners />
+
+      {isConnected && (
+        <BridgeStatusTracker
+          sourceTxHash="0x1234567890abcdef1234567890abcdef12345678"
+          destinationTxHash={null}
+          currentStep={2}
+          sourceChain="Avalanche"
+          destinationChain="Stellar"
+          estimatedTime={180}
+        />
+      )}
+
       <section className="vq-glass mx-auto max-w-xl p-6 text-center sm:p-8">
-        <h2 className="text-xl font-semibold text-vault-text">Ready to join a pool?</h2>
+        <h2 className="text-xl font-semibold text-vault-text">
+          Ready to join a pool?
+        </h2>
         <p className="mt-2 text-sm text-vault-muted">
           {isConnected
             ? "Explore prizes or manage your vault positions."
@@ -54,7 +86,11 @@ export default function AppDashboardPage() {
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {onboardingStep === 0 ? (
-            <button type="button" onClick={handleStartSaving} className="vq-btn-primary">
+            <button
+              type="button"
+              onClick={handleStartSaving}
+              className="vq-btn-primary"
+            >
               Start Saving
             </button>
           ) : (
@@ -68,7 +104,11 @@ export default function AppDashboardPage() {
             </>
           )}
           {!isConnected && onboardingStep === 0 && (
-            <button type="button" onClick={() => openConnectModal?.()} className="vq-btn-ghost">
+            <button
+              type="button"
+              onClick={() => openConnectModal?.()}
+              className="vq-btn-ghost"
+            >
               Connect wallet
             </button>
           )}

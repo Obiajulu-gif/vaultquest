@@ -68,9 +68,16 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
   }, [amount, onDeposit]);
 
   return (
-    <Modal onClose={step === "broadcasting" ? () => {} : onClose} ariaLabel="Deposit to pool">
+    <Modal
+      onClose={step === "broadcasting" ? () => {} : onClose}
+      ariaLabelledBy="deposit-modal-title"
+      ariaDescribedBy="deposit-modal-desc"
+    >
       <div className="space-y-5">
-        <h2 className="text-xl font-bold text-white">Deposit</h2>
+        <h2 id="deposit-modal-title" className="text-xl font-bold text-white">Deposit</h2>
+        <p id="deposit-modal-desc" className="sr-only">
+          Enter the amount of assets you wish to deposit into the prize pool.
+        </p>
 
         {step === "input" && (
           <div className="space-y-4">
@@ -111,7 +118,7 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
                   key={pct}
                   type="button"
                   onClick={() => handleQuickAmount(pct)}
-                  className="flex-1 rounded-lg border border-red-900/30 px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white"
+                  className="flex-1 rounded-lg border border-red-900/30 px-3 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
                 >
                   {pct}%
                 </button>
@@ -119,7 +126,7 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
               <button
                 type="button"
                 onClick={handleMax}
-                className="flex-1 rounded-lg border border-red-600/40 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300"
+                className="flex-1 rounded-lg border border-red-600/40 px-3 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Max
               </button>
@@ -133,7 +140,7 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
               type="button"
               onClick={handleContinue}
               disabled={!isValid}
-              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               Continue
             </button>
@@ -175,14 +182,14 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
               <button
                 type="button"
                 onClick={() => setStep("input")}
-                className="flex-1 rounded-xl border border-red-900/30 py-3 text-sm font-semibold text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white"
+                className="flex-1 rounded-xl border border-red-900/30 py-3 text-sm font-semibold text-gray-300 transition-colors hover:bg-red-900/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Confirm deposit
               </button>
@@ -211,7 +218,7 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
               <button
                 type="button"
                 onClick={() => { setStep("review"); setError(null); }}
-                className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
               >
                 Try again
               </button>

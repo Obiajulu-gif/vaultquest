@@ -202,16 +202,13 @@ export const PoolDetail: FC<PoolDetailProps> = ({
               key={action}
               type="button"
               onClick={() => !mismatch && onAction?.(action)}
-              disabled={mismatch}
-              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505] ${
+              disabled={mismatch || txFlow?.busy}
+              className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505] ${
                 mismatch
                   ? "bg-gray-600 opacity-50 cursor-not-allowed focus-visible:ring-gray-400"
                   : "bg-red-600 hover:bg-red-700 focus-visible:ring-red-400"
               }`}
               title={mismatch ? "Actions blocked due to network mismatch" : ACTION_LABEL[action]}
-              onClick={() => onAction?.(action)}
-              disabled={txFlow?.busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
             >
               {ACTION_LABEL[action]}
             </button>
