@@ -209,6 +209,33 @@ export class LedgerService {
     return { items: items as unknown as ActionRecord[], nextCursor };
   }
 
+  async getHistoryPaginated(params: {
+    walletAddress: string;
+    status?: ActionStatus;
+    type?: string;
+    skip: number;
+    limit: number;
+  }): Promise<{ items: ActionRecord[]; total: number }> {
+    const { walletAddress, status, type, skip, limit } = params;
+    
+    const whereClause: any = { walletAddress };
+    if (status) whereClause.status = status;
+    if (type) whereClause.actionType = type;
+
+    const [total, rows] = await this.prisma.$transaction([
+      this.prisma.actionLedger.count({ where: whereClause }),
+      this.prisma.actionLedger.findMany({
+        where: whereClause,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return { items: rows as unknown as ActionRecord[], total };
+  }
+
+
   async reconcileEvent(input: {
     txHash: string;
     sorobanEventId: string;
