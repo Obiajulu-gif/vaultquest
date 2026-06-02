@@ -16,6 +16,7 @@ const generateMockTickets = (count) => {
     winProbability: Math.random() * 0.001,
   }));
 };
+import TicketSimulator from "@/components/app/TicketSimulator";
 
 export default function PrizesPage() {
   const { address } = useAccount();
@@ -24,6 +25,7 @@ export default function PrizesPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-vault-text">Prizes</h1>
+      <TicketSimulator />
       <PublicStatsBar />
       <RecentWinners />
       <TicketDistributionGrid
