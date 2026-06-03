@@ -12,6 +12,7 @@ import RecentWinners from "@/components/app/RecentWinners";
 import YieldCalculator from "@/components/app/YieldCalculator";
 import BridgeStatusTracker from "@/components/app/BridgeStatusTracker";
 import WinnerCelebration from "@/components/app/WinnerCelebration";
+import PrizeCountdown from "@/components/app/PrizeCountdown";
 
 export default function AppDashboardPage() {
   const { isConnected, address } = useAccount();
@@ -20,6 +21,20 @@ export default function AppDashboardPage() {
 
   // Mock winner status - replace with actual API call
   const isWinner = false; // Set to true to test celebration modal
+
+  // Calculate next Friday at 18:00 UTC as mock draw date
+  const getNextDrawDate = () => {
+    const now = new Date();
+    const nextFriday = new Date(now);
+    nextFriday.setUTCDate(now.getUTCDate() + (5 - now.getUTCDay() + 7) % 7);
+    nextFriday.setUTCHours(18, 0, 0, 0);
+    if (nextFriday <= now) {
+      nextFriday.setUTCDate(nextFriday.getUTCDate() + 7);
+    }
+    return nextFriday;
+  };
+
+  const nextDrawDate = getNextDrawDate();
 
   const handleStartSaving = () => {
     if (!isConnected) {
@@ -55,6 +70,8 @@ export default function AppDashboardPage() {
           design.
         </p>
       </section>
+
+      <PrizeCountdown targetDate={nextDrawDate} />
 
       <PublicStatsBar />
 

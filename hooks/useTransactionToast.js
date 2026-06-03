@@ -1,72 +1,126 @@
-// hooks/useTransactionToast.js
 "use client";
 
-import { toast } from "sonner";
-import { useEffect } from "react";
-import { useAccount } from "wagmi";
+import { createContext, useContext, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { AlertCircle, CheckCircle2, Info, X, Terminal } from "lucide-react";
+import ErrorDebugger from "@/components/app/ErrorDebugger";
+
+const TransactionToastContext = createContext();
 
 /**
- * Hook to show toast notifications for a wagmi transaction.
- * Accepts the transaction result object returned by wagmi hooks
- * (e.g., useContractWrite, useSendTransaction, usePrepareSendTransaction).
- * It monitors the transaction's status and updates a single toast
- * accordingly, providing links to an explorer when available.
+ * TransactionToastProvider
+ * 
+ * Manages the global state for transaction-related toasts and the Error Debugger drawer.
  */
-export function useTransactionToast({
-  data,
-  isError,
-  error,
-  isSuccess,
-  isLoading,
-  chainId,
-  status,
-} = {}) {
-  // Keep track of the toast ID so we can update the same toast
-  let toastId = null;
+export function TransactionToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const [debugError, setDebugError] = useState(null);
+  const [isDebuggerOpen, setIsDebuggerOpen] = useState(false);
 
-  // Helper to build explorer URL (using Snowtrace for Avalanche chains)
-  const explorerUrl = (hash) => {
-    // Fallback to generic Etherscan explorer format if chain is unknown
-    const base = chainId === 43114 || chainId === 43113 ? "https://snowtrace.io" : "https://etherscan.io";
-    return `${base}/tx/${hash}`;
-  };
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
-  useEffect(() => {
-    if (isLoading) {
-      // Show pending signature toast
-      toastId = toast.loading("Signature Pending - Approve in wallet", {
-        description: "Waiting for you to sign the transaction in your wallet.",
-        duration: Infinity,
-        richColors: true,
-      });
-    } else if (status === "pending" && data?.hash && !toastId) {
-      // Transaction broadcasted but not yet confirmed
-      toastId = toast.loading("Transaction Broadcasting - Waiting for blocks", {
-        description: "Your transaction has been sent to the network.",
-        duration: Infinity,
-        richColors: true,
-      });
-    } else if (isSuccess && data?.hash) {
-      // Success toast with link to explorer
-      toast.success("Transaction Confirmed", {
-        description: (
-          <a href={explorerUrl(data.hash)} target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
-            View on Explorer
-          </a>
-        ),
-        richColors: true,
-        duration: 8000,
-      });
-      toast.dismiss(toastId);
-    } else if (isError) {
-      // Error toast with friendly message
-      const msg = error?.shortMessage || error?.message || "Transaction failed";
-      toast.error("Transaction Failed", {
-        description: msg,
-        richColors: true,
-        duration: 8000,
-      });
-      toast.dismiss(toastId);
+  const addToast = useCallback((type, title, description, error = null) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    setToasts((prev) => [...prev, { id, type, title, description, error }]);
+    
+    // Auto-remove non-error toasts or errors without debug info after 6 seconds
+    if (type !== 'error' || !error) {
+      setTimeout(() => {
+        removeToast(id);
+      }, 6000);
     }
-  }, [isLoading, status, isSuccess, isError, data, error, chainId]);
+  }, [removeToast]);
+
+  const openDebugger = useCallback((error) => {
+    setDebugError(error);
+    setIsDebuggerOpen(true);
+  }, []);
+
+  const closeDebugger = useCallback(() => {
+    setIsDebuggerOpen(false);
+  }, []);
+
+  return (
+    <TransactionToastContext.Provider value={{ addToast, removeToast, openDebugger }}>
+      {children}
+      
+      {/* Toast Portal Area */}
+      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+        <AnimatePresence mode="popLayout">
+          {toasts.map((toast) => (
+            <motion.div
+              key={toast.id}
+              layout
+              initial={{ opacity: 0, x: 40, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 20, scale: 0.95 }}
+              className={`pointer-events-auto flex w-80 items-start gap-3 rounded-2xl border p-4 shadow-glass backdrop-blur-xl transition-colors ${
+                toast.type === 'error' 
+                  ? 'border-red-500/30 bg-red-500/5 text-red-600 dark:text-red-400' 
+                  : toast.type === 'success'
+                  ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400'
+                  : 'border-vault-border bg-vault-surface/90 text-vault-text'
+              }`}
+            >
+              <div className="mt-0.5 shrink-0">
+                {toast.type === 'error' && <AlertCircle className="h-5 w-5" />}
+                {toast.type === 'success' && <CheckCircle2 className="h-5 w-5" />}
+                {toast.type === 'info' && <Info className="h-5 w-5 text-vault-muted" />}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold tracking-tight leading-none">{toast.title}</div>
+                <div className="mt-1.5 text-xs opacity-70 leading-relaxed line-clamp-2">
+                  {toast.description}
+                </div>
+                
+                {toast.error && (
+                  <button
+                    onClick={() => {
+                      openDebugger(toast.error);
+                      removeToast(toast.id);
+                    }}
+                    className="mt-3 flex items-center gap-1.5 rounded-lg bg-red-500/10 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all hover:bg-red-500/20 active:scale-95"
+                  >
+                    <Terminal className="h-3 w-3" />
+                    Debug Error
+                  </button>
+                )}
+              </div>
+              
+              <button
+                onClick={() => removeToast(toast.id)}
+                className="mt-0.5 rounded-lg p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                aria-label="Dismiss toast"
+              >
+                <X className="h-3.5 w-3.5 opacity-40" />
+              </button>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Global Debugger Drawer */}
+      <ErrorDebugger
+        isOpen={isDebuggerOpen}
+        error={debugError}
+        onClose={closeDebugger}
+      />
+    </TransactionToastContext.Provider>
+  );
+}
+
+/**
+ * useTransactionToast
+ * 
+ * Hook to access the transaction toast and error debugging functionality.
+ */
+export function useTransactionToast() {
+  const context = useContext(TransactionToastContext);
+  if (!context) {
+    throw new Error("useTransactionToast must be used within a TransactionToastProvider");
+  }
+  return context;
 }

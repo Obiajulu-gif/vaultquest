@@ -7,6 +7,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Gift, Menu, User, Wallet, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
+import BalanceAutoRefresh from "./BalanceAutoRefresh";
 
 const LINKS = [
   { href: "/app/prizes", label: "Prizes", icon: Gift },
@@ -50,6 +51,7 @@ export default function AppNav() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <BalanceAutoRefresh />
           <ThemeToggle className="hidden sm:flex" />
           <div className="hidden sm:block">
             <ConnectButton chainStatus="icon" showBalance={false} />

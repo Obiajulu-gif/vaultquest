@@ -31,7 +31,46 @@ export const ERROR_CODES = {
   ILLEGAL_TRANSITION: "ILLEGAL_TRANSITION",
   NOT_FOUND: "NOT_FOUND",
   UNAUTHORIZED: "UNAUTHORIZED",
-  FORBIDDEN: "FORBIDDEN"
+  // Escrow settlement pipeline (#settlement)
+  SETTLEMENT_SUBMIT_FAILED: "SETTLEMENT_SUBMIT_FAILED",
+  SETTLEMENT_RETRIES_EXHAUSTED: "SETTLEMENT_RETRIES_EXHAUSTED",
+  SETTLEMENT_ALREADY_RESOLVED: "SETTLEMENT_ALREADY_RESOLVED",
+  SETTLEMENT_IN_PROGRESS: "SETTLEMENT_IN_PROGRESS"
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
+
+/**
+ * Lifecycle of a vault payout. A vault starts `Unresolved`; the settlement
+ * pipeline moves it to `Resolving` while a transaction is in flight and to a
+ * terminal state on success. On any submission failure the vault is rolled
+ * back to `Unresolved` so it can be retried safely.
+ */
+export const VAULT_STATES = ["Unresolved", "Resolving", "Resolved", "Refunded"] as const;
+export type VaultState = (typeof VAULT_STATES)[number];
+
+/** How a resolved vault disburses its balance on-chain. */
+export const SETTLEMENT_TYPES = ["release", "distribute", "refund"] as const;
+export type SettlementType = (typeof SETTLEMENT_TYPES)[number];
+
+/**
+ * Horizon / Soroban RPC result codes that are transient and therefore safe to
+ * retry. `tx_bad_seq` is a stale sequence number (reload and resubmit);
+ * `tx_too_late` / timeouts are network-level and clear on their own.
+ */
+export const RETRYABLE_RESULT_CODES: readonly string[] = [
+  "tx_bad_seq",
+  "tx_too_late",
+  "timeout",
+  "ETIMEDOUT",
+  "ECONNRESET",
+  "504",
+  "503",
+  "429"
+];
+
+export const SETTLEMENT_RETRY = {
+  maxAttempts: 5,
+  baseDelayMs: 250,
+  maxDelayMs: 8000
+} as const;
