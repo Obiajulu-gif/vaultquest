@@ -15,7 +15,11 @@ const schema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace"])
     .default("info"),
   PORT: z.coerce.number().int().positive().default(3001),
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development")
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  // Stellar indexer daemon (#indexer). Optional: when both are set the daemon
+  // polls the Soroban RPC for the listed contracts' events.
+  SOROBAN_RPC_URL: z.string().url().optional(),
+  INDEXER_CONTRACT_IDS: z.string().optional()
 });
 
 export type Env = z.infer<typeof schema>;
@@ -41,7 +45,9 @@ export function getEnv(): Env {
       ORPHAN_TTL_MINUTES: Number(process.env.ORPHAN_TTL_MINUTES ?? 10),
       LOG_LEVEL: (process.env.LOG_LEVEL ?? "info") as Env["LOG_LEVEL"],
       PORT: Number(process.env.PORT ?? 3001),
-      NODE_ENV: (process.env.NODE_ENV ?? "development") as Env["NODE_ENV"]
+      NODE_ENV: (process.env.NODE_ENV ?? "development") as Env["NODE_ENV"],
+      SOROBAN_RPC_URL: process.env.SOROBAN_RPC_URL || undefined,
+      INDEXER_CONTRACT_IDS: process.env.INDEXER_CONTRACT_IDS || undefined
     } satisfies Env;
   }
   return parseEnv();

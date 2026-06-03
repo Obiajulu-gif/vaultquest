@@ -42,5 +42,6 @@ export async function startTestDb(): Promise<TestDb> {
 export async function resetDb(prisma: PrismaClient): Promise<void> {
   await prisma.pendingEvent.deleteMany({});
   await prisma.savedPool.deleteMany({});
+  await prisma.userQuest.deleteMany({});
   await prisma.actionLedger.deleteMany({});
 }
