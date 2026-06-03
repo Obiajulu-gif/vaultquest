@@ -5,7 +5,10 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
 import UserDepositsList from "@/components/app/UserDepositsList";
-import DepositAnalyticsCard from "@/components/app/DepositAnalyticsCard";
+import ProfileEditor from "@/components/app/ProfileEditor";
+import LevelOnboarding from "@/components/app/LevelOnboarding";
+import BadgesGallery from "@/components/app/BadgesGallery";
+import PrizeChart from "@/components/app/PrizeChart";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
 import { DEMO_PORTFOLIO, DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
@@ -20,8 +23,12 @@ function MetricCard({ icon: Icon, label, value, sub, highlight }) {
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>
-      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-vault-muted">{label}</p>
-      <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text sm:text-3xl">{value}</p>
+      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-vault-muted">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text sm:text-3xl">
+        {value}
+      </p>
       {sub && <p className="mt-1 text-sm text-vault-muted">{sub}</p>}
     </article>
   );
@@ -61,11 +68,13 @@ function ConnectedDashboard() {
         />
       </div>
 
-      <DepositAnalyticsCard
-        transactions={DEMO_TRANSACTIONS}
-        selectedAsset={selectedAsset}
-        onSelectAsset={setSelectedAsset}
-      />
+      <BadgesGallery />
+
+      <LevelOnboarding activeBalance={DEMO_PORTFOLIO.activeDeposits} />
+
+      <ProfileEditor />
+
+      <PrizeChart />
 
       <UserDepositsList
         transactions={DEMO_TRANSACTIONS}
@@ -84,11 +93,18 @@ function EmptyAccount() {
       <span className="flex h-16 w-16 items-center justify-center rounded-full border border-vault-border bg-red-500/10 text-red-500 ring-2 ring-red-400/20 dark:text-red-400">
         <Wallet className="h-8 w-8" aria-hidden="true" />
       </span>
-      <h2 className="mt-6 text-xl font-semibold text-vault-text">Wallet not connected</h2>
+      <h2 className="mt-6 text-xl font-semibold text-vault-text">
+        Wallet not connected
+      </h2>
       <p className="mt-2 max-w-md text-sm text-vault-muted">
-        Connect your wallet to view deposits, live yield accrual, and your transaction history.
+        Connect your wallet to view deposits, live yield accrual, and your
+        transaction history.
       </p>
-      <button type="button" onClick={() => openConnectModal?.()} className="vq-btn-primary mt-8">
+      <button
+        type="button"
+        onClick={() => openConnectModal?.()}
+        className="vq-btn-primary mt-8"
+      >
         <Wallet className="h-4 w-4" aria-hidden="true" />
         Connect wallet
       </button>

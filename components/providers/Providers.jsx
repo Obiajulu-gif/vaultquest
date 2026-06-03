@@ -7,6 +7,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
 import { wagmiConfig } from "@/lib/wagmi";
+import { TransactionToastProvider } from "@/hooks/useTransactionToast";
 
 export default function Providers({ children }) {
   const [queryClient] = useState(
@@ -20,7 +21,11 @@ export default function Providers({ children }) {
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="vaultquest-theme">
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>{children}</RainbowKitProvider>
+          <RainbowKitProvider>
+            <TransactionToastProvider>
+              {children}
+            </TransactionToastProvider>
+          </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
     </ThemeProvider>
