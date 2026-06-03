@@ -2,6 +2,9 @@ import cron from "node-cron";
 import type { PrismaClient } from "@prisma/client";
 import type { Logger } from "pino";
 import { sweepOrphans } from "./services/reconciler.js";
+import { QuestService } from "./services/questService.js";
+import type { StellarIndexer } from "./services/stellarIndexer.js";
+import { pingDatabase } from "./db.js";
 
 export function startReconcilerCron(opts: {
   prisma: PrismaClient;
@@ -16,6 +19,61 @@ export function startReconcilerCron(opts: {
       opts.logger.info({ result }, "reconciler sweep complete");
     } catch (err) {
       opts.logger.error({ err }, "reconciler sweep failed");
+    }
+  });
+  return task;
+}
+
+/**
+ * Periodically re-evaluates savings quests for wallets with recently confirmed
+ * ledger activity (#26). The lookback window is kept slightly larger than the
+ * schedule interval so a slow tick never skips a wallet.
+ */
+export function startQuestCron(opts: {
+  prisma: PrismaClient;
+  logger: Logger;
+  schedule?: string;
+  lookbackMinutes?: number;
+}): cron.ScheduledTask {
+  const schedule = opts.schedule ?? "*/2 * * * *";
+  const lookbackMinutes = opts.lookbackMinutes ?? 10;
+  const questService = new QuestService(opts.prisma);
+
+  const task = cron.schedule(schedule, async () => {
+    const since = new Date(Date.now() - lookbackMinutes * 60 * 1000);
+    try {
+      const result = await questService.evaluateRecent(since);
+      opts.logger.info({ result }, "quest evaluation sweep complete");
+    } catch (err) {
+      opts.logger.error({ err }, "quest evaluation sweep failed");
+    }
+  });
+  return task;
+}
+
+/**
+ * Drives the Stellar indexer daemon on a schedule (#indexer). Each tick polls
+ * Horizon for new contract events and reconciles them into the ledger. The
+ * tick is skipped when the database is unreachable so we never fetch events we
+ * cannot persist.
+ */
+export function startIndexerCron(opts: {
+  prisma: PrismaClient;
+  indexer: StellarIndexer;
+  logger: Logger;
+  schedule?: string;
+}): cron.ScheduledTask {
+  const schedule = opts.schedule ?? "*/1 * * * *";
+  const task = cron.schedule(schedule, async () => {
+    try {
+      if (!(await pingDatabase(opts.prisma))) {
+        opts.logger.warn({}, "indexer tick skipped: database unreachable");
+        return;
+      }
+      const result = await opts.indexer.tick();
+      opts.logger.info({ result }, "indexer tick complete");
+    } catch (err) {
+      opts.logger.error({ err }, "indexer tick failed");
     }
   });
   return task;

@@ -69,6 +69,45 @@ model IndexerCheckpoint {
   @@map("indexer_checkpoints")
 }
 
+model VaultSettlement {
+  id             String    @id @default(uuid()) @db.Uuid
+  vaultId        String    @unique @map("vault_id")
+  state          String    @default("Unresolved")
+  settlementType String    @map("settlement_type")
+  recipient      String?
+  amount         String?
+  txHash         String?   @unique @map("tx_hash")
+  resultCode     String?   @map("result_code")
+  errorCode      String?   @map("error_code")
+  errorDetail    String?   @map("error_detail")
+  attempts       Int       @default(0)
+  resolvedAt     DateTime? @map("resolved_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([state, updatedAt])
+  @@map("vault_settlements")
+}
+
+model UserQuest {
+  id                    String    @id @default(uuid()) @db.Uuid
+  walletAddress         String    @map("wallet_address")
+  questId               String    @map("quest_id")
+  progress              Float     @default(0)
+  target                Float
+  status                String    @default("in_progress")
+  metadata              Json?
+  completedAt           DateTime? @map("completed_at")
+  lastEvaluatedAt       DateTime  @default(now()) @map("last_evaluated_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  @@unique([walletAddress, questId])
+  @@index([walletAddress, status])
+  @@index([status, completedAt(sort: Desc)])
+  @@map("user_quests")
+}
+
 model SavedPool {
   id               String   @id @default(uuid()) @db.Uuid
   walletAddress    String   @map("wallet_address")
