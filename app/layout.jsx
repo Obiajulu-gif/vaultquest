@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import Providers from "@/components/providers/Providers";
+import { Toaster } from "sonner";
 
 export const metadata = {
   title: "VaultQuest — No-loss prize savings",
@@ -11,6 +12,8 @@ export default function RootLayout({ children }) {
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
+        {/* Global toast container */}
+        <Toaster position="top-right" richColors />
       </body>
     </html>
   );
