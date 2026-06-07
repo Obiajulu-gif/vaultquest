@@ -11,6 +11,7 @@ import {
 import { connectedPublicKey, connectedNetwork, isNetworkMismatch } from "../core/store.js";
 import { EXPECTED_NETWORK, STELLAR_NETWORKS, type NetworkType } from "../lib/wallets.js";
 import { getFrontendEnv } from "../core/env.js";
+import { resolveHorizonUrl } from "../core/horizonConfig.js";
 
 export const NetworkDiagnostics: FC = () => {
   const publicKey = useStore(connectedPublicKey);
@@ -31,6 +32,10 @@ export const NetworkDiagnostics: FC = () => {
 
   const expectedNetworkConfig = STELLAR_NETWORKS[EXPECTED_NETWORK as NetworkType];
   const connectedNetworkConfig = network ? STELLAR_NETWORKS[network as NetworkType] : null;
+  const activeHorizonUrl = resolveHorizonUrl(
+    env.NEXT_PUBLIC_HORIZON_URL ?? "",
+    expectedNetworkConfig?.horizonUrl ?? "",
+  );
 
   const handleCopy = () => {
     const info = `### VaultQuest Diagnostic Report
@@ -45,7 +50,7 @@ export const NetworkDiagnostics: FC = () => {
 - **Drip Pool Contract ID**: ${env.NEXT_PUBLIC_DRIP_POOL_CONTRACT_ID || "Not Set"}
 - **Trustless Work Escrow Contract ID**: ${env.NEXT_PUBLIC_TRUSTLESS_WORK_ESCROW_CONTRACT_ID || "Not Set"}
 - **Soroban RPC URL**: ${env.NEXT_PUBLIC_SOROBAN_RPC_URL || "Not Set"}
-- **Horizon URL**: ${env.NEXT_PUBLIC_HORIZON_URL || "Not Set"}
+- **Horizon URL**: ${activeHorizonUrl || env.NEXT_PUBLIC_HORIZON_URL || "Not Set"}
 - **Trustless Work API Base URL**: ${env.TRUSTLESS_WORK_API_BASE_URL || "Not Set"}
 - **Trustless Work API Key**: ${env.TRUSTLESS_WORK_API_KEY ? "[HIDDEN / PRESENT]" : "[NOT SET]"}
 - **Environment Status**: ${envError ? `Degraded (${envError})` : "Healthy"}
@@ -190,7 +195,7 @@ export const NetworkDiagnostics: FC = () => {
                 <div>
                   <dt className="text-gray-400">Horizon Endpoint URL:</dt>
                   <dd className="font-mono text-gray-200 break-all bg-black/30 p-1 rounded mt-0.5 select-all">
-                    {env.NEXT_PUBLIC_HORIZON_URL || "Not Set"}
+                    {activeHorizonUrl || env.NEXT_PUBLIC_HORIZON_URL || "Not Set"}
                   </dd>
                 </div>
                 <div>

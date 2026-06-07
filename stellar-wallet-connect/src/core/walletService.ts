@@ -1,5 +1,7 @@
 import { connectedPublicKey, connectedNetwork, isNetworkMismatch } from "./store.js";
-import { kit, resolveHorizonNodes } from "./kit.js";
+import { kit } from "./kit.js";
+import { getFrontendEnv } from "./env.js";
+import { resolveHorizonUrl } from "./horizonConfig.js";
 import type { ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 import {
   EXPECTED_NETWORK,
@@ -240,6 +242,11 @@ async function getWalletHealth(): Promise<{
   balances: { XLM: number; USDC: number };
 }> {
   const publicKey = loadedPublicKey();
+  const env = getFrontendEnv();
+  const horizonUrl = resolveHorizonUrl(
+    env.NEXT_PUBLIC_HORIZON_URL,
+    STELLAR_NETWORKS[EXPECTED_NETWORK].horizonUrl,
+  );
 
   if (!publicKey) return { exists: false, balances: { XLM: 0, USDC: 0 } };
 

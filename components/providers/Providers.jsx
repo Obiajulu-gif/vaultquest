@@ -5,8 +5,9 @@ import { ThemeProvider } from "next-themes";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
-import { useState } from "react";
-import { wagmiConfig } from "@/lib/wagmi";
+import { useEffect, useState } from "react";
+import { readStoredRpc, RPC_UPDATED_EVENT } from "@/lib/customRpc";
+import { createWagmiConfig } from "@/lib/wagmi";
 import { TransactionToastProvider } from "@/hooks/useTransactionToast";
 
 export default function Providers({ children }) {
@@ -17,14 +18,30 @@ export default function Providers({ children }) {
       }),
   );
 
+  const [wagmiConfig, setWagmiConfig] = useState(() => createWagmiConfig());
+  const [configVersion, setConfigVersion] = useState(0);
+
+  useEffect(() => {
+    const stored = readStoredRpc();
+    if (stored) {
+      setWagmiConfig(createWagmiConfig(stored));
+      setConfigVersion((v) => v + 1);
+    }
+
+    const onRpcUpdated = (event) => {
+      setWagmiConfig(createWagmiConfig(event.detail));
+      setConfigVersion((v) => v + 1);
+    };
+    window.addEventListener(RPC_UPDATED_EVENT, onRpcUpdated);
+    return () => window.removeEventListener(RPC_UPDATED_EVENT, onRpcUpdated);
+  }, []);
+
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="vaultquest-theme">
-      <WagmiProvider config={wagmiConfig}>
+      <WagmiProvider key={configVersion} config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider>
-            <TransactionToastProvider>
-              {children}
-            </TransactionToastProvider>
+            <TransactionToastProvider>{children}</TransactionToastProvider>
           </RainbowKitProvider>
         </QueryClientProvider>
       </WagmiProvider>
