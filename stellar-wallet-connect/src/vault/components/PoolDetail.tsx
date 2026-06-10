@@ -1,5 +1,4 @@
 import type { FC, ReactNode } from "react";
-import { Coins, Trophy, Users } from "lucide-react";
 import { useStore } from "@nanostores/react";
 import { Bookmark, Coins, Trophy, Users } from "lucide-react";
 import {

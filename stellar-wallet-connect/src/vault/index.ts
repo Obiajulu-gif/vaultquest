@@ -5,7 +5,11 @@
 export * from "./contract/types";
 export { createMockVaultClient, SAMPLE_ADDRESS, type MockVaultConfig } from "./contract/mockClient";
 export * from "./lib/format";
-export { usePoolDetail, useRewardHistory, useSavedPools, type AsyncResource, type PoolDetailResource, type SavedPoolsResource } from "./hooks";
+export { useAccountView, usePoolAction, usePoolDetail, usePoolDiscovery, usePrizeViews, useRewardHistory, useSavedPools, useTransactionStatus, invalidatePoolActionQueries, type AccountView, type AsyncResource, type PoolActionFlow, type PoolDetailResource, type PoolDiscoveryOptions, type PrizeViewsOptions, type SavedPoolsResource, type TransactionStatusResource } from "./hooks";
+export { VaultApiClient, isTerminalTransaction, type TransactionStatus, type TransactionStatusView } from "./data/apiClient";
+export { createVaultDataConfig, defaultVaultDataConfig, type VaultDataConfig, type VaultFeatureFlags, type VaultNetworkConfig } from "./data/config";
+export { vaultQueryClient, useVaultQuery, type QueryState, type QueryStatus } from "./data/queryClient";
+export { vaultQueryKeys, serializeQueryKey, type VaultQueryKey } from "./data/queryKeys";
 export { RewardHistory, type RewardHistoryProps } from "./components/RewardHistory";
 export { SavedPoolsWatchlist, type SavedPoolsWatchlistProps } from "./components/SavedPoolsWatchlist";
 export { PoolDetail, availableActions, type PoolDetailProps } from "./components/PoolDetail";
