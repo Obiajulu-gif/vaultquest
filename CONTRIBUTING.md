@@ -86,7 +86,8 @@ break anything else. Run the relevant commands for your area:
 | Backend | `pnpm --filter backend run lint` | ESLint + TypeScript |
 | Backend | `pnpm --filter backend exec prisma format` | Prisma schema formatting |
 | Frontend | `pnpm test` (root) | Vitest unit tests |
-| Frontend | `pnpm exec playwright test` | E2E smoke tests |
+| Frontend | `pnpm run test:smoke:routes` | Critical route smoke tests |
+| Frontend | `pnpm run test:e2e` | Full Playwright E2E suite |
 | CI / docs | `pnpm run check:terms` | Legacy product name and import guard |
 | Contracts | `cargo test` (in `contracts/`) | Soroban contract tests |
 | Contracts | `cargo fmt --check && cargo clippy -- -D warnings` | Format + lint |

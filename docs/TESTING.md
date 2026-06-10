@@ -22,17 +22,34 @@ To run in watch mode:
 npm run test:watch
 ```
 
-### E2E & Quality Gates (Playwright)
+### Route Smoke Tests (Playwright)
 
-Make sure the dev server is running (or it will be started automatically):
+Route smoke tests live in `e2e/route-smoke.spec.ts`. They cover the initial critical public and app routes:
+
+- `/` — marketing landing page
+- `/app` — app dashboard in a disconnected-wallet state
+- `/app/prizes` — prizes index in a disconnected-wallet state
+- `/app/vaults` — vaults index in a disconnected-wallet state
+
+The app-route tests clear browser storage, mock common wallet globals as disconnected, and fulfill `/api/*` requests with empty fixture data so route-level provider, import, and render failures surface consistently. Test names include the route path so CI failures identify the regressed route.
+
+Run only the route smoke tests:
 
 ```bash
-npx playwright test
+pnpm run test:smoke:routes
+```
+
+### E2E & Quality Gates (Playwright)
+
+Make sure the dev server is running (or let Playwright start it via `playwright.config.ts`):
+
+```bash
+pnpm run test:e2e
 ```
 
 To see the test results UI:
 ```bash
-npx playwright test --ui
+pnpm exec playwright test --ui
 ```
 
 ## Mocking Wallet States
