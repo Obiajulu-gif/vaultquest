@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { Columns, Plus, X } from "lucide-react";
 import { EmptyState, LoadingState, StaleIndicator } from "../../components/FallbackStates";
 import type { PoolStatus, PoolSummary } from "../contract/types";

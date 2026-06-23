@@ -44,6 +44,7 @@ export class CacheService {
           return {
             id: "singleton",
             latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
             lastSyncTime: new Date(parsed.lastSyncTime),
             lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime),
             lastError: parsed.lastError
@@ -59,6 +60,7 @@ export class CacheService {
 
   async setCheckpoint(checkpoint: {
     latestLedger: number;
+    lastProcessedEventId: string | null;
     lastSyncTime: Date;
     lastSuccessSyncTime: Date;
     lastError: string | null;
@@ -69,6 +71,7 @@ export class CacheService {
           "indexer:checkpoint",
           JSON.stringify({
             latestLedger: checkpoint.latestLedger,
+            lastProcessedEventId: checkpoint.lastProcessedEventId,
             lastSyncTime: checkpoint.lastSyncTime.toISOString(),
             lastSuccessSyncTime: checkpoint.lastSuccessSyncTime.toISOString(),
             lastError: checkpoint.lastError
@@ -84,18 +87,20 @@ export class CacheService {
     // Fallback direct DB write
     await this.prisma.indexerCheckpoint.upsert({
       where: { id: "singleton" },
-      create: {
-        id: "singleton",
-        latestLedger: checkpoint.latestLedger,
-        lastSyncTime: checkpoint.lastSyncTime,
-        lastError: checkpoint.lastError,
-        lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
-      },
-      update: {
-        latestLedger: checkpoint.latestLedger,
-        lastSyncTime: checkpoint.lastSyncTime,
-        lastError: checkpoint.lastError,
-        lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
+        create: {
+          id: "singleton",
+          latestLedger: checkpoint.latestLedger,
+          lastProcessedEventId: checkpoint.lastProcessedEventId,
+          lastSyncTime: checkpoint.lastSyncTime,
+          lastError: checkpoint.lastError,
+          lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
+        },
+        update: {
+          latestLedger: checkpoint.latestLedger,
+          lastProcessedEventId: checkpoint.lastProcessedEventId,
+          lastSyncTime: checkpoint.lastSyncTime,
+          lastError: checkpoint.lastError,
+          lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
       }
     });
   }
@@ -110,20 +115,22 @@ export class CacheService {
       if (!data) return;
 
       const parsed = JSON.parse(data);
-      await this.prisma.indexerCheckpoint.upsert({
-        where: { id: "singleton" },
-        create: {
-          id: "singleton",
-          latestLedger: parsed.latestLedger,
-          lastSyncTime: new Date(parsed.lastSyncTime),
-          lastError: parsed.lastError,
-          lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
-        },
-        update: {
-          latestLedger: parsed.latestLedger,
-          lastSyncTime: new Date(parsed.lastSyncTime),
-          lastError: parsed.lastError,
-          lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
+        await this.prisma.indexerCheckpoint.upsert({
+          where: { id: "singleton" },
+          create: {
+            id: "singleton",
+            latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
+            lastSyncTime: new Date(parsed.lastSyncTime),
+            lastError: parsed.lastError,
+            lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
+          },
+          update: {
+            latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
+            lastSyncTime: new Date(parsed.lastSyncTime),
+            lastError: parsed.lastError,
+            lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
         }
       });
       await this.redis.del("indexer:checkpoint:dirty");
