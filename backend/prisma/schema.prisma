@@ -62,6 +62,7 @@ model PendingEvent {
 model IndexerCheckpoint {
   id                  String   @id @default("singleton")
   latestLedger        Int      @map("latest_ledger")
+  lastProcessedEventId String?  @map("last_processed_event_id")
   lastSyncTime        DateTime @map("last_sync_time")
   lastError           String?  @map("last_error")
   lastSuccessSyncTime DateTime @default(now()) @map("last_success_sync_time")

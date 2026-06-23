@@ -27,6 +27,7 @@ export const internalRoutes = (svc: LedgerService, secret: string): FastifyPlugi
       const body = checkpointBody.parse(req.body);
       await svc.updateIndexerCheckpoint({
         latestLedger: body.latest_ledger,
+        lastProcessedEventId: body.last_processed_event_id,
         lastError: body.last_error,
         success: body.success
       });
