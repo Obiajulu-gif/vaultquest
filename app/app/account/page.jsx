@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
@@ -114,17 +114,9 @@ function EmptyAccount() {
 
 export default function AccountPage() {
   const { isConnected: wagmiConnected } = useAccount();
-  const [isMockConnected, setIsMockConnected] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("mockConnected") === "true") {
-        setIsMockConnected(true);
-      }
-    }
-  }, []);
-
+  const isMockConnected =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("mockConnected") === "true";
   const isConnected = wagmiConnected || isMockConnected;
 
   return (
