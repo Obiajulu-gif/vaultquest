@@ -31,6 +31,11 @@ const appRoutes: SmokeRoute[] = [
     path: "/app/vaults",
     expectedContent: /Quick Deposit Flow|Available Pools/i,
   },
+  {
+    name: "admin settings overview",
+    path: "/app/admin/settings",
+    expectedContent: /Protocol parameters|Active rounds|Service status/i,
+  },
 ];
 
 const routeLevelCrashPatterns = [

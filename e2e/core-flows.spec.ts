@@ -20,7 +20,6 @@ test.describe("Core user flows", () => {
     await mockAppShell(page);
 
     await gotoWithRetry(page, "/app");
-    await page.waitForTimeout(1500);
 
     await expect(page.getByRole("heading", { name: "Save together. Win together." })).toBeVisible({
       timeout: 15000,
@@ -37,7 +36,6 @@ test.describe("Core user flows", () => {
     await mockAppShell(page);
 
     await gotoWithRetry(page, "/app/vaults");
-    await page.waitForTimeout(1500);
 
     await expect(page.getByRole("heading", { name: "Vaults" })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole("heading", { name: "Quick Deposit Flow" })).toBeVisible({
@@ -52,7 +50,6 @@ test.describe("Core user flows", () => {
     await mockAppShell(page);
 
     await gotoWithRetry(page, "/app/account");
-    await page.waitForTimeout(1500);
 
     await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible({
       timeout: 15000,
@@ -61,6 +58,28 @@ test.describe("Core user flows", () => {
       timeout: 15000,
     });
     await expect(page.getByRole("button", { name: "Connect wallet" })).toBeVisible({
+      timeout: 15000,
+    });
+  });
+
+  test("shows the admin settings overview", async ({ page }) => {
+    await mockAppShell(page);
+
+    await gotoWithRetry(page, "/app/admin/settings");
+
+    await expect(page.getByRole("heading", { name: "Settings Overview" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Protocol parameters" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Active rounds" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Service status" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Operational notes" })).toBeVisible({
       timeout: 15000,
     });
   });
