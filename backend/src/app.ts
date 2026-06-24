@@ -6,6 +6,8 @@ import { SavedPoolsService } from "./services/savedPools.js";
 import { actionsRoutes } from "./routes/actions.js";
 import { savedPoolsRoutes } from "./routes/savedPools.js";
 import { internalRoutes } from "./routes/internal.js";
+import { metricsRoutes } from "./routes/metrics.js";
+import { MetricsService } from "./services/metricsService.js";
 import { ok } from "./responses.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
@@ -61,6 +63,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   // Inject CacheService into LedgerService
   const svc = new LedgerService(deps.prisma, deps.cacheService);
   const savedPoolsSvc = new SavedPoolsService(deps.prisma);
+  const metricsSvc = new MetricsService(deps.prisma);
 
   app.get("/health", async () => ok({ ok: true }));
   app.get("/health/indexer", async () => {
@@ -71,6 +74,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.register(actionsRoutes(svc));
   app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));
+  app.register(metricsRoutes(metricsSvc));
 
   // Central Error Handler Middleware
   app.setErrorHandler(errorHandler);
