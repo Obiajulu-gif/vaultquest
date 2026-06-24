@@ -69,7 +69,11 @@ export default function VaultList({ vaults = [] }) {
               </div>
             </div>
 
-            <button className="vq-btn-ghost mt-6 w-full group-hover:bg-vault-accent group-hover:text-white group-hover:border-vault-accent transition-all">
+            <button
+              type="button"
+              aria-label={`View ${vault.name} details`}
+              className="vq-btn-ghost mt-6 w-full group-hover:bg-vault-accent group-hover:text-white group-hover:border-vault-accent transition-all"
+            >
               View Vault
               <ArrowUpRight size={16} className="ml-1" />
             </button>
