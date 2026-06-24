@@ -25,7 +25,7 @@ export const HistoryPage: React.FC = () => {
     };
     fetchHistory();
   }, []);
-if (loading) return React.createElement('div', null, 'Loading history...');
+  if (loading) return React.createElement('div', null, 'Loading history...');
   return React.createElement('div', { style: { padding: '2rem', fontFamily: 'sans-serif' } },
     React.createElement('h2', null, 'Prize Pool History'),
     React.createElement('table', { style: { width: '100%', borderCollapse: 'collapse' } },
@@ -34,7 +34,8 @@ if (loading) return React.createElement('div', null, 'Loading history...');
           React.createElement('th', null, 'Round'),
           React.createElement('th', null, 'Winner Address'),
           React.createElement('th', null, 'Prize Awarded'),
-          React.createElement('th', null, 'Draw Date')
+          React.createElement('th', null, 'Draw Date'),
+          React.createElement('th', null, 'Transaction')
         )
       ),
       React.createElement('tbody', null,
@@ -43,7 +44,10 @@ if (loading) return React.createElement('div', null, 'Loading history...');
             React.createElement('td', null, '#' + item.round),
             React.createElement('td', null, item.winner),
             React.createElement('td', null, item.prizeAmount),
-            React.createElement('td', null, item.date)
+            React.createElement('td', null, item.date),
+            React.createElement('td', null,
+              React.createElement('a', { href: item.txRef, target: '_blank', rel: 'noopener noreferrer' }, 'View Receipt →')
+            )
           )
         )
       )
