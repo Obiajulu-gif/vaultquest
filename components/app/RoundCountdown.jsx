@@ -111,8 +111,10 @@ export default function RoundCountdown({ startDate, endDate, label = "Round" }) 
     );
   }
 
-  const borderColor = timeLeft?.isComplete ? "text-emerald-500" : "text-red-500";
-  const bgColor = timeLeft?.isComplete ? "bg-emerald-500/10" : "bg-red-500/10";
+  if (!timeLeft) return null;
+
+  const borderColor = timeLeft.isComplete ? "text-emerald-500" : "text-red-500";
+  const bgColor = timeLeft.isComplete ? "bg-emerald-500/10" : "bg-red-500/10";
 
   return (
     <div className="vq-glass relative overflow-hidden p-6 sm:p-8">

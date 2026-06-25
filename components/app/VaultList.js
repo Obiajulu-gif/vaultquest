@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { Wallet, Info, ArrowUpRight } from "lucide-react";
 
 export const MOCK_VAULTS = [
@@ -69,10 +70,10 @@ export default function VaultList({ vaults = [] }) {
               </div>
             </div>
 
-            <button className="vq-btn-ghost mt-6 w-full group-hover:bg-vault-accent group-hover:text-white group-hover:border-vault-accent transition-all">
+            <Link href={`/app/vaults/${vault.id}`} className="vq-btn-ghost mt-6 w-full group-hover:bg-vault-accent group-hover:text-white group-hover:border-vault-accent transition-all text-center">
               View Vault
-              <ArrowUpRight size={16} className="ml-1" />
-            </button>
+              <ArrowUpRight size={16} className="ml-1 inline" />
+            </Link>
           </motion.div>
         ))}
       </AnimatePresence>
