@@ -10,9 +10,13 @@ function Stat({ label, value }) {
   );
 }
 
-export default function PublicStatsBar() {
+export default function PublicStatsBar({ layout = "horizontal" }) {
+  const containerClass = layout === "vertical"
+    ? "flex flex-col gap-3 w-full"
+    : "grid grid-cols-2 gap-3 lg:grid-cols-4 w-full";
+
   return (
-    <section aria-label="Protocol statistics" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <section aria-label="Protocol statistics" className={containerClass}>
       <Stat label="Total value locked" value={formatUsd(PUBLIC_STATS.tvl)} />
       <Stat label="Prize pool" value={formatUsd(PUBLIC_STATS.prizePool)} />
       <Stat
