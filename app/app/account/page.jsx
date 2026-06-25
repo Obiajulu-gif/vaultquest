@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
+import AccountPositionSummary from "@/components/app/AccountPositionSummary";
 import UserDepositsList from "@/components/app/UserDepositsList";
 import ProfileEditor from "@/components/app/ProfileEditor";
 import LevelOnboarding from "@/components/app/LevelOnboarding";
@@ -47,6 +48,8 @@ function ConnectedDashboard() {
 
   return (
     <>
+      <AccountPositionSummary />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <MetricCard
           icon={PiggyBank}
