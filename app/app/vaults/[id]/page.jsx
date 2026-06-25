@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { MOCK_VAULTS } from "@/components/app/VaultList";
 import DepositModal from "@/components/app/DepositModal";
+import RoundStatusBadge from "@/components/app/RoundStatusBadge";
 
 function DetailSkeleton() {
   return (
@@ -145,6 +146,7 @@ export default function VaultDetailPage({ params }) {
           <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-500">
             {vault.asset} Backed
           </span>
+          <RoundStatusBadge status={vault.status} />
         </div>
         <h1 className="text-3xl font-extrabold text-vault-text sm:text-4xl">
           {vault.name}

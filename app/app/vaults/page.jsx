@@ -9,6 +9,7 @@ import VaultList, { MOCK_VAULTS } from "@/components/app/VaultList";
 import VaultComparisonTable from "@/components/app/VaultComparisonTable";
 import VaultDataRefresh from "@/components/app/VaultDataRefresh";
 import VaultFaqSection from "@/components/app/VaultFaqSection";
+import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
 import { LayoutGrid, Table } from "lucide-react";
 
@@ -83,6 +84,8 @@ export default function VaultsPage() {
           before you submit a transaction.
         </p>
       </section>
+
+      <VaultRiskExplainer />
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <VaultFilters
