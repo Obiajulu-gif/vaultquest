@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
 import { Sparkles } from "lucide-react";
 import OnboardingCards from "@/components/app/OnboardingCards";
 import PublicStatsBar from "@/components/app/PublicStatsBar";
+import VaultMetricsCards from "@/components/app/VaultMetricsCards";
 import UnsupportedNetworkBanner from "@/components/app/UnsupportedNetworkBanner";
 import RecentWinners from "@/components/app/RecentWinners";
 import YieldCalculator from "@/components/app/YieldCalculator";
@@ -14,6 +15,7 @@ import BridgeStatusTracker from "@/components/app/BridgeStatusTracker";
 import WinnerCelebration from "@/components/app/WinnerCelebration";
 import PrizeCountdown from "@/components/app/PrizeCountdown";
 import FaqAccordion from "@/components/app/FaqAccordion";
+import { WalletConnectionStatus, OnboardingChecklist } from "stellar-wallet-connect";
 
 function DashboardSkeleton() {
   return (
@@ -33,9 +35,8 @@ function DashboardSkeleton() {
 
       {/* Main Grid Skeleton */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        {/* Left Column (Main Panel) */}
+        {/* Left Column */}
         <div className="space-y-8 lg:col-span-8">
-          {/* Yield Calculator Skeleton */}
           <div className="vq-glass p-6 h-96 flex flex-col justify-between">
             <div className="flex items-center justify-between border-b border-vault-border/30 pb-4">
               <div className="h-6 w-40 bg-vault-border/40 rounded" />
@@ -48,8 +49,6 @@ function DashboardSkeleton() {
             </div>
             <div className="h-48 bg-vault-border/20 rounded-xl" />
           </div>
-
-          {/* Recent Winners Skeleton */}
           <div className="space-y-4">
             <div className="h-6 w-48 bg-vault-border/40 rounded" />
             <div className="flex gap-4 overflow-hidden">
@@ -60,9 +59,8 @@ function DashboardSkeleton() {
           </div>
         </div>
 
-        {/* Right Column (Sidebar Panel) */}
+        {/* Right Column */}
         <div className="space-y-8 lg:col-span-4">
-          {/* Stats Skeleton */}
           <div className="vq-glass p-6 space-y-6">
             <div className="h-6 w-32 bg-vault-border/40 rounded border-b border-vault-border/30 pb-3" />
             <div className="space-y-3">
@@ -72,8 +70,6 @@ function DashboardSkeleton() {
               <div className="h-16 bg-vault-border/20 rounded-xl" />
             </div>
           </div>
-
-          {/* CTA Skeleton */}
           <div className="vq-glass p-6 h-56 flex flex-col justify-between">
             <div className="h-6 w-2/3 bg-vault-border/40 mx-auto rounded" />
             <div className="h-12 bg-vault-border/30 rounded-xl w-full" />
@@ -86,9 +82,10 @@ function DashboardSkeleton() {
 }
 
 export default function AppDashboardPage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address, chain } = useAccount();
   const { openConnectModal } = useConnectModal();
   const [onboardingStep, setOnboardingStep] = useState(0);
+  const [hasJoinedVault] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -97,25 +94,17 @@ export default function AppDashboardPage() {
 
   const isWinner = false;
 
-  const getNextDrawDate = () => {
+  const nextDrawDate = useMemo(() => {
     const now = new Date();
     const nextFriday = new Date(now);
     nextFriday.setUTCDate(now.getUTCDate() + ((5 - now.getUTCDay() + 7) % 7));
     nextFriday.setUTCHours(18, 0, 0, 0);
-    if (nextFriday <= now) {
-      nextFriday.setUTCDate(nextFriday.getUTCDate() + 7);
-    }
+    if (nextFriday <= now) nextFriday.setUTCDate(nextFriday.getUTCDate() + 7);
     return nextFriday;
-  };
-
-  const nextDrawDate = getNextDrawDate();
+  }, []);
 
   const handleStartSaving = () => {
-    if (!isConnected) {
-      openConnectModal?.();
-      setOnboardingStep(1);
-      return;
-    }
+    if (!isConnected) { openConnectModal?.(); setOnboardingStep(1); return; }
     setOnboardingStep(1);
   };
 
@@ -134,7 +123,7 @@ export default function AppDashboardPage() {
         drawDate={new Date().toISOString()}
       />
 
-      {/* Hero Header Section */}
+      {/* Hero Header */}
       <header className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between border-b border-vault-border/20 pb-8">
         <div className="space-y-4 max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-vault-border bg-vault-surface px-3 py-1 text-xs font-medium text-vault-muted backdrop-blur-md transition-all duration-300">
@@ -154,17 +143,21 @@ export default function AppDashboardPage() {
         </div>
       </header>
 
-      {/* Main Grid Layout */}
+      {/* Vault Metrics (full-width, below hero) */}
+      <VaultMetricsCards />
+
+      {/* Main Grid */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        {/* Left Column (Main Panel) */}
+        {/* Left Column */}
         <main className="space-y-8 lg:col-span-8">
+          <OnboardingChecklist walletConnected={isConnected} hasJoinedVault={hasJoinedVault} />
           <YieldCalculator />
           <RecentWinners />
           <OnboardingCards />
           <FaqAccordion />
         </main>
 
-        {/* Right Column (Sidebar Panel) */}
+        {/* Right Column */}
         <aside className="space-y-8 lg:col-span-4">
           <div className="vq-glass p-6 space-y-6">
             <h3 className="text-lg font-bold text-vault-text border-b border-vault-border/30 pb-3">
@@ -174,7 +167,13 @@ export default function AppDashboardPage() {
           </div>
 
           {isConnected && (
-            <div className="space-y-4">
+            <>
+              <WalletConnectionStatus
+                walletAddress={address ?? null}
+                network={chain?.name ?? null}
+                isNetworkMismatch={isConnected && !chain}
+                onReconnect={() => openConnectModal?.()}
+              />
               <BridgeStatusTracker
                 sourceTxHash="0x1234567890abcdef1234567890abcdef12345678"
                 destinationTxHash={null}
@@ -183,7 +182,7 @@ export default function AppDashboardPage() {
                 destinationChain="Stellar"
                 estimatedTime={180}
               />
-            </div>
+            </>
           )}
 
           <section className="vq-glass p-6 text-center sm:p-8 relative overflow-hidden group">
@@ -201,12 +200,8 @@ export default function AppDashboardPage() {
                 </button>
               ) : (
                 <>
-                  <Link href="/app/prizes" className="vq-btn-primary w-full">
-                    View All Prizes
-                  </Link>
-                  <Link href="/app/vaults" className="vq-btn-ghost w-full">
-                    Manage Vaults
-                  </Link>
+                  <Link href="/app/prizes" className="vq-btn-primary w-full">View All Prizes</Link>
+                  <Link href="/app/vaults" className="vq-btn-ghost w-full">Manage Vaults</Link>
                 </>
               )}
               {!isConnected && onboardingStep === 0 && (
