@@ -47,7 +47,7 @@ export default function ProtocolDocsPage() {
             <ol className="list-decimal pl-6 space-y-2">
               <li>The total yield generated across all strategies is calculated.</li>
               <li>A verifiable random function (VRF) is used to select winners based on their deposit size and duration (time-weighted balance).</li>
-              <li>Prizes are distributed to the winners' wallets or added to their vault balances.</li>
+              <li>Prizes are distributed to the winners&apos; wallets or added to their vault balances.</li>
               <li>A new round begins immediately.</li>
             </ol>
           </div>
