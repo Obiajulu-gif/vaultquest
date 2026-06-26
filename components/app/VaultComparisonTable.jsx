@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { ArrowUpDown, ArrowUpRight, Wallet } from "lucide-react";
 
 export default function VaultComparisonTable({ vaults = [] }) {
@@ -93,9 +94,9 @@ export default function VaultComparisonTable({ vaults = [] }) {
                 {vault.lockup === 0 ? "Flexible" : `${vault.lockup} Days`}
               </td>
               <td className="px-6 py-4 text-right">
-                <button className="inline-flex items-center gap-1 rounded-lg border border-vault-border bg-vault-surface px-3 py-1.5 text-sm font-medium text-vault-text transition-all hover:border-vault-accent hover:text-vault-accent">
+                <Link href={`/app/vaults/${vault.id}`} className="inline-flex items-center gap-1 rounded-lg border border-vault-border bg-vault-surface px-3 py-1.5 text-sm font-medium text-vault-text transition-all hover:border-vault-accent hover:text-vault-accent">
                   View <ArrowUpRight size={14} />
-                </button>
+                </Link>
               </td>
             </motion.tr>
           ))}

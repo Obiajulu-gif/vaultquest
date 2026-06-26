@@ -5,9 +5,10 @@ import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   ArrowDownRight, ArrowUpRight, Gift, RefreshCw, Wallet,
-  ChevronLeft, ChevronRight, Filter, Clock, AlertCircle
+  ChevronLeft, ChevronRight, Filter, Clock
 } from "lucide-react";
 import { DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
+import { ActivityExport } from "stellar-wallet-connect/src/vault";
 
 const ACTIVITY_TYPES = {
   deposit: { label: "Deposit", icon: ArrowDownRight, color: "text-emerald-600 dark:text-emerald-400" },
@@ -18,12 +19,6 @@ const ACTIVITY_TYPES = {
   round_update: { label: "Round Update", icon: Clock, color: "text-vault-muted" },
   account_action: { label: "Account Action", icon: Wallet, color: "text-vault-muted" },
   system_message: { label: "System Message", icon: AlertCircle, color: "text-amber-600 dark:text-amber-400" },
-};
-
-const TYPE_LABELS = {
-  deposit: "Deposit",
-  withdraw: "Withdraw",
-  reward: "Prize won",
 };
 
 const STATUS_LABELS = {
@@ -108,10 +103,7 @@ function ActivityFeed({ transactions }) {
                     {tx.message || tx.pool}
                   </p>
                   <p className="mt-0.5 text-xs text-vault-muted">
-                    {new Date(tx.date).toLocaleString("en-US", {
-                      month: "short", day: "numeric", year: "numeric",
-                      hour: "2-digit", minute: "2-digit"
-                    })}
+                    {new Date(tx.date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
                 {tx.amount !== undefined ? (
@@ -130,26 +122,12 @@ function ActivityFeed({ transactions }) {
 
       {filtered.length > PAGE_SIZE && (
         <div className="mt-4 flex items-center justify-between border-t border-vault-border pt-4">
-          <button
-            type="button"
-            disabled={safePage === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="vq-btn-ghost disabled:opacity-40"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Prev
+          <button type="button" disabled={safePage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))} className="vq-btn-ghost disabled:opacity-40">
+            <ChevronLeft className="h-4 w-4" /> Prev
           </button>
-          <span className="text-sm text-vault-muted">
-            Page {safePage + 1} of {pageCount}
-          </span>
-          <button
-            type="button"
-            disabled={safePage >= pageCount - 1}
-            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-            className="vq-btn-ghost disabled:opacity-40"
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
+          <span className="text-sm text-vault-muted">Page {safePage + 1} of {pageCount}</span>
+          <button type="button" disabled={safePage >= pageCount - 1} onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))} className="vq-btn-ghost disabled:opacity-40">
+            Next <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       )}
@@ -175,33 +153,21 @@ function ActivitySummary({ transactions }) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <div className="vq-glass-hover p-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-emerald-500">
-          <ArrowDownRight className="h-5 w-5" />
-        </span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-emerald-500"><ArrowDownRight className="h-5 w-5" /></span>
         <p className="mt-4 text-xs font-medium uppercase tracking-wide text-vault-muted">Total Deposits</p>
-        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">
-          ${stats.totalDeposits.toLocaleString()}
-        </p>
+        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">${stats.totalDeposits.toLocaleString()}</p>
         <p className="text-sm text-vault-muted">{stats.depositCount} deposits</p>
       </div>
       <div className="vq-glass-hover p-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-vault-muted">
-          <ArrowUpRight className="h-5 w-5" />
-        </span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-vault-muted"><ArrowUpRight className="h-5 w-5" /></span>
         <p className="mt-4 text-xs font-medium uppercase tracking-wide text-vault-muted">Total Withdrawals</p>
-        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">
-          ${stats.totalWithdrawals.toLocaleString()}
-        </p>
+        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">${stats.totalWithdrawals.toLocaleString()}</p>
         <p className="text-sm text-vault-muted">{stats.withdrawCount} withdrawals</p>
       </div>
       <div className="vq-glass-hover p-5">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-amber-500">
-          <Gift className="h-5 w-5" />
-        </span>
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-amber-500"><Gift className="h-5 w-5" /></span>
         <p className="mt-4 text-xs font-medium uppercase tracking-wide text-vault-muted">Total Claims</p>
-        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">
-          ${stats.totalClaims.toLocaleString()}
-        </p>
+        <p className="mt-1 text-2xl font-bold tabular-nums text-vault-text">${stats.totalClaims.toLocaleString()}</p>
         <p className="text-sm text-vault-muted">{stats.claimCount} prizes</p>
       </div>
     </div>
@@ -216,12 +182,9 @@ function EmptyActivity() {
         <Wallet className="h-8 w-8" />
       </span>
       <h2 className="mt-6 text-xl font-semibold text-vault-text">Wallet not connected</h2>
-      <p className="mt-2 max-w-md text-sm text-vault-muted">
-        Connect your wallet to view your account activity, deposits, withdrawals, and prize claims.
-      </p>
+      <p className="mt-2 max-w-md text-sm text-vault-muted">Connect your wallet to view your account activity, deposits, withdrawals, and prize claims.</p>
       <button type="button" onClick={() => openConnectModal?.()} className="vq-btn-primary mt-8">
-        <Wallet className="h-4 w-4" />
-        Connect wallet
+        <Wallet className="h-4 w-4" /> Connect wallet
       </button>
     </div>
   );
@@ -231,19 +194,31 @@ export default function ActivityPage() {
   const { isConnected } = useAccount();
   const enrichedTx = useMemo(() => DEMO_TRANSACTIONS.map((tx) => ({ ...tx })), []);
 
+  const summary = useMemo(() => {
+    if (!isConnected) return null;
+    return {
+      deposits: enrichedTx.filter((t) => t.type === "deposit" && t.status === "confirmed").length,
+      withdrawals: enrichedTx.filter((t) => t.type === "withdraw" && t.status === "confirmed").length,
+      rewards: enrichedTx.filter((t) => t.type === "reward" && t.status === "confirmed").length,
+    };
+  }, [isConnected, enrichedTx]);
+
   return (
     <div className="space-y-8">
       <header>
         <h1 className="text-3xl font-bold text-vault-text">Account Activity</h1>
-        <p className="mt-2 text-vault-muted">
-          Track all deposits, withdrawals, prize claims, and status changes.
-        </p>
+        <p className="mt-2 text-vault-muted">Track all deposits, withdrawals, prize claims, and status changes.</p>
       </header>
 
       {isConnected ? (
         <>
           <ActivitySummary transactions={enrichedTx} />
           <ActivityFeed transactions={enrichedTx} />
+          <ActivityExport
+            walletAddress={null}
+            walletConnected={isConnected}
+            summary={summary}
+          />
         </>
       ) : (
         <EmptyActivity />

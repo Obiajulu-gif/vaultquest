@@ -7,6 +7,10 @@ import DepositModal from "@/components/app/DepositModal";
 import VaultFilters from "@/components/app/VaultFilters";
 import VaultList, { MOCK_VAULTS } from "@/components/app/VaultList";
 import VaultComparisonTable from "@/components/app/VaultComparisonTable";
+import VaultDataRefresh from "@/components/app/VaultDataRefresh";
+import VaultFaqSection from "@/components/app/VaultFaqSection";
+import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
+import MobileVaultActions from "@/components/app/MobileVaultActions";
 import { LayoutGrid, Table } from "lucide-react";
 
 const INITIAL_FILTERS = {
@@ -36,7 +40,10 @@ export default function VaultsPage() {
       }
 
       // Networks
-      if (filters.networks.length > 0 && !filters.networks.includes(vault.network)) {
+      if (
+        filters.networks.length > 0 &&
+        !filters.networks.includes(vault.network)
+      ) {
         return false;
       }
 
@@ -73,9 +80,12 @@ export default function VaultsPage() {
       <section className="space-y-3">
         <h1 className="text-3xl font-bold text-vault-text">Vaults</h1>
         <p className="max-w-2xl text-vault-muted">
-          Manage your pool positions and drip deposits. Review live fee tiers before you submit a transaction.
+          Manage your pool positions and drip deposits. Review live fee tiers
+          before you submit a transaction.
         </p>
       </section>
+
+      <VaultRiskExplainer />
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <VaultFilters
@@ -85,6 +95,13 @@ export default function VaultsPage() {
         />
 
         <div className="flex-1 space-y-6">
+          <VaultDataRefresh />
+
+          <MobileVaultActions
+            vaultName="Selected Vault"
+            onAction={(action) => console.log(`Action: ${action}`)}
+          />
+
           <div className="grid gap-6 xl:grid-cols-2">
             <GasPrioritySelector nativeBalance={0.0018} />
 
@@ -97,7 +114,8 @@ export default function VaultsPage() {
                   Quick Deposit Flow
                 </h2>
                 <p className="mt-2 text-sm text-vault-muted">
-                  Select a vault below to begin your deposit. Live network estimates will be calculated automatically.
+                  Select a vault below to begin your deposit. Live network
+                  estimates will be calculated automatically.
                 </p>
               </div>
 
@@ -114,19 +132,21 @@ export default function VaultsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-vault-text">Available Pools</h3>
+                <h3 className="text-xl font-bold text-vault-text">
+                  Available Pools
+                </h3>
                 <p className="text-sm text-vault-muted">
                   Showing {filteredVaults.length} of {MOCK_VAULTS.length} vaults
                 </p>
               </div>
               <div className="flex gap-2 rounded-lg border border-vault-border p-1 bg-vault-surface">
-                <button 
+                <button
                   onClick={() => setViewMode("table")}
                   className={`p-1.5 rounded-md transition-colors ${viewMode === "table" ? "bg-vault-accent/20 text-vault-accent" : "text-vault-muted hover:text-vault-text"}`}
                 >
                   <Table size={18} />
                 </button>
-                <button 
+                <button
                   onClick={() => setViewMode("grid")}
                   className={`p-1.5 rounded-md transition-colors ${viewMode === "grid" ? "bg-vault-accent/20 text-vault-accent" : "text-vault-muted hover:text-vault-text"}`}
                 >
@@ -140,6 +160,8 @@ export default function VaultsPage() {
               <VaultList vaults={filteredVaults} />
             )}
           </div>
+
+          <VaultFaqSection />
         </div>
       </div>
 
