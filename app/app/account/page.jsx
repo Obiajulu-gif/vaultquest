@@ -11,6 +11,7 @@ import LevelOnboarding from "@/components/app/LevelOnboarding";
 import BadgesGallery from "@/components/app/BadgesGallery";
 import PrizeChart from "@/components/app/PrizeChart";
 import VaultNotificationSettings from "@/components/app/VaultNotificationSettings";
+import WalletReconnectGuidance from "@/components/app/WalletReconnectGuidance";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
 import { DEMO_PORTFOLIO, DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
@@ -36,7 +37,7 @@ function MetricCard({ icon: Icon, label, value, sub, highlight }) {
   );
 }
 
-function ConnectedDashboard() {
+function ConnectedDashboard({ isNetworkMismatch, onRetry }) {
   const [selectedAsset, setSelectedAsset] = useState("all");
 
   const accrued = useYieldCounter(
@@ -48,6 +49,12 @@ function ConnectedDashboard() {
 
   return (
     <>
+      {isNetworkMismatch && (
+        <WalletReconnectGuidance
+          isNetworkMismatch
+          onRetry={onRetry}
+        />
+      )}
       <AccountPositionSummary />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -120,7 +127,10 @@ function EmptyAccount() {
 
 export default function AccountPage() {
   const { isConnected: wagmiConnected } = useAccount();
+  const { openConnectModal } = useConnectModal();
   const [isMockConnected, setIsMockConnected] = useState(false);
+  const [wasDisconnected, setWasDisconnected] = useState(false);
+  const [isNetworkMismatch, setIsNetworkMismatch] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -128,10 +138,25 @@ export default function AccountPage() {
       if (params.get("mockConnected") === "true") {
         setIsMockConnected(true);
       }
+      if (params.get("networkMismatch") === "true") {
+        setIsNetworkMismatch(true);
+      }
     }
-  }, []);
+
+    if (!wagmiConnected && !isMockConnected && !isNetworkMismatch) {
+      setWasDisconnected(true);
+    } else {
+      setWasDisconnected(false);
+    }
+  }, [wagmiConnected, isMockConnected, isNetworkMismatch]);
 
   const isConnected = wagmiConnected || isMockConnected;
+
+  const handleRetry = () => {
+    setIsNetworkMismatch(false);
+    setWasDisconnected(false);
+    openConnectModal?.();
+  };
 
   return (
     <div className="space-y-8">
@@ -141,7 +166,22 @@ export default function AccountPage() {
           Track savings, live yield, and pool activity in one place.
         </p>
       </header>
-      {isConnected ? <ConnectedDashboard /> : <EmptyAccount />}
+      {isConnected ? (
+        <ConnectedDashboard
+          isNetworkMismatch={isNetworkMismatch}
+          onRetry={handleRetry}
+        />
+      ) : (
+        <>
+          {wasDisconnected && (
+            <WalletReconnectGuidance
+              isDisconnected
+              onRetry={handleRetry}
+            />
+          )}
+          <EmptyAccount />
+        </>
+      )}
     </div>
   );
 }

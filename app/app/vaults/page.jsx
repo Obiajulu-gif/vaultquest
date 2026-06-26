@@ -19,6 +19,9 @@ const INITIAL_FILTERS = {
   minApy: 0,
   minTvl: 0,
   lockups: [],
+  statuses: [],
+  strategies: [],
+  sortBy: "apy",
 };
 
 export default function VaultsPage() {
@@ -28,12 +31,13 @@ export default function VaultsPage() {
 
   const filteredVaults = useMemo(() => {
     return MOCK_VAULTS.filter((vault) => {
-      // Search
+      // Search (by name, asset, or strategy)
       if (filters.search) {
         const search = filters.search.toLowerCase();
         if (
           !vault.name.toLowerCase().includes(search) &&
-          !vault.asset.toLowerCase().includes(search)
+          !vault.asset.toLowerCase().includes(search) &&
+          !vault.strategy.toLowerCase().includes(search)
         ) {
           return false;
         }
@@ -69,11 +73,50 @@ export default function VaultsPage() {
         if (!isMatch) return false;
       }
 
+      // Status
+      if (filters.statuses && filters.statuses.length > 0) {
+        if (!filters.statuses.includes(vault.status)) {
+          return false;
+        }
+      }
+
+      // Strategy
+      if (filters.strategies && filters.strategies.length > 0) {
+        if (!filters.strategies.includes(vault.strategy)) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [filters]);
 
   const clearFilters = () => setFilters(INITIAL_FILTERS);
+
+  const generateSuggestions = () => {
+    if (filteredVaults.length > 0 || !filters.search) {
+      return null;
+    }
+
+    const search = filters.search.toLowerCase();
+    const allNames = MOCK_VAULTS.map((v) => v.name);
+    const allAssets = MOCK_VAULTS.map((v) => v.asset);
+    const allStrategies = MOCK_VAULTS.map((v) => v.strategy);
+
+    const suggestions = new Set();
+
+    [...allNames, ...allAssets, ...allStrategies].forEach((item) => {
+      if (item.toLowerCase().includes(search) && suggestions.size < 3) {
+        suggestions.add(item);
+      }
+    });
+
+    return Array.from(suggestions);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setFilters({ ...filters, search: suggestion });
+  };
 
   return (
     <div className="space-y-6">
@@ -155,9 +198,18 @@ export default function VaultsPage() {
               </div>
             </div>
             {viewMode === "table" ? (
-              <VaultComparisonTable vaults={filteredVaults} />
+              <VaultComparisonTable
+                vaults={filteredVaults}
+                sortBy={filters.sortBy}
+                suggestions={generateSuggestions()}
+                onSuggestionClick={handleSuggestionClick}
+              />
             ) : (
-              <VaultList vaults={filteredVaults} />
+              <VaultList
+                vaults={filteredVaults}
+                suggestions={generateSuggestions()}
+                onSuggestionClick={handleSuggestionClick}
+              />
             )}
           </div>
 

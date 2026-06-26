@@ -3,16 +3,26 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowUpDown, ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowUpDown, ArrowUpRight, Wallet, Info } from "lucide-react";
 
-export default function VaultComparisonTable({ vaults = [] }) {
-  const [sortConfig, setSortConfig] = useState({ key: "apy", direction: "desc" });
+export default function VaultComparisonTable({ vaults = [], sortBy = "apy", suggestions = null, onSuggestionClick = null }) {
+  const [sortConfig, setSortConfig] = useState({ key: sortBy, direction: "desc" });
 
   const sortedVaults = [...vaults].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
+    let keyA, keyB;
+
+    if (sortConfig.key === "activity") {
+      keyA = a.lastActivity?.getTime() || 0;
+      keyB = b.lastActivity?.getTime() || 0;
+    } else {
+      keyA = a[sortConfig.key];
+      keyB = b[sortConfig.key];
+    }
+
+    if (keyA < keyB) {
       return sortConfig.direction === "asc" ? -1 : 1;
     }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
+    if (keyA > keyB) {
       return sortConfig.direction === "asc" ? 1 : -1;
     }
     return 0;
@@ -35,29 +45,63 @@ export default function VaultComparisonTable({ vaults = [] }) {
     />
   );
 
+  if (vaults.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-vault-surface text-vault-muted border border-vault-border">
+          <Info size={32} />
+        </div>
+        <h3 className="text-xl font-semibold text-vault-text">No vaults found</h3>
+        <p className="text-vault-muted mb-6">Try adjusting your filters to find more opportunities.</p>
+        {suggestions && suggestions.length > 0 && (
+          <div className="max-w-md">
+            <p className="text-sm font-semibold text-vault-muted mb-3">Did you mean:</p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => onSuggestionClick?.(suggestion)}
+                  className="rounded-lg border border-vault-border bg-vault-surface/50 px-3 py-1.5 text-xs font-medium text-vault-accent transition-all hover:border-vault-accent hover:bg-vault-surface"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-x-auto rounded-2xl border border-vault-border bg-vault-surface/50 backdrop-blur-md">
       <table className="w-full min-w-[600px] text-left text-sm">
         <thead className="border-b border-vault-border bg-vault-surface/80 text-xs uppercase tracking-wider text-vault-muted">
           <tr>
             <th className="px-6 py-4 font-semibold">Vault</th>
-            <th 
+            <th
               className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
               onClick={() => handleSort("tvl")}
             >
               Deposits (TVL) <SortIcon columnKey="tvl" />
             </th>
-            <th 
+            <th
               className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
               onClick={() => handleSort("apy")}
             >
               Est. Yield <SortIcon columnKey="apy" />
             </th>
-            <th 
+            <th
               className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
               onClick={() => handleSort("lockup")}
             >
               Lockup <SortIcon columnKey="lockup" />
+            </th>
+            <th
+              className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
+              onClick={() => handleSort("activity")}
+            >
+              Activity <SortIcon columnKey="activity" />
             </th>
             <th className="px-6 py-4 text-right font-semibold">Action</th>
           </tr>
@@ -92,6 +136,9 @@ export default function VaultComparisonTable({ vaults = [] }) {
               </td>
               <td className="px-6 py-4 text-vault-muted">
                 {vault.lockup === 0 ? "Flexible" : `${vault.lockup} Days`}
+              </td>
+              <td className="px-6 py-4 text-sm text-vault-muted">
+                {vault.lastActivity ? new Date(vault.lastActivity).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}
               </td>
               <td className="px-6 py-4 text-right">
                 <Link href={`/app/vaults/${vault.id}`} className="inline-flex items-center gap-1 rounded-lg border border-vault-border bg-vault-surface px-3 py-1.5 text-sm font-medium text-vault-text transition-all hover:border-vault-accent hover:text-vault-accent">
