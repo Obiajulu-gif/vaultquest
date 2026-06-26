@@ -14,7 +14,10 @@ import {
   AlertCircle,
   Copy,
   Check,
-  Server
+  CircleDollarSign,
+  Clock,
+  Server,
+  Ticket,
 } from "lucide-react";
 import { MOCK_VAULTS } from "@/components/app/VaultList";
 import DepositModal from "@/components/app/DepositModal";
@@ -22,6 +25,39 @@ import RoundStatusBadge from "@/components/app/RoundStatusBadge";
 import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
 import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import VaultKeyboardNavAudit from "@/components/app/VaultKeyboardNavAudit";
+import VaultDocsQuickLinks from "@/components/app/VaultDocsQuickLinks";
+
+function MetricTile({ label, value, tone = "default" }) {
+  const toneClass = tone === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-vault-text";
+
+  return (
+    <div className="rounded-xl border border-vault-border bg-vault-surface/40 p-4">
+      <p className="text-xs font-bold uppercase tracking-wide text-vault-muted">{label}</p>
+      <p className={`mt-1.5 text-xl font-black sm:text-2xl ${toneClass}`}>{value}</p>
+    </div>
+  );
+}
+
+function DetailSection({ icon: Icon, title, description, children }) {
+  const titleId = `${title.toLowerCase().replace(/\s+/g, "-")}-title`;
+
+  return (
+    <section className="vq-glass space-y-5 p-4 sm:p-6" aria-labelledby={titleId}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-vault-border bg-vault-surface text-red-500">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h2 id={titleId} className="text-lg font-bold text-vault-text">
+            {title}
+          </h2>
+          {description && <p className="mt-1 text-sm text-vault-muted">{description}</p>}
+        </div>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 function DetailSkeleton() {
   return (
@@ -163,44 +199,44 @@ export default function VaultDetailPage({ params }) {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Metrics & Estimator */}
         <main className="space-y-8 lg:col-span-8">
-          {/* Key Metrics Section */}
-          <section className="vq-glass p-6 space-y-6" aria-label="Vault stats">
-            <h3 className="text-lg font-bold text-vault-text flex items-center gap-2">
-              <Coins className="h-5 w-5 text-red-500" /> Vault Key Metrics
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="vq-glass bg-vault-surface/40 p-4 border border-vault-border/50">
-                <p className="text-xs font-bold uppercase tracking-wider text-vault-muted">Est. APY</p>
-                <p className="mt-1.5 text-2xl font-black text-emerald-500">{vault.apy}%</p>
+          <DetailSection
+            icon={Coins}
+            title="Vault Data Overview"
+            description="Key vault data grouped for faster review before depositing."
+          >
+            <div className="space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold text-vault-text">Performance</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <MetricTile label="Est. APY" value={`${vault.apy}%`} tone="success" />
+                  <MetricTile label="Deposits (TVL)" value={`$${(vault.tvl / 1000000).toFixed(2)}M`} />
+                </div>
               </div>
 
-              <div className="vq-glass bg-vault-surface/40 p-4 border border-vault-border/50">
-                <p className="text-xs font-bold uppercase tracking-wider text-vault-muted">Deposits (TVL)</p>
-                <p className="mt-1.5 text-2xl font-black text-vault-text">
-                  ${(vault.tvl / 1000000).toFixed(2)}M
-                </p>
+              <div>
+                <h3 className="text-sm font-semibold text-vault-text">Access</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <MetricTile label="Lockup Period" value={vault.lockup === 0 ? "Flexible" : `${vault.lockup} Days`} />
+                  <MetricTile label="Slippage Tier" value="0.10%" />
+                </div>
               </div>
 
-              <div className="vq-glass bg-vault-surface/40 p-4 border border-vault-border/50">
-                <p className="text-xs font-bold uppercase tracking-wider text-vault-muted">Lockup Period</p>
-                <p className="mt-1.5 text-2xl font-black text-vault-text">
-                  {vault.lockup === 0 ? "Flexible" : `${vault.lockup} Days`}
-                </p>
-              </div>
-
-              <div className="vq-glass bg-vault-surface/40 p-4 border border-vault-border/50">
-                <p className="text-xs font-bold uppercase tracking-wider text-vault-muted">Slippage Tier</p>
-                <p className="mt-1.5 text-2xl font-black text-vault-text">0.10%</p>
+              <div>
+                <h3 className="text-sm font-semibold text-vault-text">Round State</h3>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <MetricTile label="Network" value={vault.network} />
+                  <MetricTile label="Strategy" value={vault.strategy} />
+                </div>
               </div>
             </div>
-          </section>
+          </DetailSection>
 
           {/* Dynamic Estimator */}
-          <section className="vq-glass p-6 space-y-6" aria-label="Interactive yield estimator">
-            <div className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-red-500" />
-              <h3 className="text-lg font-bold text-vault-text">Vault Yield Projection</h3>
-            </div>
+          <DetailSection
+            icon={Calculator}
+            title="Vault Yield Projection"
+            description="Estimate how much yield your principal could generate over time."
+          >
             <p className="text-sm text-vault-muted">
               Enter a custom deposit amount below to see the estimated non-loss yields generated by your principal over time.
             </p>
@@ -236,13 +272,14 @@ export default function VaultDetailPage({ params }) {
                 </div>
               </div>
             </div>
-          </section>
+          </DetailSection>
 
           {/* Technical Specs */}
-          <section className="vq-glass p-6 space-y-4" aria-label="Technical details">
-            <h3 className="text-lg font-bold text-vault-text flex items-center gap-2">
-              <Server className="h-5 w-5 text-red-500" /> Contract Specifications
-            </h3>
+          <DetailSection
+            icon={Server}
+            title="Contract Specifications"
+            description="Operational contract data and audit context for this vault."
+          >
             <div className="divide-y divide-vault-border/30 text-sm">
               <div className="py-3 flex justify-between gap-4">
                 <span className="text-vault-muted">Contract Standard</span>
@@ -267,32 +304,64 @@ export default function VaultDetailPage({ params }) {
                 </div>
               </div>
             </div>
-          </section>
+          </DetailSection>
+
+          <VaultDocsQuickLinks />
         </main>
 
         {/* Right Column: Account metrics & CTAs */}
         <aside className="space-y-8 lg:col-span-4">
           <VaultHealthStatusPanel />
-          <section className="vq-glass p-6 space-y-6 relative overflow-hidden group">
+          <section className="vq-glass p-4 sm:p-6 space-y-6 relative overflow-hidden group">
             <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-red-500/10 blur-[80px]" />
-            <h3 className="text-lg font-bold text-vault-text flex items-center gap-2">
-              <Shield className="h-5 w-5 text-red-500" /> Your Positions
-            </h3>
+            <div>
+              <h2 className="text-lg font-bold text-vault-text flex items-center gap-2">
+                <Shield className="h-5 w-5 text-red-500" /> Your Position Data
+              </h2>
+              <p className="mt-1 text-sm text-vault-muted">
+                Wallet-specific vault metrics load after connection.
+              </p>
+            </div>
 
             {isConnected ? (
               <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-vault-muted">Your Deposits</span>
-                    <span className="font-bold text-vault-text">1,250.00 {vault.asset}</span>
+                <div className="grid gap-3">
+                  <div className="rounded-xl border border-vault-border bg-vault-surface/40 p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-vault-text">
+                      <CircleDollarSign className="h-4 w-4 text-red-500" aria-hidden="true" />
+                      Balance
+                    </div>
+                    <div className="mt-3 flex justify-between items-center text-sm">
+                      <span className="text-vault-muted">Your Deposits</span>
+                      <span className="font-bold text-vault-text">1,250.00 {vault.asset}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-vault-muted">Active Tickets</span>
-                    <span className="font-bold text-vault-text">125 tickets</span>
+
+                  <div className="rounded-xl border border-vault-border bg-vault-surface/40 p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-vault-text">
+                      <Ticket className="h-4 w-4 text-red-500" aria-hidden="true" />
+                      Draw Eligibility
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-vault-muted">Active Tickets</span>
+                        <span className="font-bold text-vault-text">125 tickets</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-vault-muted">Draw Win Chance</span>
+                        <span className="font-bold text-emerald-500">~ 0.023%</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-vault-muted">Draw Win Chance</span>
-                    <span className="font-bold text-emerald-500">~ 0.023%</span>
+
+                  <div className="rounded-xl border border-dashed border-vault-border bg-vault-bg/30 p-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-vault-text">
+                      <Clock className="h-4 w-4 text-vault-muted" aria-hidden="true" />
+                      History
+                    </div>
+                    <p className="mt-2 text-sm text-vault-muted">
+                      No user-specific vault events are loaded in this placeholder account view.
+                    </p>
                   </div>
                 </div>
 

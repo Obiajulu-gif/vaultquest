@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   FileText,
   Menu,
+  RefreshCw,
 } from "lucide-react";
 
 const AUDIT_CHECKS = [
