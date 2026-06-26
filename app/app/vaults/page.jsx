@@ -8,9 +8,11 @@ import VaultFilters from "@/components/app/VaultFilters";
 import VaultList, { MOCK_VAULTS } from "@/components/app/VaultList";
 import VaultComparisonTable from "@/components/app/VaultComparisonTable";
 import VaultDataRefresh from "@/components/app/VaultDataRefresh";
+import VaultDataWarnings from "@/components/app/VaultDataWarnings";
 import VaultFaqSection from "@/components/app/VaultFaqSection";
 import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
+import { useVaultDataReview } from "@/hooks/useVaultDataReview";
 import { LayoutGrid, Table } from "lucide-react";
 
 const INITIAL_FILTERS = {
@@ -29,8 +31,11 @@ export default function VaultsPage() {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState("table");
 
+  const { vaults: reviewedVaults, warnings: dataWarnings } =
+    useVaultDataReview(MOCK_VAULTS);
+
   const filteredVaults = useMemo(() => {
-    return MOCK_VAULTS.filter((vault) => {
+    return reviewedVaults.filter((vault) => {
       // Search (by name, asset, or strategy)
       if (filters.search) {
         const search = filters.search.toLowerCase();
@@ -139,6 +144,8 @@ export default function VaultsPage() {
 
         <div className="flex-1 space-y-6">
           <VaultDataRefresh />
+
+          <VaultDataWarnings warnings={dataWarnings} />
 
           <MobileVaultActions
             vaultName="Selected Vault"

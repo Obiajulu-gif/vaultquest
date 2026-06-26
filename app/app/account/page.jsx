@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
-import { PiggyBank, Trophy, TrendingUp, Wallet } from "lucide-react";
+import { PiggyBank, RotateCcw, Trophy, TrendingUp, Wallet } from "lucide-react";
 import AccountPositionSummary from "@/components/app/AccountPositionSummary";
 import UserDepositsList from "@/components/app/UserDepositsList";
 import ProfileEditor from "@/components/app/ProfileEditor";
@@ -12,6 +12,8 @@ import BadgesGallery from "@/components/app/BadgesGallery";
 import PrizeChart from "@/components/app/PrizeChart";
 import VaultNotificationSettings from "@/components/app/VaultNotificationSettings";
 import WalletReconnectGuidance from "@/components/app/WalletReconnectGuidance";
+import SecurityTipsPanel from "@/components/app/SecurityTipsPanel";
+import VaultOnboardingTour, { useRestartTour } from "@/components/app/VaultOnboardingTour";
 import { useYieldCounter } from "@/components/hooks/useYieldCounter";
 import { formatUsd } from "@/lib/yield-counter";
 import { DEMO_PORTFOLIO, DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
@@ -39,6 +41,7 @@ function MetricCard({ icon: Icon, label, value, sub, highlight }) {
 
 function ConnectedDashboard({ isNetworkMismatch, onRetry }) {
   const [selectedAsset, setSelectedAsset] = useState("all");
+  const [tourKey, setTourKey] = useState(0);
 
   const accrued = useYieldCounter(
     DEMO_PORTFOLIO.activeDeposits,
@@ -47,14 +50,19 @@ function ConnectedDashboard({ isNetworkMismatch, onRetry }) {
     true,
   );
 
+  const restartTour = useRestartTour(() => setTourKey((k) => k + 1));
+
   return (
     <>
+      <SecurityTipsPanel />
+
       {isNetworkMismatch && (
         <WalletReconnectGuidance
           isNetworkMismatch
           onRetry={onRetry}
         />
       )}
+
       <AccountPositionSummary />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -94,6 +102,19 @@ function ConnectedDashboard({ isNetworkMismatch, onRetry }) {
         selectedAsset={selectedAsset}
         onClearAsset={() => setSelectedAsset("all")}
       />
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={restartTour}
+          className="vq-btn-ghost flex items-center gap-2 text-xs"
+        >
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+          Replay onboarding tour
+        </button>
+      </div>
+
+      <VaultOnboardingTour key={tourKey} />
     </>
   );
 }
