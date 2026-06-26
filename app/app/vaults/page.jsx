@@ -11,6 +11,8 @@ import VaultDataRefresh from "@/components/app/VaultDataRefresh";
 import VaultDataWarnings from "@/components/app/VaultDataWarnings";
 import VaultFaqSection from "@/components/app/VaultFaqSection";
 import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
+import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
+import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
 import { useVaultDataReview } from "@/hooks/useVaultDataReview";
 import { LayoutGrid, Table } from "lucide-react";
@@ -135,6 +137,10 @@ export default function VaultsPage() {
 
       <VaultRiskExplainer />
 
+      <div className="flex justify-end">
+        <VaultRewardsExplanationModal />
+      </div>
+
       <div className="flex flex-col gap-8 lg:flex-row">
         <VaultFilters
           filters={filters}
@@ -146,6 +152,8 @@ export default function VaultsPage() {
           <VaultDataRefresh />
 
           <VaultDataWarnings warnings={dataWarnings} />
+
+          <VaultHealthStatusPanel />
 
           <MobileVaultActions
             vaultName="Selected Vault"
