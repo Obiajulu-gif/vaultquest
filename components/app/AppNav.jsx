@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Contrast, Gift, Menu, Server, User, Wallet, X, Activity, Shield } from "lucide-react";
+import { Bell, Contrast, Gift, Menu, Server, User, Wallet, X, Activity, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import BalanceAutoRefresh from "./BalanceAutoRefresh";
@@ -17,6 +17,7 @@ const LINKS = [
   { href: "/app/vaults", label: "Vaults", icon: Wallet },
   { href: "/app/account", label: "Account", icon: User },
   { href: "/app/activity", label: "Activity", icon: Activity },
+  { href: "/app/notifications", label: "Notifications", icon: Bell },
   { href: "/app/trust", label: "Trust", icon: Shield },
   { href: "/app/admin/proposals", label: "Admin", icon: Menu },
 ];

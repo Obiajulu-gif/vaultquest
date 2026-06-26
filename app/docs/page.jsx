@@ -17,7 +17,7 @@ export default function ProtocolDocsPage() {
       </div>
 
       <div className="space-y-16">
-        <section className="space-y-6">
+        <section id="product-overview" className="scroll-mt-24 space-y-6">
           <h2 className="flex items-center gap-2 text-2xl font-semibold text-vault-text">
             <Shield className="text-vault-accent" /> Product Overview
           </h2>
@@ -36,7 +36,7 @@ export default function ProtocolDocsPage() {
           </div>
         </section>
 
-        <section className="space-y-6">
+        <section id="round-lifecycle" className="scroll-mt-24 space-y-6">
           <h2 className="flex items-center gap-2 text-2xl font-semibold text-vault-text">
             <RefreshCw className="text-vault-accent" /> Round Lifecycle
           </h2>

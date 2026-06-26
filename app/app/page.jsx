@@ -20,6 +20,8 @@ import VaultEmptyState from "@/components/app/VaultEmptyState";
 import VaultOnboardingTour from "@/components/app/VaultOnboardingTour";
 import VaultGoalTracker from "@/components/app/VaultGoalTracker";
 import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
+import VaultDocsQuickLinks from "@/components/app/VaultDocsQuickLinks";
+import VaultLeaderboardPlaceholder from "@/components/app/VaultLeaderboardPlaceholder";
 
 function DashboardSkeleton() {
   return (
@@ -162,6 +164,8 @@ export default function AppDashboardPage() {
           )}
           <YieldCalculator />
           <RecentWinners />
+          <VaultLeaderboardPlaceholder />
+          <VaultDocsQuickLinks />
           <OnboardingCards />
           <FaqAccordion />
         </main>
