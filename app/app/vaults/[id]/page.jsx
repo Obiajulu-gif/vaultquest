@@ -19,6 +19,9 @@ import {
 import { MOCK_VAULTS } from "@/components/app/VaultList";
 import DepositModal from "@/components/app/DepositModal";
 import RoundStatusBadge from "@/components/app/RoundStatusBadge";
+import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
+import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
+import VaultKeyboardNavAudit from "@/components/app/VaultKeyboardNavAudit";
 
 function DetailSkeleton() {
   return (
@@ -269,6 +272,7 @@ export default function VaultDetailPage({ params }) {
 
         {/* Right Column: Account metrics & CTAs */}
         <aside className="space-y-8 lg:col-span-4">
+          <VaultHealthStatusPanel />
           <section className="vq-glass p-6 space-y-6 relative overflow-hidden group">
             <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-red-500/10 blur-[80px]" />
             <h3 className="text-lg font-bold text-vault-text flex items-center gap-2">
@@ -334,6 +338,12 @@ export default function VaultDetailPage({ params }) {
       </div>
 
       <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
+
+      <div className="flex justify-center">
+        <VaultRewardsExplanationModal />
+      </div>
+
+      <VaultKeyboardNavAudit />
     </div>
   );
 }

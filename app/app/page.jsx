@@ -18,6 +18,8 @@ import FaqAccordion from "@/components/app/FaqAccordion";
 import { WalletConnectionStatus, OnboardingChecklist } from "stellar-wallet-connect";
 import VaultEmptyState from "@/components/app/VaultEmptyState";
 import VaultOnboardingTour from "@/components/app/VaultOnboardingTour";
+import VaultGoalTracker from "@/components/app/VaultGoalTracker";
+import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 
 function DashboardSkeleton() {
   return (
@@ -175,6 +177,7 @@ export default function AppDashboardPage() {
 
           {isConnected && (
             <>
+              <VaultGoalTracker currentBalance={1250} />
               <WalletConnectionStatus
                 walletAddress={address ?? null}
                 network={chain?.name ?? null}
@@ -218,6 +221,10 @@ export default function AppDashboardPage() {
               )}
             </div>
           </section>
+
+          <div className="flex justify-center">
+            <VaultRewardsExplanationModal />
+          </div>
         </aside>
       </div>
     </div>
