@@ -203,6 +203,7 @@ export default function VaultsPage() {
                 sortBy={filters.sortBy}
                 suggestions={generateSuggestions()}
                 onSuggestionClick={handleSuggestionClick}
+                onClearFilters={clearFilters}
               />
             ) : (
               <VaultList

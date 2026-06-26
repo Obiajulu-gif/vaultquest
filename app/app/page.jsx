@@ -16,6 +16,7 @@ import WinnerCelebration from "@/components/app/WinnerCelebration";
 import PrizeCountdown from "@/components/app/PrizeCountdown";
 import FaqAccordion from "@/components/app/FaqAccordion";
 import { WalletConnectionStatus, OnboardingChecklist } from "stellar-wallet-connect";
+import VaultEmptyState from "@/components/app/VaultEmptyState";
 
 function DashboardSkeleton() {
   return (
@@ -151,6 +152,9 @@ export default function AppDashboardPage() {
         {/* Left Column */}
         <main className="space-y-8 lg:col-span-8">
           <OnboardingChecklist walletConnected={isConnected} hasJoinedVault={hasJoinedVault} />
+          {isConnected && !hasJoinedVault && (
+            <VaultEmptyState variant="dashboard" />
+          )}
           <YieldCalculator />
           <RecentWinners />
           <OnboardingCards />

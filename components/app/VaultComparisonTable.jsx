@@ -4,8 +4,9 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowUpDown, ArrowUpRight, Wallet, Info } from "lucide-react";
+import VaultEmptyState from "@/components/app/VaultEmptyState";
 
-export default function VaultComparisonTable({ vaults = [], sortBy = "apy", suggestions = null, onSuggestionClick = null }) {
+export default function VaultComparisonTable({ vaults = [], sortBy = "apy", suggestions = null, onSuggestionClick = null, onClearFilters = null }) {
   const [sortConfig, setSortConfig] = useState({ key: sortBy, direction: "desc" });
 
   const sortedVaults = [...vaults].sort((a, b) => {
@@ -47,14 +48,10 @@ export default function VaultComparisonTable({ vaults = [], sortBy = "apy", sugg
 
   if (vaults.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-vault-surface text-vault-muted border border-vault-border">
-          <Info size={32} />
-        </div>
-        <h3 className="text-xl font-semibold text-vault-text">No vaults found</h3>
-        <p className="text-vault-muted mb-6">Try adjusting your filters to find more opportunities.</p>
+      <div className="space-y-4">
+        <VaultEmptyState variant="vaultList" onClearFilters={onClearFilters ?? undefined} />
         {suggestions && suggestions.length > 0 && (
-          <div className="max-w-md">
+          <div className="text-center">
             <p className="text-sm font-semibold text-vault-muted mb-3">Did you mean:</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {suggestions.map((suggestion) => (
