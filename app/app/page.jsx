@@ -17,6 +17,7 @@ import PrizeCountdown from "@/components/app/PrizeCountdown";
 import FaqAccordion from "@/components/app/FaqAccordion";
 import { WalletConnectionStatus, OnboardingChecklist } from "stellar-wallet-connect";
 import VaultEmptyState from "@/components/app/VaultEmptyState";
+import VaultOnboardingTour from "@/components/app/VaultOnboardingTour";
 
 function DashboardSkeleton() {
   return (
@@ -115,6 +116,8 @@ export default function AppDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <VaultOnboardingTour />
+
       <UnsupportedNetworkBanner />
 
       <WinnerCelebration
