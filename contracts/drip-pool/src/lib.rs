@@ -155,6 +155,46 @@ impl DripPool {
         Ok(())
     }
 
+    pub fn add_admin(env: Env, caller: Address, new_admin: Address) -> Result<(), Error> {
+        caller.require_auth();
+        Self::require_signer(&env, &caller)?;
+        let mut admins: Vec<Address> = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admins)
+            .unwrap_or(vec![&env]);
+        if !admins.contains(&new_admin) {
+            admins.push_back(new_admin);
+            env.storage().instance().set(&DataKey::Admins, &admins);
+        }
+        Ok(())
+    }
+
+    pub fn remove_admin(env: Env, caller: Address, target: Address) -> Result<(), Error> {
+        caller.require_auth();
+        Self::require_signer(&env, &caller)?;
+
+        let mut admins: Vec<Address> = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admins)
+            .unwrap_or(vec![&env]);
+
+        if admins.len() <= 1 {
+            return Err(Error::Unauthorized);
+        }
+
+        let mut updated: Vec<Address> = Vec::new(&env);
+        for a in admins.iter() {
+            if a != &target {
+                updated.push_back(a);
+            }
+        }
+
+        env.storage().instance().set(&DataKey::Admins, &updated);
+        Ok(())
+    }
+
     // ── Multi-sig: propose an admin action ─────────────────────────────────
     pub fn propose(env: Env, signer: Address, action: ProposalAction) -> Result<u32, Error> {
         signer.require_auth();
