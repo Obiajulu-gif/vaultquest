@@ -25,12 +25,44 @@ export default defineConfig({
       use: { ...devices['Desktop Safari'] },
     },
     {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      name: 'mobile-chrome',
+      use: { 
+        ...devices['Pixel 5'],
+        viewport: { width: 393, height: 851 },
+        deviceScaleFactor: 2.75,
+        isMobile: true,
+        hasTouch: true,
+      },
     },
     {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      name: 'mobile-safari',
+      use: { 
+        ...devices['iPhone 12'],
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: 'tablet-ipad',
+      use: { 
+        ...devices['iPad Pro'],
+        viewport: { width: 1024, height: 1366 },
+        deviceScaleFactor: 2,
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+    {
+      name: 'mobile-android-small',
+      use: { 
+        ...devices['Galaxy S9+'],
+        viewport: { width: 360, height: 740 },
+        deviceScaleFactor: 4.5,
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
   webServer: {
