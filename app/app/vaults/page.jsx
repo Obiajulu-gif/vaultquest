@@ -188,13 +188,21 @@ export default function VaultsPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsDepositModalOpen(true)}
-                className="vq-btn-primary mt-6 self-start"
-              >
-                Open deposit modal
-              </button>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDepositModalOpen(true)}
+                  className="vq-btn-primary"
+                >
+                  Open deposit modal
+                </button>
+                <Link
+                  href="/app/vaults/planner"
+                  className="vq-btn-ghost"
+                >
+                  Recurring Planner
+                </Link>
+              </div>
             </section>
           </div>
 
