@@ -14,6 +14,7 @@ import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
 import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
 import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
+import VaultRetryQueue from "@/components/app/VaultRetryQueue";
 import { useVaultDataReview } from "@/hooks/useVaultDataReview";
 import { Archive, LayoutGrid, Table } from "lucide-react";
 
@@ -144,6 +145,8 @@ export default function VaultsPage() {
       </section>
 
       <VaultRiskExplainer />
+
+      <VaultRetryQueue />
 
       <div className="flex justify-end">
         <VaultRewardsExplanationModal />
