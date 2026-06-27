@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v6
         with:
           version: 8
       - name: Run pnpm audit
