@@ -10,6 +10,17 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+  },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+    toMatchSnapshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
   },
   projects: [
     {
