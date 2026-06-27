@@ -18,9 +18,15 @@
 //! - New proxy contract in `proxy.rs` stores logic contract + admin.
 //! - `upgrade` is admin-only; direct caller path enforces auth for transparent proxy.
 
-use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, symbol_short, vec, Address, Env, Vec,
-};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, vec, Address, Env, Vec};
+use vaultquest_common::ContractError;
+
+#[cfg(test)]
+pub mod proxy;
+mod vault;
+
+#[cfg(test)]
+pub use proxy::{VaultProxy, VaultProxyClient};
 
 // ── Lockup duration (ledgers, ~7 days at 5 s/ledger) ──────────────────────
 const LOCKUP_LEDGERS: u32 = 120_960;
@@ -34,29 +40,14 @@ const SIG_THRESHOLD: u32 = 2;
 #[contracttype]
 pub enum DataKey {
     Admin,
-    Admins,          // Vec<Address> — approved signers
+    Admins, // Vec<Address> — approved signers
     Pool,
     Participant(Address),
-    Proposal(u32),   // pending admin proposal
+    Proposal(u32), // pending admin proposal
 }
 
-// ── Errors ─────────────────────────────────────────────────────────────────
-#[contracterror]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
-#[repr(u32)]
-pub enum Error {
-    AlreadyInitialized = 1,
-    NotInitialized     = 2,
-    AlreadyJoined      = 3,
-    NotJoined          = 4,
-    InvalidAmount      = 5,
-    Locked             = 6,   // reentrancy
-    LockupActive       = 7,   // withdrawal before lockup ends
-    Unauthorized       = 8,   // not an approved signer
-    ThresholdNotMet    = 9,   // not enough signatures
-    AlreadySigned      = 10,  // signer already approved this proposal
-    ProposalNotFound   = 11,
-}
+/// Drip-pool contract errors — alias to the shared VaultQuest error enum.
+pub type Error = ContractError;
 
 // ── Structs ────────────────────────────────────────────────────────────────
 // #257: Consolidated `locked` (reentrancy guard) and `proposal_nonce` into
@@ -68,8 +59,8 @@ pub struct Pool {
     pub total_drips: u64,
     pub total_deposited: i128,
     pub created_at: u64,
-    pub locked: bool,         // reentrancy guard (was DataKey::Locked)
-    pub proposal_nonce: u32,  // monotonic counter (was DataKey::ProposalNonce)
+    pub locked: bool,        // reentrancy guard (was DataKey::Locked)
+    pub proposal_nonce: u32, // monotonic counter (was DataKey::ProposalNonce)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -78,7 +69,7 @@ pub struct Participant {
     pub joined_at: u64,
     pub deposited: i128,
     pub claimable: i128,
-    pub locked_until: u32, // ledger sequence
+    pub locked_until: u32,      // ledger sequence
     pub lockup_multiplier: u32, // yield boost in basis points (100 = 1x)
 }
 
@@ -148,10 +139,8 @@ impl DripPool {
         env.storage().instance().set(&DataKey::Admin, &admin);
         env.storage().instance().set(&DataKey::Admins, &admins);
         env.storage().instance().set(&DataKey::Pool, &pool);
-        env.events().publish(
-            (symbol_short!("pool"), symbol_short!("created")),
-            admin,
-        );
+        env.events()
+            .publish((symbol_short!("pool"), symbol_short!("created")), admin);
         Ok(())
     }
 
@@ -174,7 +163,7 @@ impl DripPool {
         caller.require_auth();
         Self::require_signer(&env, &caller)?;
 
-        let mut admins: Vec<Address> = env
+        let admins: Vec<Address> = env
             .storage()
             .instance()
             .get(&DataKey::Admins)
@@ -186,7 +175,7 @@ impl DripPool {
 
         let mut updated: Vec<Address> = Vec::new(&env);
         for a in admins.iter() {
-            if a != &target {
+            if a != target {
                 updated.push_back(a);
             }
         }
@@ -323,17 +312,13 @@ impl DripPool {
         }
 
         let key = DataKey::Participant(who.clone());
-        let mut p: Participant = env
-            .storage()
-            .persistent()
-            .get(&key)
-            .unwrap_or(Participant {
-                joined_at: env.ledger().timestamp(),
-                deposited: 0,
-                claimable: 0,
-                locked_until: env.ledger().sequence() + LOCKUP_LEDGERS,
-                lockup_multiplier: 100,
-            });
+        let mut p: Participant = env.storage().persistent().get(&key).unwrap_or(Participant {
+            joined_at: env.ledger().timestamp(),
+            deposited: 0,
+            claimable: 0,
+            locked_until: env.ledger().sequence() + LOCKUP_LEDGERS,
+            lockup_multiplier: 100,
+        });
 
         p.deposited += amount;
         p.claimable += amount;
@@ -404,18 +389,13 @@ impl DripPool {
             .get(&DataKey::Pool)
             .ok_or(Error::NotInitialized)?;
         Self::acquire_lock(&mut pool)?;
-        env.storage().instance().set(&DataKey::Pool, &pool);
 
         let amount = p.deposited;
         env.storage().persistent().remove(&key);
+        pool.total_deposited = pool.total_deposited.saturating_sub(amount);
 
         // token_client.transfer(&env.current_contract_address(), &who, &amount);
 
-        let mut pool: Pool = env
-            .storage()
-            .instance()
-            .get(&DataKey::Pool)
-            .ok_or(Error::NotInitialized)?;
         Self::release_lock(&mut pool);
         env.storage().instance().set(&DataKey::Pool, &pool);
 
