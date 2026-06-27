@@ -151,6 +151,38 @@ export class CacheService {
     this.touch(this.assetMap, metadata.asset, metadata);
   }
 
+  async getOrSet<T>(key: string, ttlSeconds: number, fetch: () => Promise<T>): Promise<T> {
+    if (this.redis && this.isOnline) {
+      try {
+        const cached = await this.redis.get(key);
+        if (cached !== null) {
+          return JSON.parse(cached) as T;
+        }
+      } catch (err: any) {
+        this.logger.warn({ err, key }, 'Redis get failed — falling through to source');
+      }
+    }
+    const value = await fetch();
+    if (this.redis && this.isOnline) {
+      try {
+        await this.redis.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+      } catch (err: any) {
+        this.logger.warn({ err, key }, 'Redis set failed — response served uncached');
+      }
+    }
+    return value;
+  }
+
+  async invalidate(key: string): Promise<void> {
+    if (this.redis && this.isOnline) {
+      try {
+        await this.redis.del(key);
+      } catch (err: any) {
+        this.logger.warn({ err, key }, 'Redis invalidate failed');
+      }
+    }
+  }
+
   // --- protocol config ---
 
   /**
