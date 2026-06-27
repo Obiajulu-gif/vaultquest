@@ -5,10 +5,11 @@ import { useAccount } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   ArrowDownRight, ArrowUpRight, Gift, RefreshCw, Wallet,
-  ChevronLeft, ChevronRight, Filter, Clock
+  ChevronLeft, ChevronRight, Filter, Clock, History
 } from "lucide-react";
 import { DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
 import { ActivityExport } from "@vaultquest/stellar-wallet-connect/src/vault/components/ActivityExport";
+import TransactionHistoryModal from "@/components/app/TransactionHistoryModal";
 
 const ACTIVITY_TYPES = {
   deposit: { label: "Deposit", icon: ArrowDownRight, color: "text-emerald-600 dark:text-emerald-400" },
@@ -167,7 +168,8 @@ function EmptyActivity() {
 }
 
 export default function ActivityPage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const [historyOpen, setHistoryOpen] = useState(false);
   const enrichedTx = useMemo(() => DEMO_TRANSACTIONS.map((tx) => ({ ...tx })), []);
 
   const summary = useMemo(() => {
@@ -194,6 +196,20 @@ export default function ActivityPage() {
             walletAddress={null}
             walletConnected={isConnected}
             summary={summary}
+          />
+          <div className="vq-glass flex items-center justify-between p-4 sm:p-6">
+            <div>
+              <h3 className="text-base font-semibold text-vault-text">Full transaction history</h3>
+              <p className="text-sm text-vault-muted">View paginated deposits, withdrawals, and claims from the backend.</p>
+            </div>
+            <button type="button" onClick={() => setHistoryOpen(true)} className="vq-btn-primary">
+              <History className="h-4 w-4" /> View history
+            </button>
+          </div>
+          <TransactionHistoryModal
+            open={historyOpen}
+            onClose={() => setHistoryOpen(false)}
+            walletAddress={address ?? null}
           />
         </>
       ) : (
