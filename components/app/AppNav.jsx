@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Bell, Contrast, Gift, Menu, Server, User, Wallet, X, Activity, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import BalanceAutoRefresh from "./BalanceAutoRefresh";
 import CustomRpcModal from "./CustomRpcModal";
+import HeaderWalletStatus from "./HeaderWalletStatus";
 
 const HIGH_CONTRAST_KEY = "vaultquest-high-contrast";
 
@@ -105,7 +105,7 @@ export default function AppNav() {
               <ThemeToggle />
             </div>
             <div className="hidden sm:block">
-              <ConnectButton chainStatus="icon" showBalance={false} />
+              <HeaderWalletStatus variant="desktop" />
             </div>
             <button
               type="button"
@@ -167,7 +167,7 @@ export default function AppNav() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <ConnectButton chainStatus="full" showBalance={false} />
+                  <HeaderWalletStatus variant="mobile" />
                 </div>
               </nav>
             </motion.div>

@@ -72,7 +72,7 @@ export default function VaultComparisonTable({ vaults = [], sortBy = "apy", sugg
 
   return (
     <div className="w-full overflow-x-auto rounded-2xl border border-vault-border bg-vault-surface/50 backdrop-blur-md">
-      <table className="w-full min-w-[600px] text-left text-sm">
+      <table className="w-full min-w-[720px] text-left text-sm">
         <thead className="border-b border-vault-border bg-vault-surface/80 text-xs uppercase tracking-wider text-vault-muted">
           <tr>
             <th className="px-6 py-4 font-semibold">Vault</th>
@@ -81,6 +81,12 @@ export default function VaultComparisonTable({ vaults = [], sortBy = "apy", sugg
               onClick={() => handleSort("tvl")}
             >
               Deposits (TVL) <SortIcon columnKey="tvl" />
+            </th>
+            <th
+              className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
+              onClick={() => handleSort("participantCount")}
+            >
+              Participants <SortIcon columnKey="participantCount" />
             </th>
             <th
               className="group cursor-pointer px-6 py-4 font-semibold hover:bg-white/5"
@@ -125,6 +131,9 @@ export default function VaultComparisonTable({ vaults = [], sortBy = "apy", sugg
               </td>
               <td className="px-6 py-4 font-medium text-vault-text">
                 ${(vault.tvl / 1000000).toFixed(2)}M
+              </td>
+              <td className="px-6 py-4 font-medium text-vault-text">
+                {vault.participantCount?.toLocaleString("en-US") ?? "Pending"}
               </td>
               <td className="px-6 py-4">
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-sm font-bold text-emerald-500">

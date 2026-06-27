@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, Filter, Clock
 } from "lucide-react";
 import { DEMO_TRANSACTIONS } from "@/lib/demo-portfolio";
-import { ActivityExport } from "stellar-wallet-connect/src/vault";
+import { ActivityExport } from "@vaultquest/stellar-wallet-connect/src/vault/components/ActivityExport";
 
 const ACTIVITY_TYPES = {
   deposit: { label: "Deposit", icon: ArrowDownRight, color: "text-emerald-600 dark:text-emerald-400" },

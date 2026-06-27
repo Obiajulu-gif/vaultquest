@@ -9,6 +9,9 @@ This document outlines the testing infrastructure and how to contribute tests.
 - **Playwright**: E2E, Responsive, and Accessibility testing.
 - **Axe Core**: Automated accessibility audits.
 
+For a status map of important covered, partial, and missing areas, see
+[`docs/TEST_COVERAGE_MAP.md`](./TEST_COVERAGE_MAP.md).
+
 ## Running Tests
 
 ### Unit & Integration (Vitest)
