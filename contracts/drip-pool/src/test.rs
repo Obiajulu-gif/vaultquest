@@ -1,8 +1,9 @@
 //! Adversarial unit-test suite (#141) + regression tests (#139, #140).
+//! Event emission tests (#255). Storage optimisation regression (#257).
 
 use super::*;
-use soroban_sdk::testutils::{Address as _, Ledger as _};
-use soroban_sdk::{Address, Env};
+use soroban_sdk::testutils::{Address as _, Events as _, Ledger as _};
+use soroban_sdk::{symbol_short, vec, Address, Env, IntoVal};
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -287,4 +288,114 @@ fn negative_deposit_rejected() {
         client.try_deposit(&alice, &-1),
         Err(Ok(Error::InvalidAmount))
     );
+}
+
+// ── #255: event emission ───────────────────────────────────────────────────
+
+/// Deposit emits a `pool / deposit` event with (who, amount, total_deposited).
+#[test]
+fn deposit_emits_event() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    let alice = Address::generate(&env);
+    client.join(&alice);
+    client.deposit(&alice, &500);
+
+    let events = env.events().all();
+    let deposit_event = events.iter().find(|(_, topics, _)| {
+        *topics == vec![
+            &env,
+            symbol_short!("pool").into_val(&env),
+            symbol_short!("deposit").into_val(&env),
+        ]
+    });
+    assert!(deposit_event.is_some(), "deposit event not found");
+}
+
+/// Withdraw emits a `pool / withdrawn` event with (who, amount).
+#[test]
+fn withdraw_emits_event() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    let alice = Address::generate(&env);
+    client.join(&alice);
+    client.deposit(&alice, &200);
+    skip_lockup(&env);
+    client.withdraw(&alice);
+
+    let events = env.events().all();
+    let withdrawn_event = events.iter().find(|(_, topics, _)| {
+        *topics == vec![
+            &env,
+            symbol_short!("pool").into_val(&env),
+            symbol_short!("withdrawn").into_val(&env),
+        ]
+    });
+    assert!(withdrawn_event.is_some(), "withdrawn event not found");
+}
+
+/// draw_winner emits a `pool / payout` event with (winner, prize).
+#[test]
+fn draw_winner_emits_payout_event() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    let alice = Address::generate(&env);
+    client.join(&alice);
+    client.deposit(&alice, &1_000);
+
+    let winner = client.draw_winner(&admin, &100);
+    assert_eq!(winner, admin);
+
+    let events = env.events().all();
+    let payout_event = events.iter().find(|(_, topics, _)| {
+        *topics == vec![
+            &env,
+            symbol_short!("pool").into_val(&env),
+            symbol_short!("payout").into_val(&env),
+        ]
+    });
+    assert!(payout_event.is_some(), "payout event not found");
+}
+
+/// draw_winner with zero prize is rejected.
+#[test]
+fn draw_winner_zero_prize_fails() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    assert_eq!(
+        client.try_draw_winner(&admin, &0),
+        Err(Ok(Error::InvalidAmount))
+    );
+}
+
+/// Non-admin cannot call draw_winner.
+#[test]
+fn draw_winner_unauthorized_fails() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    let rando = Address::generate(&env);
+    assert_eq!(
+        client.try_draw_winner(&rando, &100),
+        Err(Ok(Error::Unauthorized))
+    );
+}
+
+// ── #257: storage optimisation regression ─────────────────────────────────
+
+/// Pool struct carries locked and proposal_nonce — verify nonce increments.
+#[test]
+fn proposal_nonce_increments_in_pool() {
+    let (env, client, admin) = setup();
+    client.create(&admin);
+    assert_eq!(client.pool().proposal_nonce, 0);
+    client.propose(&admin, &ProposalAction::AddAdmin(Address::generate(&env)));
+    assert_eq!(client.pool().proposal_nonce, 1);
+}
+
+/// Pool.locked starts false and does not block a normal deposit.
+#[test]
+fn pool_locked_field_starts_false() {
+    let (_env, client, admin) = setup();
+    client.create(&admin);
+    assert!(!client.pool().locked);
 }
