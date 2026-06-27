@@ -9,7 +9,7 @@ version = "0.0.0"
 edition = "2021"
 
 [workspace.dependencies]
-soroban-sdk = "21"
+soroban-sdk = "26"
 
 [profile.release]
 opt-level = "z"
