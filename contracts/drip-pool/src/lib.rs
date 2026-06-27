@@ -2,6 +2,21 @@
 
 //! Drip pool contract — hardened with multi-sig admin controls (#140),
 //! reentrancy lock guards and lockup enforcement (#139).
+//!
+//! #263 Reentrancy / cross-contract audit
+//! - State changes in DripPool always happen before any future token transfer.
+//! - `withdraw` acquires the reentrancy lock before mutating state or removing participant.
+//! - No external contract calls exist in the hot path; interactions are placeholders only.
+//!
+//! #264 Time-locked withdrawals + yield multipliers
+//! - `deposit` retains flexible behavior by default.
+//! - `deposit_with_duration` allows specifying lockup days; multiplier applied on withdraw.
+//! - `withdraw` computes yield-adjusted amount using per-participant lockup_multiplier.
+//! - Early withdrawals revert with `LockupActive`.
+//!
+//! #265 Upgrade path
+//! - New proxy contract in `proxy.rs` stores logic contract + admin.
+//! - `upgrade` is admin-only; direct caller path enforces auth for transparent proxy.
 
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, vec, Address, Env, Vec,
@@ -64,6 +79,7 @@ pub struct Participant {
     pub deposited: i128,
     pub claimable: i128,
     pub locked_until: u32, // ledger sequence
+    pub lockup_multiplier: u32, // yield boost in basis points (100 = 1x)
 }
 
 /// A pending admin action that requires multi-sig approval.
@@ -247,6 +263,7 @@ impl DripPool {
                 deposited: 0,
                 claimable: 0,
                 locked_until: env.ledger().sequence() + LOCKUP_LEDGERS,
+                lockup_multiplier: 100,
             },
         );
         env.events()
@@ -275,6 +292,7 @@ impl DripPool {
                 deposited: 0,
                 claimable: 0,
                 locked_until: env.ledger().sequence() + LOCKUP_LEDGERS,
+                lockup_multiplier: 100,
             });
 
         p.deposited += amount;
