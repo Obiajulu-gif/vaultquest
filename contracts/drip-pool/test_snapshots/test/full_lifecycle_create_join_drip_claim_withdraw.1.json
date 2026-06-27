@@ -217,18 +217,6 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "Locked"
-                            }
-                          ]
-                        },
-                        "val": {
-                          "bool": false
-                        }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
                               "symbol": "Pool"
                             }
                           ]
@@ -253,6 +241,22 @@
                             },
                             {
                               "key": {
+                                "symbol": "locked"
+                              },
+                              "val": {
+                                "bool": false
+                              }
+                            },
+                            {
+                              "key": {
+                                "symbol": "proposal_nonce"
+                              },
+                              "val": {
+                                "u32": 0
+                              }
+                            },
+                            {
+                              "key": {
                                 "symbol": "total_deposited"
                               },
                               "val": {
@@ -271,18 +275,6 @@
                               }
                             }
                           ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
-                              "symbol": "ProposalNonce"
-                            }
-                          ]
-                        },
-                        "val": {
-                          "u32": 0
                         }
                       }
                     ]
@@ -751,6 +743,12 @@
                     "hi": 0,
                     "lo": 10
                   }
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 10
+                  }
                 }
               ]
             }
@@ -841,6 +839,12 @@
                     "hi": 0,
                     "lo": 5
                   }
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 15
+                  }
                 }
               ]
             }
@@ -925,6 +929,22 @@
                   },
                   "val": {
                     "u64": 0
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "locked"
+                  },
+                  "val": {
+                    "bool": false
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "proposal_nonce"
+                  },
+                  "val": {
+                    "u32": 0
                   }
                 },
                 {

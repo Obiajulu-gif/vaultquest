@@ -14,8 +14,6 @@ export interface WithdrawalModalProps {
   onClose: () => void;
 }
 
-const GAS_BUFFER = 0.5;
-
 export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWithdraw, onClose }) => {
   const [step, setStep] = useState<Step>("input");
   const [amount, setAmount] = useState("");
