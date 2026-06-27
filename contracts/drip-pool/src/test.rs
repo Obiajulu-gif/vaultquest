@@ -2,31 +2,22 @@
 //! Event emission tests (#255). Storage optimisation regression (#257).
 
 use super::*;
-use soroban_sdk::testutils::{Address as _, Events as _, Ledger as _};
-use soroban_sdk::{symbol_short, vec, Address, Env, IntoVal};
+use soroban_sdk::{Address, Env};
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
 fn setup() -> (Env, DripPoolClient<'static>, Address) {
     let env = Env::default();
-    env.mock_all_auths();
-    // Set a high max_entry_ttl so instance storage survives the lockup skip.
-    env.ledger().with_mut(|l| {
-        l.max_entry_ttl = 500_000;
-        l.min_persistent_entry_ttl = 500_000;
-        l.min_temp_entry_ttl = 500_000;
-    });
-    let id = env.register_contract(None, DripPool);
+    let id = env.register_contract(None, DripPool).unwrap();
     let client = DripPoolClient::new(&env, &id);
-    let admin = Address::generate(&env);
+    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
     (env, client, admin)
 }
 
-/// Advance ledger sequence past the lockup window and keep instance storage live.
+/// Advance ledger sequence past the lockup window.
 fn skip_lockup(env: &Env) {
-    env.ledger().with_mut(|l| {
-        l.sequence_number += 120_961;
-    });
+    let current = env.ledger().sequence();
+    env.ledger().set_sequence(current + 120_961);
 }
 
 // ── existing regression tests (updated for new Participant shape) ──────────
@@ -398,4 +389,48 @@ fn pool_locked_field_starts_false() {
     let (_env, client, admin) = setup();
     client.create(&admin);
     assert!(!client.pool().locked);
+}
+
+// ── #265: proxy upgrade tests ─────────────────────────────────────────────
+
+#[test]
+fn proxy_create_initialises() {
+    let env = Env::default();
+    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    let client = VaultProxyClient::new(&env, &proxy_id);
+    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
+    let logic = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
+    client.create(&admin, &logic);
+    assert_eq!(client.admin(), admin);
+    assert_eq!(client.logic_contract(), logic);
+}
+
+#[test]
+fn proxy_upgrade_changes_logic() {
+    let env = Env::default();
+    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    let client = VaultProxyClient::new(&env, &proxy_id);
+    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
+    let logic1 = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
+    let logic2 = Address::from_string(&"GCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEF".to_string());
+    client.create(&admin, &logic1);
+    assert_eq!(client.logic_contract(), logic1);
+    // Upgrade to new logic
+    client.upgrade(&admin, &logic2);
+    assert_eq!(client.logic_contract(), logic2);
+}
+
+#[test]
+fn proxy_upgrade_unauthorized_fails() {
+    let env = Env::default();
+    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    let client = VaultProxyClient::new(&env, &proxy_id);
+    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
+    let rando = Address::from_string(&"GDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFG".to_string());
+    let logic = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
+    client.create(&admin, &logic);
+    assert_eq!(
+        client.try_upgrade(&rando, &logic),
+        Err(Ok(Error::Unauthorized))
+    );
 }
