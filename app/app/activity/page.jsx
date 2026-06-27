@@ -191,7 +191,7 @@ function EmptyActivity() {
 }
 
 export default function ActivityPage() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const enrichedTx = useMemo(() => DEMO_TRANSACTIONS.map((tx) => ({ ...tx })), []);
 
   const summary = useMemo(() => {
@@ -215,7 +215,7 @@ export default function ActivityPage() {
           <ActivitySummary transactions={enrichedTx} />
           <ActivityFeed transactions={enrichedTx} />
           <ActivityExport
-            walletAddress={null}
+            walletAddress={address || null}
             walletConnected={isConnected}
             summary={summary}
           />
