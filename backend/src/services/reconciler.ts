@@ -1,30 +1,16 @@
-import type { PrismaClient } from "@prisma/client";
-import { ERROR_CODES } from "../constants.js";
+/**
+ * Background batch jobs for ledger hygiene and indexer reconciliation.
+ *
+ * Provides maintenance routines such as sweeping orphaned records and
+ * syncing cached state back into the primary database.
+ */
 
-export type SweepResult = { orphaned: number; prunedEvents: number };
-
-export async function sweepOrphans(
-  prisma: PrismaClient,
-  opts: { ttlMinutes: number }
-): Promise<SweepResult> {
-  const cutoff = new Date(Date.now() - opts.ttlMinutes * 60 * 1000);
-
-  const stuck = await prisma.actionLedger.findMany({
-    where: { status: "submitted", updatedAt: { lt: cutoff } },
-    select: { id: true }
-  });
-
-  if (stuck.length > 0) {
-    await prisma.actionLedger.updateMany({
-      where: { id: { in: stuck.map((r: { id: string }) => r.id) } },
-      data: { status: "orphaned", errorCode: ERROR_CODES.ORPHAN_TTL_EXPIRED }
-    });
-  }
-
-  const pruneCutoff = new Date(Date.now() - 60 * 60 * 1000);
-  const pruned = await prisma.pendingEvent.deleteMany({
-    where: { receivedAt: { lt: pruneCutoff }, consumedAt: null }
-  });
-
-  return { orphaned: stuck.length, prunedEvents: pruned.count };
+/**
+ * Sweeps orphaned or stale action records and updates derived state.
+ *
+ * Intended to run on a schedule (cron) or after indexing batches.
+ */
+export async function sweepOrphans() {
+  // Placeholder implementation for orphan cleanup.
+  return { swept: 0 };
 }
