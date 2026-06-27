@@ -26,6 +26,7 @@ import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
 import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import VaultKeyboardNavAudit from "@/components/app/VaultKeyboardNavAudit";
 import VaultDocsQuickLinks from "@/components/app/VaultDocsQuickLinks";
+import VaultParticipantInsights from "@/components/app/VaultParticipantInsights";
 
 function MetricTile({ label, value, tone = "default" }) {
   const toneClass = tone === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-vault-text";
@@ -311,6 +312,7 @@ export default function VaultDetailPage({ params }) {
 
         {/* Right Column: Account metrics & CTAs */}
         <aside className="space-y-8 lg:col-span-4">
+          <VaultParticipantInsights vault={vault} />
           <VaultHealthStatusPanel />
           <section className="vq-glass p-4 sm:p-6 space-y-6 relative overflow-hidden group">
             <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-red-500/10 blur-[80px]" />

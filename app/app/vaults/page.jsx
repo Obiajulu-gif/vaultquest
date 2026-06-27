@@ -15,7 +15,7 @@ import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
 import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
 import { useVaultDataReview } from "@/hooks/useVaultDataReview";
-import { LayoutGrid, Table } from "lucide-react";
+import { Archive, LayoutGrid, Table } from "lucide-react";
 
 const INITIAL_FILTERS = {
   search: "",
@@ -128,11 +128,19 @@ export default function VaultsPage() {
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <h1 className="text-3xl font-bold text-vault-text">Vaults</h1>
-        <p className="max-w-2xl text-vault-muted">
-          Manage your pool positions and drip deposits. Review live fee tiers
-          before you submit a transaction.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-vault-text">Vaults</h1>
+            <p className="mt-3 max-w-2xl text-vault-muted">
+              Manage your pool positions and drip deposits. Review live fee tiers
+              before you submit a transaction.
+            </p>
+          </div>
+          <Link href="/app/vaults/archive" className="vq-btn-ghost self-start">
+            <Archive className="h-4 w-4" aria-hidden="true" />
+            Round archive
+          </Link>
+        </div>
       </section>
 
       <VaultRiskExplainer />
