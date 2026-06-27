@@ -44,7 +44,9 @@ describe("HorizonPool", () => {
       "https://node-c.example/": 20,
     };
     const fetchImpl = vi.fn(async (url: any) => {
-      clock += latency[String(url)] ?? 10;
+      const ms = latency[String(url)] ?? 10;
+      await new Promise((resolve) => setTimeout(resolve, ms));
+      clock += ms;
       return res(200);
     });
     const pool = new HorizonPool({
