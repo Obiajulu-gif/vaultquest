@@ -61,9 +61,9 @@
     "timestamp": 0,
     "network_id": "0000000000000000000000000000000000000000000000000000000000000000",
     "base_reserve": 0,
-    "min_persistent_entry_ttl": 500000,
-    "min_temp_entry_ttl": 500000,
-    "max_entry_ttl": 500000,
+    "min_persistent_entry_ttl": 4096,
+    "min_temp_entry_ttl": 16,
+    "max_entry_ttl": 6312000,
     "ledger_entries": [
       [
         {
@@ -230,7 +230,7 @@
             },
             "ext": "v0"
           },
-          499999
+          4095
         ]
       ],
       [
@@ -263,7 +263,7 @@
             },
             "ext": "v0"
           },
-          499999
+          6311999
         ]
       ],
       [
@@ -296,7 +296,7 @@
             },
             "ext": "v0"
           },
-          499999
+          6311999
         ]
       ],
       [
@@ -317,7 +317,7 @@
             },
             "ext": "v0"
           },
-          499999
+          4095
         ]
       ]
     ]
