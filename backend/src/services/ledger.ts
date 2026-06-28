@@ -9,6 +9,7 @@ import type { CacheService } from "./cacheService.js";
 export type ListActionsParams = {
   walletAddress: string;
   status?: ActionStatus;
+  type?: string;
   limit: number;
   cursor?: string | null;
 };
@@ -193,10 +194,16 @@ export class LedgerService {
   }
 
   async listActions(params: ListActionsParams): Promise<ListActionsResult> {
-    const { walletAddress, status, limit, cursor } = params;
+    const { walletAddress, status, type, limit, cursor } = params;
+
+    const where = {
+      walletAddress,
+      ...(status !== undefined && { status }),
+      ...(type !== undefined && { actionType: type as ActionStatus })
+    };
 
     const rows = await this.prisma.actionLedger.findMany({
-      where: { walletAddress, ...(status !== undefined && { status }) },
+      where,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: limit + 1,
       ...(cursor != null && { cursor: { id: cursor }, skip: 1 })
@@ -207,32 +214,6 @@ export class LedgerService {
     const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
 
     return { items: items as unknown as ActionRecord[], nextCursor };
-  }
-
-  async getHistoryPaginated(params: {
-    walletAddress: string;
-    status?: ActionStatus;
-    type?: string;
-    skip: number;
-    limit: number;
-  }): Promise<{ items: ActionRecord[]; total: number }> {
-    const { walletAddress, status, type, skip, limit } = params;
-    
-    const whereClause: any = { walletAddress };
-    if (status) whereClause.status = status;
-    if (type) whereClause.actionType = type;
-
-    const [total, rows] = await this.prisma.$transaction([
-      this.prisma.actionLedger.count({ where: whereClause }),
-      this.prisma.actionLedger.findMany({
-        where: whereClause,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-        skip,
-        take: limit,
-      }),
-    ]);
-
-    return { items: rows as unknown as ActionRecord[], total };
   }
 
 

@@ -13,6 +13,7 @@ import { MetricsService } from "./services/metricsService.js";
 import { ok } from "./responses.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
+import { requireApiKey } from "./middleware/api-key-auth.js";
 import { createLogger } from "./logger.js";
 import type { Logger } from "pino";
 import type { CacheService } from "./services/cacheService.js";
@@ -20,6 +21,8 @@ import type { CacheService } from "./services/cacheService.js";
 export type AppDeps = {
   prisma: PrismaClient;
   internalSecret: string;
+  /** API key for external-service endpoints (issue #273). Undefined disables enforcement. */
+  apiKey?: string;
   logger?: Logger;
   cacheService?: CacheService;
 };
@@ -76,16 +79,20 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   const savedPoolsSvc = new SavedPoolsService(deps.prisma);
   const metricsSvc = new MetricsService(deps.prisma);
 
+  // API key guard for external-service endpoints (#273).
+  // Guard is a no-op when apiKey is undefined (local dev without configuration).
+  const apiKeyGuard = requireApiKey(deps.apiKey);
+
   app.get("/health", async () => ok({ ok: true }));
   app.get("/health/indexer", async () => {
     const health = await svc.getIndexerHealth();
     return ok(health);
   });
 
-  app.register(actionsRoutes(svc));
+  app.register(actionsRoutes(svc, apiKeyGuard));
   app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));
-  app.register(metricsRoutes(metricsSvc));
+  app.register(metricsRoutes(metricsSvc, apiKeyGuard));
   app.register(prometheusRoutes);
 
   // Central Error Handler Middleware

@@ -2,7 +2,7 @@ import { buildApp } from "./app.js";
 import { getEnv } from "./env.js";
 import { getPrisma } from "./db.js";
 import { createLogger } from "./logger.js";
-import { startReconcilerCron, startQuestCron, startIndexerCron } from "./cron.js";
+import { startReconcilerCron, startQuestCron, startIndexerCron, startBackupCron } from "./cron.js";
 import { CacheService } from "./services/cacheService.js";
 import { LedgerService } from "./services/ledger.js";
 import {
@@ -22,6 +22,7 @@ const cacheService = new CacheService(prisma, logger, process.env.REDIS_URL);
 const app = buildApp({
   prisma,
   internalSecret: env.INTERNAL_SERVICE_SECRET,
+  apiKey: env.API_KEY,
   logger,
   cacheService
 });
@@ -59,12 +60,29 @@ if (env.SOROBAN_RPC_URL && env.INDEXER_CONTRACT_IDS) {
   logger.info({ contractIds }, "stellar indexer daemon started");
 }
 
+// Automated database backup cron (#275). Only started when BACKUP_DIR is set.
+let backupCronTask: ScheduledTask | undefined;
+if (env.BACKUP_DIR) {
+  backupCronTask = startBackupCron({
+    backupDir: env.BACKUP_DIR,
+    databaseUrl: env.DATABASE_URL,
+    retainDays: env.BACKUP_RETAIN_DAYS,
+    schedule: env.BACKUP_SCHEDULE,
+    logger
+  });
+  logger.info(
+    { backupDir: env.BACKUP_DIR, schedule: env.BACKUP_SCHEDULE },
+    "backup cron started"
+  );
+}
+
 async function shutdown(signal: string) {
   logger.info({ signal }, "shutting down");
   clearInterval(cacheSyncInterval);
   cronTask.stop();
   questCronTask.stop();
   indexerCronTask?.stop();
+  backupCronTask?.stop();
   await app.close();
   await cacheService.disconnect();
   await prisma.$disconnect();
