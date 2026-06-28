@@ -1,0 +1,86 @@
+name: Release on Tag
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  draft_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install smart contract build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev zip
+
+      - name: Build contract WASM binaries
+        working-directory: contracts
+        run: |
+          # Build Soroban artifacts
+          cargo build --target wasm32-unknown-unknown --release
+
+          # Standard cargo workspaces place 'target' at the repository root.
+          # We search from the root level to ensure we catch the compiled .wasm files safely.
+          mkdir -p ../release-artifacts/contracts
+          find ../target/wasm32-unknown-unknown/release -maxdepth 1 -type f -name "*.wasm" -print -exec cp {} ../release-artifacts/contracts/ \;
+
+      - name: Compile changelog from commits
+        id: changelog
+        shell: bash
+        run: |
+          TAG_REF="${GITHUB_REF_NAME}"
+          echo "Building changelog for tag: $TAG_REF"
+
+          PREV_TAG=$(git tag --list 'v*' | sort -V | tail -n 2 | head -n 1)
+          echo "Previous tag candidate: ${PREV_TAG}"
+
+          if [[ -z "${PREV_TAG}" || "${PREV_TAG}" == "${TAG_REF}" ]]; then
+            RANGE="HEAD"
+          else
+            RANGE="${PREV_TAG}..HEAD"
+          fi
+
+          if [[ "${RANGE}" == "HEAD" ]]; then
+            git log --pretty=format:'- %s' --no-merges --max-count=200 > changelog.md
+          else
+            git log ${RANGE} --pretty=format:'- %s' --no-merges --max-count=200 > changelog.md
+          fi
+
+          if [[ ! -s changelog.md ]]; then
+            echo "- (no notable commits)" > changelog.md
+          fi
+
+          echo "changelog<<'EOF'" >> $GITHUB_OUTPUT
+          cat changelog.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Zip contract binaries
+        run: |
+          cd ./release-artifacts
+          zip -r contracts-wasm.zip contracts
+
+      - name: Draft GitHub Release and Upload Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          draft: true
+          prerelease: false
+          files: ./release-artifacts/contracts-wasm.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
