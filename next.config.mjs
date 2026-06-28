@@ -1,6 +1,8 @@
 import path from "path";
 
 /** @type {import('next').NextConfig} */
+const { i18n } = require('./next-i18next.config.js');
+
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@vaultquest/stellar-wallet-connect"],
@@ -12,6 +14,10 @@ const nextConfig = {
       ),
     };
     return config;
+  i18n,
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [],
   },
 };
 

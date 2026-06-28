@@ -123,7 +123,7 @@ export class HorizonPool {
     const now = this.opts.now();
     if (now < h.cooldownUntil) return Number.MAX_SAFE_INTEGER;
     if (!h.healthy) return Number.MAX_SAFE_INTEGER - 1;
-    return h.latencyMs;
+    return Number.isFinite(h.latencyMs) ? h.latencyMs : Number.MAX_SAFE_INTEGER / 2;
   }
 
   /**
@@ -131,9 +131,9 @@ export class HorizonPool {
    * refreshed health snapshot. Routing favours the lowest-latency node.
    */
   async pingAll(path = "/"): Promise<NodeHealth[]> {
-    await Promise.all(
-      [...this.health.keys()].map((url) => this.pingNode(url, path))
-    );
+    for (const url of this.health.keys()) {
+      await this.pingNode(url, path);
+    }
     return this.getHealth();
   }
 

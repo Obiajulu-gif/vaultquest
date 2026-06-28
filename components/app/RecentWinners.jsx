@@ -89,11 +89,26 @@ export default function RecentWinners() {
   const x = useMotionValue(0);
 
   useEffect(() => {
-    if (containerRef.current) {
-      // The scroll width represents two sets of cards, so one set is exactly half the scrollWidth
-      setWidth(containerRef.current.scrollWidth / 2);
-    }
-  }, [containerRef.current?.scrollWidth]);
+    if (!containerRef.current) return;
+
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setWidth(containerRef.current.scrollWidth / 2);
+      }
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(() => {
+      updateWidth();
+    });
+    
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   useAnimationFrame((time, delta) => {
     if (!width || isPaused || isDragging) return;

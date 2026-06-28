@@ -45,6 +45,8 @@ model ActionLedger {
 
   @@index([walletAddress, createdAt(sort: Desc)])
   @@index([status, updatedAt])
+  @@index([walletAddress, actionType])
+  @@index([status, createdAt(sort: Desc)])
   @@map("action_ledger")
 }
 
@@ -56,6 +58,7 @@ model PendingEvent {
   receivedAt      DateTime  @default(now()) @map("received_at")
   consumedAt      DateTime? @map("consumed_at")
 
+  @@index([statusHint, receivedAt])
   @@map("pending_events")
 }
 
@@ -87,6 +90,7 @@ model VaultSettlement {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   @@index([state, updatedAt])
+  @@index([recipient, state])
   @@map("vault_settlements")
 }
 
@@ -128,5 +132,6 @@ model SavedPool {
 
   @@unique([walletAddress, poolId])
   @@index([walletAddress, createdAt(sort: Desc)])
+  @@index([poolId])
   @@map("saved_pools")
 }
