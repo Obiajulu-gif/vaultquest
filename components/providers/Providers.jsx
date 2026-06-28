@@ -6,11 +6,12 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useEffect, useState } from "react";
+import { appWithTranslation } from "next-i18next";
 import { readStoredRpc, RPC_UPDATED_EVENT } from "@/lib/customRpc";
 import { createWagmiConfig } from "@/lib/wagmi";
 import { TransactionToastProvider } from "@/hooks/useTransactionToast";
 
-export default function Providers({ children }) {
+function ProvidersInner({ children }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -48,3 +49,5 @@ export default function Providers({ children }) {
     </ThemeProvider>
   );
 }
+
+export default appWithTranslation(ProvidersInner);

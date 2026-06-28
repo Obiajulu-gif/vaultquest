@@ -5,7 +5,7 @@ import Modal from "../../components/Modal";
 import type { PoolSummary } from "../contract/types";
 import { formatAmount } from "../lib/format";
 
-type Step = "input" | "review" | "broadcasting";
+type Step = "input" | "review" | "broadcasting" | "success";
 
 export interface DepositModalProps {
   pool: PoolSummary;
@@ -61,6 +61,7 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
     setError(null);
     try {
       await onDeposit(amount);
+      setStep("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transaction failed");
       setStep("review");
@@ -229,6 +230,26 @@ export const DepositModal: FC<DepositModalProps> = ({ pool, walletBalance, onDep
                 <span>Waiting for wallet confirmation</span>
               </div>
             )}
+          </div>
+        )}
+        {step === "success" && (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-glow-green">
+              <Check className="h-8 w-8" />
+            </div>
+            <p className="text-base font-semibold text-white">
+              Deposit successful!
+            </p>
+            <p className="text-sm text-gray-400 text-center max-w-xs">
+              Your deposit of {amount} {pool.asset} has been successfully submitted and confirmed on-chain.
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl bg-red-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+            >
+              Close
+            </button>
           </div>
         )}
       </div>

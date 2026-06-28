@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "title": "VaultQuest — No-loss prize savings",
+    "description": "Deposit, earn yield, and win prizes without risking your principal."
+  },
+  "nav": {
+    "vaults": "Vaults",
+    "activity": "Activity",
+    "account": "Account",
+    "prizes": "Prizes",
+    "trust": "Trust",
+    "notifications": "Notifications",
+    "admin": "Admin"
+  },
+  "footer": {
+    "terms": "Product terms",
+    "privacy": "Privacy policy",
+    "language": "Language",
+    "copyright": "© {{year}} VaultQuest. All rights reserved."
+  },
+  "vaults": {
+    "title": "Vaults",
+    "empty": "No vaults available yet.",
+    "active": "Active",
+    "archived": "Archived",
+    "startSaving": "Start Saving",
+    "viewDetails": "View details"
+  },
+  "activity": {
+    "title": "Activity",
+    "noActivity": "No activity yet.",
+    "status": {
+      "pending": "Pending",
+      "submitted": "Submitted",
+      "confirmed": "Confirmed",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "positions": "Positions",
+    "rewards": "Rewards",
+    "export": "Export transactions"
+  },
+  "prizes": {
+    "title": "Prizes",
+    "empty": "No prizes drawn yet.",
+    "countdown": "Next draw in",
+    "winners": "Recent winners"
+  },
+  "trust": {
+    "title": "Trust & Security",
+    "sections": {
+      "intro": "Introduction",
+      "contracts": "Contracts",
+      "audits": "Audits",
+      "risk": "Risk factors"
+    }
+  },
+  "modals": {
+    "history": {
+      "title": "Transaction history",
+      "empty": "No transactions found.",
+      "columns": {
+        "date": "Date",
+        "type": "Type",
+        "status": "Status",
+        "amount": "Amount",
+        "token": "Token",
+        "txHash": "Tx hash"
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong.",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close"
+  }
+}
