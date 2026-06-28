@@ -288,6 +288,22 @@
                             },
                             {
                               "key": {
+                                "symbol": "locked"
+                              },
+                              "val": {
+                                "bool": false
+                              }
+                            },
+                            {
+                              "key": {
+                                "symbol": "proposal_nonce"
+                              },
+                              "val": {
+                                "u32": 2
+                              }
+                            },
+                            {
+                              "key": {
                                 "symbol": "total_deposited"
                               },
                               "val": {
@@ -398,18 +414,6 @@
                               }
                             }
                           ]
-                        }
-                      },
-                      {
-                        "key": {
-                          "vec": [
-                            {
-                              "symbol": "ProposalNonce"
-                            }
-                          ]
-                        },
-                        "val": {
-                          "u32": 2
                         }
                       }
                     ]
@@ -703,6 +707,12 @@
               "vec": [
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 500
+                  }
                 },
                 {
                   "i128": {
@@ -1050,6 +1060,22 @@
                   },
                   "val": {
                     "u64": 0
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "locked"
+                  },
+                  "val": {
+                    "bool": false
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "proposal_nonce"
+                  },
+                  "val": {
+                    "u32": 2
                   }
                 },
                 {

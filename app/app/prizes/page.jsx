@@ -5,8 +5,9 @@ import { useAccount } from "wagmi";
 import PublicStatsBar from "@/components/app/PublicStatsBar";
 import RecentWinners from "@/components/app/RecentWinners";
 import TicketDistributionGrid from "@/components/app/TicketDistributionGrid";
+import RoundCountdown from "@/components/app/RoundCountdown";
+import TicketSimulator from "@/components/app/TicketSimulator";
 
-// Mock ticket data - replace with actual API call
 const generateMockTickets = (count) => {
   return Array.from({ length: count }, (_, i) => ({
     ticketNumber: 10000 + i,
@@ -16,15 +17,27 @@ const generateMockTickets = (count) => {
     winProbability: Math.random() * 0.001,
   }));
 };
-import TicketSimulator from "@/components/app/TicketSimulator";
+
+const getCurrentRoundDates = () => {
+  const now = new Date();
+  const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const endOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59));
+  return { startDate: startOfMonth, endDate: endOfMonth };
+};
 
 export default function PrizesPage() {
   const { address } = useAccount();
   const mockTickets = generateMockTickets(1500);
+  const { startDate, endDate } = getCurrentRoundDates();
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-vault-text">Prizes</h1>
+      <RoundCountdown
+        startDate={startDate}
+        endDate={endDate}
+        label="Current Round"
+      />
       <TicketSimulator />
       <PublicStatsBar />
       <RecentWinners />
