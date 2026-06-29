@@ -23,22 +23,6 @@ export interface SubmitResult {
   status?: string;
 }
 
-/**
- * Determines whether a settlement error is safely retryable.
- *
- * @param reason - Failure reason string
- * @returns True if the operation may be retried
- */
-function isRetryable(reason: string | undefined): boolean {
-  if (!reason) return false;
-  const normalized = reason.toLowerCase();
-  return (
-    normalized.includes("timeout") ||
-    normalized.includes("network") ||
-    normalized.includes("try again")
-  );
-}
-
 export interface EscrowServiceDeps {
   loadSequence(account: string): Promise<string>;
   sign(xdr: string, networkPassphrase: string): Promise<string>;

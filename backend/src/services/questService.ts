@@ -132,7 +132,7 @@ export class QuestService {
    * @param limit - Maximum number of wallets to consider
    * @returns Count of wallets evaluated
    */
-  async evaluateRecent(since: Date, limit = 500): Promise<{ wallets: number }> {
+  async evaluateRecent(_since: Date, _limit = 500): Promise<{ wallets: number }> {
     // Placeholder: enumerate wallets from recent actions and evaluate
     return { wallets: 0 };
   }

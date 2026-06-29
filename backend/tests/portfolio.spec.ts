@@ -1,17 +1,14 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { startTestDb, resetDb, type TestDb } from "./helpers/db.js";
 import { seedAction } from "./helpers/factory.js";
-import { LedgerService } from "../src/services/ledger.js";
 import { buildApp } from "../src/app.js";
 
 describe("Backend Portfolio Summary Endpoint", () => {
   let db: TestDb;
-  let svc: LedgerService;
   let app: any;
 
   beforeAll(async () => {
     db = await startTestDb();
-    svc = new LedgerService(db.prisma);
     app = buildApp({ prisma: db.prisma, internalSecret: "test-secret" });
   });
 

@@ -10,7 +10,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc -p tsconfig.json",
     "start": "node dist/server.js",
-    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\" --ignore-pattern \"**/*.test.ts\" --ignore-pattern \"**/*.spec.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
