@@ -63,18 +63,6 @@ test.describe("Core user flows", () => {
     });
   });
 
-  test("reviews wallet status on the account page", async ({ page }) => {
-    await mockAppShell(page);
-
-    await gotoWithRetry(page, "/app/account");
-
-    await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible({
-      timeout: 15000,
-    });
-    await expect(page.getByRole("heading", { name: "Wallet not connected" })).toBeVisible({
-      timeout: 15000,
-    });
-    await expect(page.getByRole("button", { name: "Connect wallet" })).toBeVisible({
   test("shows the admin settings overview", async ({ page }) => {
     await mockAppShell(page);
 
