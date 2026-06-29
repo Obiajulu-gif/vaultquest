@@ -20,6 +20,7 @@ test.describe("Core user flows", () => {
     await mockAppShell(page);
 
     await gotoWithRetry(page, "/app");
+    await page.waitForTimeout(1500);
 
     await expect(page.getByRole("heading", { name: "Save together. Win together." })).toBeVisible({
       timeout: 15000,

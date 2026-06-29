@@ -5,13 +5,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 
 function reportError(error) {
   if (typeof window !== "undefined") {
-    try {
-      const Sentry = require("@sentry/nextjs");
-      Sentry.captureException(error);
-      return;
-    } catch {
-      // Sentry not installed
-    }
+    // Sentry is optional in this repo; fall back to console logging when absent.
   }
   console.error("[app/error]", error);
 }

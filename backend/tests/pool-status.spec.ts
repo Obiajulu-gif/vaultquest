@@ -22,8 +22,6 @@ describe("Pool status API endpoints", () => {
     await resetDb(db.prisma);
   });
 
-  const validStellarAddress = "GABCDEF1234567890123456789012345678901234567890123456789";
-
   async function createPoolAction(wallet: string, vaultId: string, status = "pending") {
     const res = await app.inject({
       method: "POST",
@@ -51,7 +49,7 @@ describe("Pool status API endpoints", () => {
   it("returns pool action history for a wallet", async () => {
     await createPoolAction("GPOOL1", "pool-1");
     await createPoolAction("GPOOL1", "pool-1");
-    const different = await createPoolAction("GPOOL2", "pool-2");
+    await createPoolAction("GPOOL2", "pool-2");
 
     const res = await app.inject({
       method: "GET",
@@ -93,7 +91,7 @@ describe("Pool status API endpoints", () => {
   it("returns pool dashboard summary with correct counts across statuses", async () => {
     const wallet = "GPOOLDASH";
     const a = await createPoolAction(wallet, "pool-1", "pending");
-    const b = await createPoolAction(wallet, "pool-2", "pending");
+    await createPoolAction(wallet, "pool-2", "pending");
 
     await app.inject({
       method: "PATCH",

@@ -10,7 +10,7 @@ import {
 import type { PoolActionType, PoolStatus, PoolSummary, UserPosition } from "../contract/types";
 import { formatAmount, formatDate, truncateAddress } from "../lib/format";
 import { OnboardingChecklist } from "./OnboardingChecklist";
-import { isNetworkMismatch } from "../../core/store.js";
+import { isNetworkMismatch } from "../../core/store";
 import { NetworkDiagnostics } from "../../components/NetworkDiagnostics";
 import { TransactionTimeline } from "../../components/TransactionTimeline";
 import type { TxFlowResult } from "../lib/txStateMachine";

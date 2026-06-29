@@ -13,6 +13,7 @@ const mockRedisInstance = {
 
 vi.mock("ioredis", () => {
   return {
+    default: vi.fn().mockImplementation(() => mockRedisInstance),
     Redis: vi.fn().mockImplementation(() => mockRedisInstance)
   };
 });

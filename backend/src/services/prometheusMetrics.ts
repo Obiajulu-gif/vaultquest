@@ -6,8 +6,6 @@ import {
   collectDefaultMetrics,
   type Registry,
 } from "prom-client";
-import type { Logger } from "pino";
-
 export class PrometheusMetrics {
   private registry: Registry;
 
@@ -42,7 +40,7 @@ export class PrometheusMetrics {
   readonly indexerLastSyncTime: Gauge;
   readonly indexerSyncErrors: Counter;
 
-  constructor(logger?: Logger) {
+  constructor(logger?: { info?: (...args: any[]) => void }) {
     this.registry = register;
 
     // Collect default Node.js metrics
@@ -177,7 +175,7 @@ export class PrometheusMetrics {
       registers: [this.registry],
     });
 
-    logger?.info("Prometheus metrics initialized");
+    logger?.info?.("Prometheus metrics initialized");
   }
 
   /**
@@ -269,7 +267,7 @@ export class PrometheusMetrics {
 // Singleton instance
 let prometheusMetrics: PrometheusMetrics | undefined;
 
-export function getPrometheusMetrics(logger?: Logger): PrometheusMetrics {
+export function getPrometheusMetrics(logger?: { info?: (...args: any[]) => void }): PrometheusMetrics {
   if (!prometheusMetrics) {
     prometheusMetrics = new PrometheusMetrics(logger);
   }

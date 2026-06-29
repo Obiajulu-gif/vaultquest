@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { HorizonPool, type HorizonNode } from "./horizonPool.js";
-import { resolveHorizonNodes } from "./kit.js";
+import { HorizonPool, resolveHorizonNodes, type HorizonNode } from "./horizonPool.js";
 
 const NODES: HorizonNode[] = [
   { url: "https://node-a.example", kind: "private" },

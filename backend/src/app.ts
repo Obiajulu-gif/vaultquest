@@ -41,7 +41,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   app.register(prometheusPlugin);
 
   // Structured Logging for incoming requests and performance duration
-  app.addHook("onRequest", async (req, reply) => {
+  app.addHook("onRequest", async (req, _reply) => {
     (req.raw as any).tempStartTime = performance.now();
     req.log.info(
       {

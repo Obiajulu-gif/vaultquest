@@ -97,7 +97,7 @@ export default function VaultsPage() {
 
       return true;
     });
-  }, [filters]);
+  }, [filters, reviewedVaults]);
 
   const clearFilters = () => setFilters(INITIAL_FILTERS);
 

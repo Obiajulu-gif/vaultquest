@@ -88,11 +88,11 @@ jobs:
       - name: Install dependencies
         run: |
           set -euo pipefail
-          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci
-          elif [ -f pnpm-lock.yaml ]; then
+          if [ -f pnpm-lock.yaml ]; then
             corepack enable
             pnpm install --frozen-lockfile
+          elif [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci
           elif [ -f yarn.lock ]; then
             corepack enable
             yarn install --frozen-lockfile
@@ -102,6 +102,9 @@ jobs:
 
       - name: Lint
         run: npm run lint --if-present
+
+      - name: Generate Prisma client
+        run: npm run prisma:generate --if-present
 
       - name: Test
         run: npm test --if-present
