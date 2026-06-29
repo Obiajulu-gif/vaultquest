@@ -47,6 +47,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          package-manager-cache: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -119,8 +120,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          package-manager-cache: false
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4

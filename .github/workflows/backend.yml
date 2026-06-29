@@ -103,6 +103,9 @@ jobs:
       - name: Lint
         run: npm run lint --if-present
 
+      - name: Generate Prisma client
+        run: npm run prisma:generate --if-present
+
       - name: Test
         run: npm test --if-present
 
