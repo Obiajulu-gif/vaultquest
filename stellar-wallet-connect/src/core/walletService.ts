@@ -5,6 +5,7 @@ import { resolveHorizonUrl } from "./horizonConfig.js";
 import type { ISupportedWallet } from "@creit.tech/stellar-wallets-kit";
 import {
   EXPECTED_NETWORK,
+  STELLAR_NETWORKS,
   type NetworkType,
   type WalletType,
   normalizeStellarNetwork,

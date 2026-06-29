@@ -8,10 +8,15 @@ import VaultFilters from "@/components/app/VaultFilters";
 import VaultList, { MOCK_VAULTS } from "@/components/app/VaultList";
 import VaultComparisonTable from "@/components/app/VaultComparisonTable";
 import VaultDataRefresh from "@/components/app/VaultDataRefresh";
+import VaultDataWarnings from "@/components/app/VaultDataWarnings";
 import VaultFaqSection from "@/components/app/VaultFaqSection";
 import VaultRiskExplainer from "@/components/app/VaultRiskExplainer";
+import VaultHealthStatusPanel from "@/components/app/VaultHealthStatusPanel";
+import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
 import MobileVaultActions from "@/components/app/MobileVaultActions";
-import { LayoutGrid, Table } from "lucide-react";
+import VaultRetryQueue from "@/components/app/VaultRetryQueue";
+import { useVaultDataReview } from "@/hooks/useVaultDataReview";
+import { Archive, LayoutGrid, Table } from "lucide-react";
 
 const INITIAL_FILTERS = {
   search: "",
@@ -19,6 +24,9 @@ const INITIAL_FILTERS = {
   minApy: 0,
   minTvl: 0,
   lockups: [],
+  statuses: [],
+  strategies: [],
+  sortBy: "apy",
 };
 
 export default function VaultsPage() {
@@ -26,14 +34,18 @@ export default function VaultsPage() {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [viewMode, setViewMode] = useState("table");
 
+  const { vaults: reviewedVaults, warnings: dataWarnings } =
+    useVaultDataReview(MOCK_VAULTS);
+
   const filteredVaults = useMemo(() => {
-    return MOCK_VAULTS.filter((vault) => {
-      // Search
+    return reviewedVaults.filter((vault) => {
+      // Search (by name, asset, or strategy)
       if (filters.search) {
         const search = filters.search.toLowerCase();
         if (
           !vault.name.toLowerCase().includes(search) &&
-          !vault.asset.toLowerCase().includes(search)
+          !vault.asset.toLowerCase().includes(search) &&
+          !vault.strategy.toLowerCase().includes(search)
         ) {
           return false;
         }
@@ -69,23 +81,76 @@ export default function VaultsPage() {
         if (!isMatch) return false;
       }
 
+      // Status
+      if (filters.statuses && filters.statuses.length > 0) {
+        if (!filters.statuses.includes(vault.status)) {
+          return false;
+        }
+      }
+
+      // Strategy
+      if (filters.strategies && filters.strategies.length > 0) {
+        if (!filters.strategies.includes(vault.strategy)) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [filters]);
 
   const clearFilters = () => setFilters(INITIAL_FILTERS);
 
+  const generateSuggestions = () => {
+    if (filteredVaults.length > 0 || !filters.search) {
+      return null;
+    }
+
+    const search = filters.search.toLowerCase();
+    const allNames = MOCK_VAULTS.map((v) => v.name);
+    const allAssets = MOCK_VAULTS.map((v) => v.asset);
+    const allStrategies = MOCK_VAULTS.map((v) => v.strategy);
+
+    const suggestions = new Set();
+
+    [...allNames, ...allAssets, ...allStrategies].forEach((item) => {
+      if (item.toLowerCase().includes(search) && suggestions.size < 3) {
+        suggestions.add(item);
+      }
+    });
+
+    return Array.from(suggestions);
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setFilters({ ...filters, search: suggestion });
+  };
+
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <h1 className="text-3xl font-bold text-vault-text">Vaults</h1>
-        <p className="max-w-2xl text-vault-muted">
-          Manage your pool positions and drip deposits. Review live fee tiers
-          before you submit a transaction.
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-vault-text">Vaults</h1>
+            <p className="mt-3 max-w-2xl text-vault-muted">
+              Manage your pool positions and drip deposits. Review live fee tiers
+              before you submit a transaction.
+            </p>
+          </div>
+          <Link href="/app/vaults/archive" className="vq-btn-ghost self-start">
+            <Archive className="h-4 w-4" aria-hidden="true" />
+            Round archive
+          </Link>
+        </div>
       </section>
 
       <VaultRiskExplainer />
+
+      <VaultRetryQueue />
+
+      <div className="flex justify-end">
+        <VaultRewardsExplanationModal />
+      </div>
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <VaultFilters
@@ -96,6 +161,10 @@ export default function VaultsPage() {
 
         <div className="flex-1 space-y-6">
           <VaultDataRefresh />
+
+          <VaultDataWarnings warnings={dataWarnings} />
+
+          <VaultHealthStatusPanel />
 
           <MobileVaultActions
             vaultName="Selected Vault"
@@ -119,13 +188,21 @@ export default function VaultsPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsDepositModalOpen(true)}
-                className="vq-btn-primary mt-6 self-start"
-              >
-                Open deposit modal
-              </button>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsDepositModalOpen(true)}
+                  className="vq-btn-primary"
+                >
+                  Open deposit modal
+                </button>
+                <Link
+                  href="/app/vaults/planner"
+                  className="vq-btn-ghost"
+                >
+                  Recurring Planner
+                </Link>
+              </div>
             </section>
           </div>
 
@@ -155,9 +232,19 @@ export default function VaultsPage() {
               </div>
             </div>
             {viewMode === "table" ? (
-              <VaultComparisonTable vaults={filteredVaults} />
+              <VaultComparisonTable
+                vaults={filteredVaults}
+                sortBy={filters.sortBy}
+                suggestions={generateSuggestions()}
+                onSuggestionClick={handleSuggestionClick}
+                onClearFilters={clearFilters}
+              />
             ) : (
-              <VaultList vaults={filteredVaults} />
+              <VaultList
+                vaults={filteredVaults}
+                suggestions={generateSuggestions()}
+                onSuggestionClick={handleSuggestionClick}
+              />
             )}
           </div>
 

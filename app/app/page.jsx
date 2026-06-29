@@ -15,7 +15,14 @@ import BridgeStatusTracker from "@/components/app/BridgeStatusTracker";
 import WinnerCelebration from "@/components/app/WinnerCelebration";
 import PrizeCountdown from "@/components/app/PrizeCountdown";
 import FaqAccordion from "@/components/app/FaqAccordion";
-import { WalletConnectionStatus, OnboardingChecklist } from "stellar-wallet-connect";
+import { WalletConnectionStatus } from "@vaultquest/stellar-wallet-connect/src/components/WalletConnectionStatus";
+import { OnboardingChecklist } from "@vaultquest/stellar-wallet-connect/src/vault/components/OnboardingChecklist";
+import VaultEmptyState from "@/components/app/VaultEmptyState";
+import VaultOnboardingTour from "@/components/app/VaultOnboardingTour";
+import VaultGoalTracker from "@/components/app/VaultGoalTracker";
+import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanationModal";
+import VaultDocsQuickLinks from "@/components/app/VaultDocsQuickLinks";
+import VaultLeaderboardPlaceholder from "@/components/app/VaultLeaderboardPlaceholder";
 
 function DashboardSkeleton() {
   return (
@@ -114,6 +121,8 @@ export default function AppDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      <VaultOnboardingTour />
+
       <UnsupportedNetworkBanner />
 
       <WinnerCelebration
@@ -151,8 +160,13 @@ export default function AppDashboardPage() {
         {/* Left Column */}
         <main className="space-y-8 lg:col-span-8">
           <OnboardingChecklist walletConnected={isConnected} hasJoinedVault={hasJoinedVault} />
+          {isConnected && !hasJoinedVault && (
+            <VaultEmptyState variant="dashboard" />
+          )}
           <YieldCalculator />
           <RecentWinners />
+          <VaultLeaderboardPlaceholder />
+          <VaultDocsQuickLinks />
           <OnboardingCards />
           <FaqAccordion />
         </main>
@@ -168,6 +182,7 @@ export default function AppDashboardPage() {
 
           {isConnected && (
             <>
+              <VaultGoalTracker currentBalance={1250} />
               <WalletConnectionStatus
                 walletAddress={address ?? null}
                 network={chain?.name ?? null}
@@ -211,6 +226,10 @@ export default function AppDashboardPage() {
               )}
             </div>
           </section>
+
+          <div className="flex justify-center">
+            <VaultRewardsExplanationModal />
+          </div>
         </aside>
       </div>
     </div>

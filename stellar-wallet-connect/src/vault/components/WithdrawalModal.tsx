@@ -5,7 +5,7 @@ import Modal from "../../components/Modal";
 import type { PoolSummary, UserPosition } from "../contract/types";
 import { formatAmount } from "../lib/format";
 
-type Step = "input" | "review" | "broadcasting";
+type Step = "input" | "review" | "broadcasting" | "success";
 
 export interface WithdrawalModalProps {
   pool: PoolSummary;
@@ -13,8 +13,6 @@ export interface WithdrawalModalProps {
   onWithdraw: (amount: string) => Promise<void>;
   onClose: () => void;
 }
-
-const GAS_BUFFER = 0.5;
 
 export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWithdraw, onClose }) => {
   const [step, setStep] = useState<Step>("input");
@@ -44,6 +42,7 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
     setError(null);
     try {
       await onWithdraw(amount);
+      setStep("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Transaction failed");
       setStep("review");
@@ -193,6 +192,43 @@ export const WithdrawalModal: FC<WithdrawalModalProps> = ({ pool, position, onWi
                 <span>Waiting for wallet confirmation</span>
               </div>
             )}
+          </div>
+        )}
+
+        {step === "success" && (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-glow-green">
+              <Check className="h-8 w-8" />
+            </div>
+            <p className="text-base font-semibold text-white">
+              Withdrawal successful!
+            </p>
+            <p className="text-sm text-gray-400 text-center max-w-xs">
+              Your withdrawal of {formatAmount(amount, pool.asset)} from the pool has been successfully confirmed.
+            </p>
+            <div className="w-full divide-y divide-red-900/20 rounded-xl border border-red-900/30 bg-[#1A0505]/40 px-4 py-2 text-xs">
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-400">Pool</span>
+                <span className="text-white font-medium">{pool.name}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-400">Remaining deposit</span>
+                <span className="text-white font-semibold">
+                  {formatAmount(String(Math.max(0, depositedNum - amountNum)), pool.asset)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-400">Status</span>
+                <span className="text-emerald-400 font-bold">Confirmed</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full rounded-xl bg-red-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1A0505]"
+            >
+              Close
+            </button>
           </div>
         )}
       </div>

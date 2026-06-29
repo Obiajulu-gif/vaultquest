@@ -95,6 +95,29 @@ break anything else. Run the relevant commands for your area:
 | Security | `trufflehog filesystem .` | Secret scanning |
 | Docs | manual preview | Markdown renders correctly on GitHub |
 
+### Auto-fixing lint errors locally
+
+Before pushing, you can auto-fix most lint errors:
+
+```bash
+# Fix ESLint errors in the frontend app
+pnpm run lint --fix
+
+# Fix ESLint errors in the backend
+cd backend && npm run lint --fix
+
+# Fix ESLint errors in the stellar-wallet-connect module
+cd stellar-wallet-connect && npm run lint --fix
+
+# Format Rust code in contracts
+cd contracts && cargo fmt
+
+# Format with Prettier (if configured)
+npx prettier --write "app/**/*.{js,jsx}" "components/**/*.{js,jsx}" "hooks/**/*.{js,ts}" "lib/**/*.{js,ts}"
+```
+
+The CI pipeline runs these same checks and fails if any lint errors remain.
+
 If you skip a check, **say so explicitly in the PR description and why** —
 that's far more useful than silent gaps.
 

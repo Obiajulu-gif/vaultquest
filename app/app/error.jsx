@@ -3,10 +3,22 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+function reportError(error) {
+  if (typeof window !== "undefined") {
+    try {
+      const Sentry = require("@sentry/nextjs");
+      Sentry.captureException(error);
+      return;
+    } catch {
+      // Sentry not installed
+    }
+  }
+  console.error("[app/error]", error);
+}
+
 export default function ErrorBoundary({ error, reset }) {
   useEffect(() => {
-    // Log the error to an error reporting service in production
-    console.error("Dashboard error boundary caught:", error);
+    reportError(error);
   }, [error]);
 
   return (
