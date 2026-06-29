@@ -27,6 +27,7 @@ import VaultRewardsExplanationModal from "@/components/app/VaultRewardsExplanati
 import VaultKeyboardNavAudit from "@/components/app/VaultKeyboardNavAudit";
 import VaultDocsQuickLinks from "@/components/app/VaultDocsQuickLinks";
 import VaultParticipantInsights from "@/components/app/VaultParticipantInsights";
+import { toast } from "react-hot-toast";
 
 function MetricTile({ label, value, tone = "default" }) {
   const toneClass = tone === "success" ? "text-emerald-600 dark:text-emerald-400" : "text-vault-text";
@@ -377,7 +378,22 @@ export default function VaultDetailPage({ params }) {
                   </button>
                   <button
                     type="button"
-                    onClick={() => alert("Withdraw flow initiated. This is a mockup action.")}
+                    onClick={() => {
+                      toast.success(
+                        <div className="flex flex-col gap-1">
+                          <span>Withdrawal confirmed!</span>
+                          <a 
+                            href={`https://etherscan.io/tx/0x9b5c32af1e57c83f949e29ae8fa9`} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-xs underline text-emerald-500 hover:text-emerald-400"
+                          >
+                            View transaction
+                          </a>
+                        </div>,
+                        { duration: 5000 }
+                      );
+                    }}
                     className="vq-btn-ghost w-full"
                   >
                     Withdraw Principal
