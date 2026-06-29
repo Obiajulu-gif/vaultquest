@@ -52,8 +52,25 @@ async function rateLimitPlugin(
 
     // Honor X-Forwarded-For when sitting behind a reverse proxy / load-balancer.
     keyGenerator(request) {
-      return request.headers["x-forwarded-for"]?.toString().split(",")[0].trim()
-        ?? request.ip;
+      const forwardedFor = request.headers["x-forwarded-for"];
+      if (typeof forwardedFor === "string") {
+        const first = forwardedFor.split(",")[0];
+        if (first) {
+          return first.trim();
+        }
+      }
+      if (Array.isArray(forwardedFor)) {
+        const firstForwarded = forwardedFor.find(
+          (entry): entry is string => typeof entry === "string" && entry.length > 0
+        );
+        if (firstForwarded) {
+          const first = firstForwarded.split(",")[0];
+          if (first) {
+            return first.trim();
+          }
+        }
+      }
+      return request.ip ?? "unknown";
     },
   });
 }

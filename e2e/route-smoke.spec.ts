@@ -66,17 +66,25 @@ async function expectRouteToRender(page: Page, route: SmokeRoute) {
   const response = await gotoWithRetry(page, route.path);
 
   expect(response, `${route.name} (${route.path}) should return a document response`).not.toBeNull();
-  expect(response?.status(), `${route.name} (${route.path}) should return a successful document response`).toBeLessThan(400);
+  expect(
+    response?.status(),
+    `${route.name} (${route.path}) should return a successful document response`,
+  ).toBeLessThan(400);
 
-
-  expect(response, `${route.name} (${route.path}) should return a document response`).not.toBeNull();
-  expect(response?.status(), `${route.name} (${route.path}) should return a successful document response`).toBeLessThan(400);
-
-  await expect(page.locator("body"), `${route.name} (${route.path}) should render a non-empty page body`).not.toBeEmpty();
-  await expect(page.locator("body"), `${route.name} (${route.path}) should show route-specific content`).toContainText(route.expectedContent);
+  await expect(
+    page.locator("body"),
+    `${route.name} (${route.path}) should render a non-empty page body`,
+  ).not.toBeEmpty();
+  await expect(
+    page.locator("body"),
+    `${route.name} (${route.path}) should show route-specific content`,
+  ).toContainText(route.expectedContent);
 
   for (const pattern of routeLevelCrashPatterns) {
-    await expect(page.locator("body"), `${route.name} (${route.path}) should not show ${pattern.toString()}`).not.toContainText(pattern);
+    await expect(
+      page.locator("body"),
+      `${route.name} (${route.path}) should not show ${pattern.toString()}`,
+    ).not.toContainText(pattern);
   }
 
   expect(pageErrors, `${route.name} (${route.path}) should not throw route-level runtime errors`).toEqual([]);

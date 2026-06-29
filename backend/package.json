@@ -19,7 +19,7 @@
     "db:setup": "prisma migrate dev && prisma db seed"
   },
   "dependencies": {
-    "@fastify/rate-limit": "^11.0.0",
+    "@fastify/rate-limit": "^9.0.0",
     "@prisma/client": "^5.22.0",
     "fastify": "^4.28.1",
     "fastify-plugin": "^4.5.1",

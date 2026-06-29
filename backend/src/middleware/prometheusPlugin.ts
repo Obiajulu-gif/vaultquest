@@ -5,7 +5,7 @@ import { getPrometheusMetrics } from "../services/prometheusMetrics.js";
  * Fastify plugin that automatically records HTTP metrics for Prometheus
  */
 const prometheusPlugin: FastifyPluginAsync = async (app) => {
-  const metrics = getPrometheusMetrics(app.log);
+  const metrics = getPrometheusMetrics(app.log as any);
 
   // Record request start time and route
   app.addHook("onRequest", async (req) => {

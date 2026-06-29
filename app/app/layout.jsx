@@ -1,7 +1,7 @@
 import AppNav from "@/components/app/AppNav";
 import SystemStatusBanner from "@/components/app/SystemStatusBanner";
-import SupportWidget from "@/components/app/SupportWidget";
 import Footer from "@/components/app/Footer";
+import SupportWidget from "@/components/app/SupportWidget";
 
 export default function AppLayout({ children }) {
   return (

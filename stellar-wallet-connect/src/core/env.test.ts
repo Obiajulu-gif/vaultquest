@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseFrontendEnv } from "./env.js";
+import { parseFrontendEnv } from "./env";
 
 describe("parseFrontendEnv", () => {
   it("accepts valid env", () => {
