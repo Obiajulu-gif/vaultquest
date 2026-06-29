@@ -52,6 +52,52 @@ export class CacheService {
     this.maxEntries = maxEntries;
   }
 
+  async getCheckpoint(): Promise<Partial<IndexerCheckpoint> | null> {
+    if (this.redis && this.isOnline) {
+      try {
+        const data = await this.redis.get("indexer:checkpoint");
+        if (data) {
+          const parsed = JSON.parse(data);
+          return {
+            id: "singleton",
+            latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
+            lastSyncTime: new Date(parsed.lastSyncTime),
+            lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime),
+            lastError: parsed.lastError
+          };
+        }
+      } catch (err) {
+        this.logger.warn({ err }, "Redis getCheckpoint failed, falling back to database");
+      }
+    }
+    // Fallback to PostgreSQL
+    return this.prisma.indexerCheckpoint.findUnique({ where: { id: "singleton" } });
+  }
+
+  async setCheckpoint(checkpoint: {
+    latestLedger: number;
+    lastProcessedEventId: string | null;
+    lastSyncTime: Date;
+    lastSuccessSyncTime: Date;
+    lastError: string | null;
+  }): Promise<void> {
+    if (this.redis && this.isOnline) {
+      try {
+        await this.redis.set(
+          "indexer:checkpoint",
+          JSON.stringify({
+            latestLedger: checkpoint.latestLedger,
+            lastProcessedEventId: checkpoint.lastProcessedEventId,
+            lastSyncTime: checkpoint.lastSyncTime.toISOString(),
+            lastSuccessSyncTime: checkpoint.lastSuccessSyncTime.toISOString(),
+            lastError: checkpoint.lastError
+          })
+        );
+        await this.redis.set("indexer:checkpoint:dirty", "true");
+        return;
+      } catch (err) {
+        this.logger.warn({ err }, "Redis setCheckpoint failed, writing directly to database");
   // --- helpers ---
 
   private touch<K, V>(map: Map<K, CacheEntry<V>>, key: K, value: V): void {
@@ -73,6 +119,60 @@ export class CacheService {
     if (oldestKey !== undefined) map.delete(oldestKey);
   }
 
+    // Fallback direct DB write
+    await this.prisma.indexerCheckpoint.upsert({
+      where: { id: "singleton" },
+        create: {
+          id: "singleton",
+          latestLedger: checkpoint.latestLedger,
+          lastProcessedEventId: checkpoint.lastProcessedEventId,
+          lastSyncTime: checkpoint.lastSyncTime,
+          lastError: checkpoint.lastError,
+          lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
+        },
+        update: {
+          latestLedger: checkpoint.latestLedger,
+          lastProcessedEventId: checkpoint.lastProcessedEventId,
+          lastSyncTime: checkpoint.lastSyncTime,
+          lastError: checkpoint.lastError,
+          lastSuccessSyncTime: checkpoint.lastSuccessSyncTime
+      }
+    });
+  }
+
+  async syncCheckpointToDb(): Promise<void> {
+    if (!this.redis || !this.isOnline) return;
+    try {
+      const isDirty = await this.redis.get("indexer:checkpoint:dirty");
+      if (isDirty !== "true") return;
+
+      const data = await this.redis.get("indexer:checkpoint");
+      if (!data) return;
+
+      const parsed = JSON.parse(data);
+        await this.prisma.indexerCheckpoint.upsert({
+          where: { id: "singleton" },
+          create: {
+            id: "singleton",
+            latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
+            lastSyncTime: new Date(parsed.lastSyncTime),
+            lastError: parsed.lastError,
+            lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
+          },
+          update: {
+            latestLedger: parsed.latestLedger,
+            lastProcessedEventId: parsed.lastProcessedEventId ?? null,
+            lastSyncTime: new Date(parsed.lastSyncTime),
+            lastError: parsed.lastError,
+            lastSuccessSyncTime: new Date(parsed.lastSuccessSyncTime)
+        }
+      });
+      await this.redis.del("indexer:checkpoint:dirty");
+      this.logger.info("Synced indexer checkpoint from Redis to PostgreSQL");
+    } catch (err) {
+      this.logger.error({ err }, "Failed to sync checkpoint from Redis to PostgreSQL");
+    }
   // --- pending events ---
 
   /**

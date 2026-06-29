@@ -44,6 +44,34 @@ test.describe("Core user flows", () => {
       timeout: 15000,
     });
     await expect(page.getByRole("button", { name: "Open deposit modal" })).toBeVisible({
+  });
+
+  test("opens the vault detail page", async ({ page }) => {
+    await mockAppShell(page);
+
+    await gotoWithRetry(page, "/app/vaults");
+
+    await expect(page.getByRole("heading", { name: "Vaults" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Quick Deposit Flow" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("button", { name: "Open deposit modal" })).toBeVisible({
+      timeout: 15000,
+    });
+  });
+
+  test("reviews wallet status on the account page", async ({ page }) => {
+    await mockAppShell(page);
+
+    await gotoWithRetry(page, "/app/account");
+
+    await expect(page.getByRole("heading", { name: "Your profile" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Wallet not connected" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("button", { name: "Connect wallet" })).toBeVisible({
       timeout: 15000,
     });
   });
@@ -61,6 +89,24 @@ test.describe("Core user flows", () => {
       timeout: 15000,
     });
     await expect(page.getByRole("button", { name: "Connect wallet" })).toBeVisible({
+  test("shows the admin settings overview", async ({ page }) => {
+    await mockAppShell(page);
+
+    await gotoWithRetry(page, "/app/admin/settings");
+
+    await expect(page.getByRole("heading", { name: "Settings Overview" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Protocol parameters" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Active rounds" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Service status" })).toBeVisible({
+      timeout: 15000,
+    });
+    await expect(page.getByRole("heading", { name: "Operational notes" })).toBeVisible({
       timeout: 15000,
     });
   });

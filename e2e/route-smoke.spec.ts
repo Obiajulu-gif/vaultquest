@@ -31,6 +31,11 @@ const appRoutes: SmokeRoute[] = [
     path: "/app/vaults",
     expectedContent: /Quick Deposit Flow|Available Pools/i,
   },
+  {
+    name: "admin settings overview",
+    path: "/app/admin/settings",
+    expectedContent: /Protocol parameters|Active rounds|Service status/i,
+  },
 ];
 
 const routeLevelCrashPatterns = [
@@ -59,6 +64,10 @@ async function expectRouteToRender(page: Page, route: SmokeRoute) {
   });
 
   const response = await gotoWithRetry(page, route.path);
+
+  expect(response, `${route.name} (${route.path}) should return a document response`).not.toBeNull();
+  expect(response?.status(), `${route.name} (${route.path}) should return a successful document response`).toBeLessThan(400);
+
 
   expect(response, `${route.name} (${route.path}) should return a document response`).not.toBeNull();
   expect(response?.status(), `${route.name} (${route.path}) should return a successful document response`).toBeLessThan(400);

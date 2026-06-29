@@ -9,8 +9,8 @@ import { savedPoolsRoutes } from "./routes/savedPools.js";
 import { internalRoutes } from "./routes/internal.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { prometheusRoutes } from "./routes/prometheus.js";
+import { healthRoutes } from "./routes/health.js";
 import { MetricsService } from "./services/metricsService.js";
-import { ok } from "./responses.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { createLogger } from "./logger.js";
@@ -76,12 +76,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   const savedPoolsSvc = new SavedPoolsService(deps.prisma);
   const metricsSvc = new MetricsService(deps.prisma);
 
-  app.get("/health", async () => ok({ ok: true }));
-  app.get("/health/indexer", async () => {
-    const health = await svc.getIndexerHealth();
-    return ok(health);
-  });
-
+  app.register(healthRoutes(svc));
   app.register(actionsRoutes(svc));
   app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));
