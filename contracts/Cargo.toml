@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "drip-pool",
+    "mock-yield",
 ]
 
 [workspace.package]
