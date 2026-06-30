@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from "fastify";
+import type { FastifyPluginAsync, preHandlerHookHandler } from "fastify";
 import type { LedgerService } from "../services/ledger.js";
 import {
   createActionBody,
@@ -37,7 +37,10 @@ function serialize(row: Awaited<ReturnType<LedgerService["getAction"]>>) {
   };
 }
 
-export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
+export const actionsRoutes = (
+  svc: LedgerService,
+  apiKeyGuard: preHandlerHookHandler
+): FastifyPluginAsync =>
   async (app) => {
     app.post("/actions", async (req, reply) => {
       const keyHeader = req.headers["idempotency-key"];
@@ -191,20 +194,15 @@ export const actionsRoutes = (svc: LedgerService): FastifyPluginAsync =>
       return ok(rows.map(serialize));
     });
 
-    app.get<{ Params: { walletAddress: string } }>("/api/actions/:walletAddress", async (req) => {
+    app.get<{ Params: { walletAddress: string } }>("/api/actions/:walletAddress", { preHandler: apiKeyGuard }, async (req) => {
       const q = actionHistoryQuery.parse(req.query);
-      const skip = (q.page - 1) * q.limit;
-      const result = await svc.getHistoryPaginated({
+      const result = await svc.listActions({
         walletAddress: req.params.walletAddress,
         status: q.status,
         type: q.type,
-        skip,
+        cursor: q.cursor ?? null,
         limit: q.limit
       });
-      return ok({
-        totalCount: result.total,
-        currentPage: q.page,
-        data: result.items.map(serialize)
-      });
+      return page(result.items.map(serialize), { nextCursor: result.nextCursor, limit: q.limit });
     });
   };

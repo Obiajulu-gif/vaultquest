@@ -3,6 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import type { Logger } from "pino";
 import { sweepOrphans } from "./services/reconciler.js";
 import { QuestService } from "./services/questService.js";
+import { BackupService } from "./services/backupService.js";
 import type { StellarIndexer } from "./services/stellarIndexer.js";
 import { pingDatabase } from "./db.js";
 
@@ -74,6 +75,41 @@ export function startIndexerCron(opts: {
       opts.logger.info({ result }, "indexer tick complete");
     } catch (err) {
       opts.logger.error({ err }, "indexer tick failed");
+    }
+  });
+  return task;
+}
+
+/**
+ * Runs automated PostgreSQL backups on a schedule (issue #275).
+ *
+ * Each tick calls `BackupService.run()` which shells out to `pg_dump` and
+ * prunes files older than `retainDays`. The cron is only started when
+ * `BACKUP_DIR` is set in the environment.
+ */
+export function startBackupCron(opts: {
+  backupDir: string;
+  databaseUrl: string;
+  retainDays?: number;
+  pgDumpPath?: string;
+  logger: Logger;
+  schedule?: string;
+}): cron.ScheduledTask {
+  const schedule = opts.schedule ?? "0 2 * * *"; // default: daily at 02:00
+  const svc = new BackupService({
+    backupDir: opts.backupDir,
+    databaseUrl: opts.databaseUrl,
+    retainDays: opts.retainDays,
+    pgDumpPath: opts.pgDumpPath,
+    logger: opts.logger
+  });
+
+  const task = cron.schedule(schedule, async () => {
+    try {
+      const result = await svc.run();
+      opts.logger.info({ result }, "backup: completed");
+    } catch (err) {
+      opts.logger.error({ err }, "backup: failed");
     }
   });
   return task;
