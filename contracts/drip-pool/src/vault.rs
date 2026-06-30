@@ -1,8 +1,8 @@
-#![no_std]
-
 //! #264 Time-locked withdrawals with yield multipliers.
 //! Adds an enhanced vault flow with duration-based lockups and APY multipliers.
 //! Existing DripPool behavior is untouched.
+
+#![allow(dead_code)]
 
 use super::*;
 

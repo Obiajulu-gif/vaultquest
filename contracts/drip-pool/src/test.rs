@@ -2,22 +2,33 @@
 //! Event emission tests (#255). Storage optimisation regression (#257).
 
 use super::*;
-use soroban_sdk::{Address, Env};
+use soroban_sdk::testutils::{Address as _, Events as _, Ledger as _};
+use soroban_sdk::{Address, Env, IntoVal};
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
 fn setup() -> (Env, DripPoolClient<'static>, Address) {
     let env = Env::default();
-    let id = env.register_contract(None, DripPool).unwrap();
+    env.mock_all_auths();
+    let id = env.register_contract(None, DripPool);
     let client = DripPoolClient::new(&env, &id);
-    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
+    let admin = Address::generate(&env);
     (env, client, admin)
 }
 
 /// Advance ledger sequence past the lockup window.
-fn skip_lockup(env: &Env) {
+fn skip_lockup(env: &Env, contract: &Address, who: &Address) {
+    env.as_contract(contract, || {
+        env.storage()
+            .instance()
+            .extend_ttl(u32::MAX / 2, u32::MAX / 2);
+        let key = DataKey::Participant(who.clone());
+        env.storage()
+            .persistent()
+            .extend_ttl(&key, u32::MAX / 2, u32::MAX / 2);
+    });
     let current = env.ledger().sequence();
-    env.ledger().set_sequence(current + 120_961);
+    env.ledger().set_sequence_number(current + 120_961);
 }
 
 // ── existing regression tests (updated for new Participant shape) ──────────
@@ -36,7 +47,10 @@ fn create_initialises_pool() {
 fn create_twice_fails() {
     let (_env, client, admin) = setup();
     client.create(&admin);
-    assert_eq!(client.try_create(&admin), Err(Ok(Error::AlreadyInitialized)));
+    assert_eq!(
+        client.try_create(&admin),
+        Err(Ok(Error::AlreadyInitialized))
+    );
 }
 
 #[test]
@@ -60,7 +74,7 @@ fn full_lifecycle_create_join_drip_claim_withdraw() {
     assert_eq!(claimed, 15);
     assert_eq!(client.claim_reward(&alice), 0);
 
-    skip_lockup(&env);
+    skip_lockup(&env, &client.address, &alice);
     let withdrawn = client.withdraw(&alice);
     assert_eq!(withdrawn, 15);
 }
@@ -128,7 +142,7 @@ fn withdraw_after_lockup_succeeds() {
     let alice = Address::generate(&env);
     client.join(&alice);
     client.deposit(&alice, &100);
-    skip_lockup(&env);
+    skip_lockup(&env, &client.address, &alice);
     assert_eq!(client.withdraw(&alice), 100);
 }
 
@@ -150,7 +164,10 @@ fn single_sig_does_not_execute_release() {
     client.deposit(&admin, &500);
 
     let recipient = Address::generate(&env);
-    let pid = client.propose(&admin, &ProposalAction::ReleaseEscrow(recipient.clone(), 500));
+    let pid = client.propose(
+        &admin,
+        &ProposalAction::ReleaseEscrow(recipient.clone(), 500),
+    );
     // Admin already signed via propose — second approve must be rejected.
     assert_eq!(
         client.try_approve(&admin, &pid),
@@ -260,10 +277,7 @@ fn flash_loan_blocked_by_lockup() {
     client.join(&attacker);
     client.deposit(&attacker, &1_000_000_000);
     // Attempt immediate withdrawal (flash-loan style) — must fail.
-    assert_eq!(
-        client.try_withdraw(&attacker),
-        Err(Ok(Error::LockupActive))
-    );
+    assert_eq!(client.try_withdraw(&attacker), Err(Ok(Error::LockupActive)));
     // Pool still holds the funds.
     assert_eq!(client.pool().total_deposited, 1_000_000_000);
 }
@@ -294,11 +308,12 @@ fn deposit_emits_event() {
 
     let events = env.events().all();
     let deposit_event = events.iter().find(|(_, topics, _)| {
-        *topics == vec![
-            &env,
-            symbol_short!("pool").into_val(&env),
-            symbol_short!("deposit").into_val(&env),
-        ]
+        *topics
+            == vec![
+                &env,
+                symbol_short!("pool").into_val(&env),
+                symbol_short!("deposit").into_val(&env),
+            ]
     });
     assert!(deposit_event.is_some(), "deposit event not found");
 }
@@ -311,16 +326,17 @@ fn withdraw_emits_event() {
     let alice = Address::generate(&env);
     client.join(&alice);
     client.deposit(&alice, &200);
-    skip_lockup(&env);
+    skip_lockup(&env, &client.address, &alice);
     client.withdraw(&alice);
 
     let events = env.events().all();
     let withdrawn_event = events.iter().find(|(_, topics, _)| {
-        *topics == vec![
-            &env,
-            symbol_short!("pool").into_val(&env),
-            symbol_short!("withdrawn").into_val(&env),
-        ]
+        *topics
+            == vec![
+                &env,
+                symbol_short!("pool").into_val(&env),
+                symbol_short!("withdrawn").into_val(&env),
+            ]
     });
     assert!(withdrawn_event.is_some(), "withdrawn event not found");
 }
@@ -339,11 +355,12 @@ fn draw_winner_emits_payout_event() {
 
     let events = env.events().all();
     let payout_event = events.iter().find(|(_, topics, _)| {
-        *topics == vec![
-            &env,
-            symbol_short!("pool").into_val(&env),
-            symbol_short!("payout").into_val(&env),
-        ]
+        *topics
+            == vec![
+                &env,
+                symbol_short!("pool").into_val(&env),
+                symbol_short!("payout").into_val(&env),
+            ]
     });
     assert!(payout_event.is_some(), "payout event not found");
 }
@@ -351,7 +368,7 @@ fn draw_winner_emits_payout_event() {
 /// draw_winner with zero prize is rejected.
 #[test]
 fn draw_winner_zero_prize_fails() {
-    let (env, client, admin) = setup();
+    let (_env, client, admin) = setup();
     client.create(&admin);
     assert_eq!(
         client.try_draw_winner(&admin, &0),
@@ -396,10 +413,11 @@ fn pool_locked_field_starts_false() {
 #[test]
 fn proxy_create_initialises() {
     let env = Env::default();
-    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    env.mock_all_auths();
+    let proxy_id = env.register_contract(None, VaultProxy);
     let client = VaultProxyClient::new(&env, &proxy_id);
-    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
-    let logic = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
+    let admin = Address::generate(&env);
+    let logic = Address::generate(&env);
     client.create(&admin, &logic);
     assert_eq!(client.admin(), admin);
     assert_eq!(client.logic_contract(), logic);
@@ -408,14 +426,14 @@ fn proxy_create_initialises() {
 #[test]
 fn proxy_upgrade_changes_logic() {
     let env = Env::default();
-    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    env.mock_all_auths();
+    let proxy_id = env.register_contract(None, VaultProxy);
     let client = VaultProxyClient::new(&env, &proxy_id);
-    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
-    let logic1 = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
-    let logic2 = Address::from_string(&"GCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEF".to_string());
+    let admin = Address::generate(&env);
+    let logic1 = Address::generate(&env);
+    let logic2 = Address::generate(&env);
     client.create(&admin, &logic1);
     assert_eq!(client.logic_contract(), logic1);
-    // Upgrade to new logic
     client.upgrade(&admin, &logic2);
     assert_eq!(client.logic_contract(), logic2);
 }
@@ -423,14 +441,16 @@ fn proxy_upgrade_changes_logic() {
 #[test]
 fn proxy_upgrade_unauthorized_fails() {
     let env = Env::default();
-    let proxy_id = env.register_contract(None, VaultProxy).unwrap();
+    env.mock_all_auths();
+    let proxy_id = env.register_contract(None, VaultProxy);
     let client = VaultProxyClient::new(&env, &proxy_id);
-    let admin = Address::from_string(&"GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD".to_string());
-    let rando = Address::from_string(&"GDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFG".to_string());
-    let logic = Address::from_string(&"GBCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE".to_string());
+    let admin = Address::generate(&env);
+    let rando = Address::generate(&env);
+    let logic = Address::generate(&env);
+    let logic2 = Address::generate(&env);
     client.create(&admin, &logic);
     assert_eq!(
-        client.try_upgrade(&rando, &logic),
+        client.try_upgrade(&rando, &logic2),
         Err(Ok(Error::Unauthorized))
     );
 }
