@@ -36,7 +36,6 @@ describe("HorizonPool", () => {
   });
 
   it("routes to the lowest-latency healthy node", async () => {
-    let clock = 0;
     // node-a is slow (40ms), node-b fast (5ms), node-c medium (20ms).
     const latency: Record<string, number> = {
       "https://node-a.example/": 40,
@@ -47,12 +46,12 @@ describe("HorizonPool", () => {
       const ms = latency[String(url)] ?? 10;
       await new Promise((resolve) => setTimeout(resolve, ms));
       clock += ms;
+      await new Promise((resolve) => setTimeout(resolve, latency[String(url)] ?? 10));
       return res(200);
     });
     const pool = new HorizonPool({
       nodes: NODES,
       fetchImpl: fetchImpl as any,
-      now: () => clock,
       sleep: noSleep,
     });
 
