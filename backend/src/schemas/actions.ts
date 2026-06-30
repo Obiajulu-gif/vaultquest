@@ -46,6 +46,7 @@ export const portfolioQuery = z.object({
 
 export const checkpointBody = z.object({
   latest_ledger: z.number().int().nonnegative(),
+  last_processed_event_id: z.string().min(1).max(200).nullable().optional(),
   last_error: z.string().nullable().optional(),
   success: z.boolean().default(true)
 });

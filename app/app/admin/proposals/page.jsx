@@ -14,12 +14,7 @@ import {
   Settings,
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-// Mock admin addresses - in production, fetch from smart contract
-const ADMIN_ADDRESSES = [
-  "0x1234567890123456789012345678901234567890",
-  "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-];
+import { ADMIN_ADDRESSES } from "../admin-config";
 
 const MOCK_PROPOSALS = [
   {

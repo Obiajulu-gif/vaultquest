@@ -9,8 +9,8 @@ import { savedPoolsRoutes } from "./routes/savedPools.js";
 import { internalRoutes } from "./routes/internal.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { prometheusRoutes } from "./routes/prometheus.js";
+import { healthRoutes } from "./routes/health.js";
 import { MetricsService } from "./services/metricsService.js";
-import { ok } from "./responses.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { requireApiKey } from "./middleware/api-key-auth.js";
@@ -90,6 +90,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
   });
 
   app.register(actionsRoutes(svc, apiKeyGuard));
+  app.register(healthRoutes(svc));
+  app.register(actionsRoutes(svc));
   app.register(savedPoolsRoutes(savedPoolsSvc));
   app.register(internalRoutes(svc, deps.internalSecret));
   app.register(metricsRoutes(metricsSvc, apiKeyGuard));
